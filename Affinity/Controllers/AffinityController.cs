@@ -8,7 +8,7 @@ using Affinity.Models;
 
 namespace Affinity.Controllers
 {
-    public class HomeController : Controller
+    public class AffinityController : Controller
     {
         public IActionResult Index()
         {

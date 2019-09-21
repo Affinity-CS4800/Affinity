@@ -13,6 +13,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
+    <PackageReference Include="QuickGraph.Core3.Tom-Wells-NW" Version="0.7.0.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -38,6 +38,14 @@ namespace Affinity.Controllers
             return Json(new { id = 1, value = "hello" });
         }
 
+        [Route("/api/pdf")]
+        public void TestPDF()
+        {
+            SelectPdf.HtmlToPdf converter = new SelectPdf.HtmlToPdf();
+            SelectPdf.PdfDocument doc = converter.ConvertUrl("https://google.com");
+            doc.Save("pdf/test.pdf");
+            doc.Close();
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

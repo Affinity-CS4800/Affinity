@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Affinity.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Affinity.Controllers
 {
@@ -51,6 +52,14 @@ namespace Affinity.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        
+        [Route("/api/logging-test")]
+        public string TestLogging()
+        {
+            ILoggerFactory loggerFactory = new LoggerFactory();
+            return loggerFactory.ToString();
         }
     }
 }

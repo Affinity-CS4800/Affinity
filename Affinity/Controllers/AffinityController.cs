@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Affinity.Models;
 using Microsoft.Extensions.Logging;
+using FluentDateTime;
 
 namespace Affinity.Controllers
 {
@@ -46,6 +47,12 @@ namespace Affinity.Controllers
             SelectPdf.PdfDocument doc = converter.ConvertUrl("https://google.com");
             doc.Save("pdf/test.pdf");
             doc.Close();
+        }
+
+        [Route("/api/tomorrow")]
+        public string TestDateTomorrow()
+        {
+            return DateTime.Now.NextDay().ToLongDateString();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
+using Newtonsoft.Json;
 
 public enum Direction
 {
@@ -82,7 +83,19 @@ namespace Affinity.Models
                             int color = GraphConstants.DEFAULT_EDGE_COLOR,
                             int weight = -1, Direction direction = Direction.Undirected)
         {
+            if(VertexExists(fromVertex) && VertexExists(toVertex))
+            {
+                int vertexIndex = FindVertex(fromVertex);
 
+                //Vertex not found
+                //Add some sort of error thing???
+                if(vertexIndex == -1)
+                {
+                    return;
+                }
+
+                AdjacencyList[vertexIndex].Edges.Add(new Edge { Color = color, Direction = direction, First = fromVertex.ID, Second = toVertex.ID, Weight = weight });
+            }
         }
 
         /// <summary>
@@ -93,26 +106,28 @@ namespace Affinity.Models
         /// <returns></returns>
         public int GetWeight(Vertex fromVertex, Vertex toVertex)
         {
-            for (int i = 0; i < AdjacencyList.Count; i++)
+            int vertexIndex = FindVertex(fromVertex);
+
+            if(vertexIndex == -1)
             {
-                if(AdjacencyList[i].Name.Equals(fromVertex.Name))
-                {
-                    for (int j = 0; j < AdjacencyList[i].Edges.Count; j++)
-                    {
-                        if(AdjacencyList[i].Edges[j].Direction == Direction.Undirected)
-                        {
-                            return -1;
-                        }
-                        else
-                        {
-                            if(AdjacencyList[i].Edges[j].Second == toVertex.ID)
-                            {
-                                return AdjacencyList[i].Edges[j].Weight;
-                            }
-                        }
-                    }
-                }  
+                return -1;
             }
+
+            for (int j = 0; j < AdjacencyList[vertexIndex].Edges.Count; j++)
+            {
+                if(AdjacencyList[vertexIndex].Edges[j].Direction == Direction.Undirected)
+                {
+                    return -1;
+                }
+                else
+                {
+                    if(AdjacencyList[vertexIndex].Edges[j].Second == toVertex.ID)
+                    {
+                        return AdjacencyList[vertexIndex].Edges[j].Weight;
+                    }
+                }
+            } 
+
             return -1;
         }
 
@@ -131,6 +146,33 @@ namespace Affinity.Models
                 }
             }
             return false;
+        }
+
+        public void SaveGraph()
+        {
+
+        }
+
+        public void InitGraphFromDB()
+        {
+
+        }
+
+        private int FindVertex(Vertex vertex)
+        {
+            for (int i = 0; i < VertexCount; i++)
+            {
+                if (AdjacencyList[i].ID == vertex.ID)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public string PrintAdjacencyList()
+        {
+            return JsonConvert.SerializeObject(AdjacencyList);
         }
     }
 }

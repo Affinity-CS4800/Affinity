@@ -60,5 +60,15 @@ namespace Affinity.Controllers
 
             return JsonConvert.SerializeObject(vertex, Formatting.Indented);
         }
+
+        [Route("/api/testGraph")]
+        public string TestGraph()
+        {
+            Graph graph = new Graph();
+
+            graph.AddVertex(new Vertex { });
+
+            return graph.PrintAdjacencyList();
+        }
     }
 }

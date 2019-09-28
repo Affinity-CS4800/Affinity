@@ -34,6 +34,7 @@ namespace Affinity
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);
         }
 

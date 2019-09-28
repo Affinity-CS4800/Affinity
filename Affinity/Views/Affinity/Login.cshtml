@@ -1,31 +1,57 @@
-﻿
-@{
+﻿<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatilbe" content="IE=edge">
+    <title>Login</title>
+    @section fbScripts{
+        <!-- The core Firebase JS SDK is always required and must be listed first -->
+        <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+        <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+        <script type="text/javascript" src="https://cdn.firebase.com/libs/firebaseui/4.2.0/firebaseui.js"></script>
+    }
+    @section fbStyles{
+        <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/4.2.0/firebaseui.css" />
+    }
+
+
+</head>
+<body>
+    <h1>Log In Page</h1>
+    <div id="firebaseui-auth-container"></div>
+    <div id="loader">Loading...</div>
+    @section loginScript{
+        <script type="text/javascript" src="~/js/firebase.js"></script>
+        <script type="text/javascript" src="~/js/login.js"></script>
+    }
+</body>
+
+
+
+@*@{
     ViewData["Title"] = "Login";
 }
-
-@section styles {
-    <style>
-        p {
-            color: blue;
-        }
-    </style>
-}
-
-<h1>Login</h1>
-<p>{{ message }}</p>
-<form id="login-form">
-    <input type="email" name="username" required="required" placeholder="Email" /><br />
-    <input type="text" name="password" required="required" placeholder="Password" /><br />
-    <input type="submit" value="Sign In" />
-</form>
-
-@section scripts {
-    <script type="text/javascript">
-        var app = new Vue({
-            el: '#app',
-            data: {
-                message: 'Hello Vue!'
+    @section styles {
+        <style>
+            p {
+                color: blue;
             }
-        })
-    </script>
-}
+        </style>
+    }
+
+    <h1>Login</h1>
+    <p>{{ message }}</p>
+    <form id="login-form">
+        <input type="email" name="username" required="required" placeholder="Email" /><br />
+        <input type="text" name="password" required="required" placeholder="Password" /><br />
+        <input type="submit" value="Sign In" />
+    </form>
+
+    @section scripts {
+        <script type="text/javascript">
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    message: 'Hello Vue!'
+                }
+            })
+        </script>
+    }*@

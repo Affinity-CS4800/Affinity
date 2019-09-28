@@ -36,6 +36,7 @@ namespace Affinity.Models
         public int Color { get; set; }
         [Range(-1,2000)]
         public int Weight { get; set; }
+        public string Name { get; set; }
     }
 
     public static class GraphConstants
@@ -52,7 +53,13 @@ namespace Affinity.Models
     public class Graph
     {
         public int VertexCount => AdjacencyList.Count;
+        private int EdgeCount = 0;
         public List<Vertex> AdjacencyList { get; set; }
+
+        public Graph()
+        {
+            AdjacencyList = new List<Vertex>();
+        }
 
         /// <summary>
         /// Adds a vertex to the adjacenecy list
@@ -60,9 +67,10 @@ namespace Affinity.Models
         /// <param name="vertex"></param>
         public void AddVertex(Vertex vertex)
         {
-            if(!VertexExists(vertex))
+            if(!VertexExists(vertex) && VertexCount < GraphConstants.VERTEX_MAX)
             {
                 AdjacencyList.Add(vertex);
+                AdjacencyList[VertexCount - 1].Edges = new List<Edge>();
             }
         }
 
@@ -83,7 +91,7 @@ namespace Affinity.Models
                             int color = GraphConstants.DEFAULT_EDGE_COLOR,
                             int weight = -1, Direction direction = Direction.Undirected)
         {
-            if(VertexExists(fromVertex) && VertexExists(toVertex))
+            if(VertexExists(fromVertex) && VertexExists(toVertex) && EdgeCount < GraphConstants.EDGE_MAX)
             {
                 int vertexIndex = FindVertex(fromVertex);
 
@@ -94,7 +102,7 @@ namespace Affinity.Models
                     return;
                 }
 
-                AdjacencyList[vertexIndex].Edges.Add(new Edge { Color = color, Direction = direction, First = fromVertex.ID, Second = toVertex.ID, Weight = weight });
+                AdjacencyList[vertexIndex].Edges.Add(new Edge { Name = name, Color = color, Direction = direction, First = fromVertex.ID, Second = toVertex.ID, Weight = weight, ID = EdgeCount++ });
             }
         }
 
@@ -172,7 +180,7 @@ namespace Affinity.Models
 
         public string PrintAdjacencyList()
         {
-            return JsonConvert.SerializeObject(AdjacencyList);
+            return JsonConvert.SerializeObject(AdjacencyList, Formatting.Indented);
         }
     }
 }

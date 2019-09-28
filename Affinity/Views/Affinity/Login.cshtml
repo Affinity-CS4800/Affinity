@@ -3,5 +3,29 @@
     ViewData["Title"] = "Login";
 }
 
-<h1>Login</h1>
+@section styles {
+    <style>
+        p {
+            color: blue;
+        }
+    </style>
+}
 
+<h1>Login</h1>
+<p>{{ message }}</p>
+<form id="login-form">
+    <input type="email" name="username" required="required" placeholder="Email" /><br />
+    <input type="text" name="password" required="required" placeholder="Password" /><br />
+    <input type="submit" value="Sign In" />
+</form>
+
+@section scripts {
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue!'
+            }
+        })
+    </script>
+}

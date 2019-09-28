@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 
 public enum Direction
 {
@@ -41,5 +42,95 @@ namespace Affinity.Models
         public static int GRID_MAX = 3000;
         public static int VERTEX_MAX = 3201;
         public static int EDGE_MAX = 3200;
+
+        public const int DEFAULT_EDGE_COLOR = -16777216; //ARGB For BLACK
+    }
+
+    //Directed graph, Undirected graph, multigraph?
+    //Make it so its assumed to be a directed graph but does not need to be?
+    public class Graph
+    {
+        public int VertexCount => AdjacencyList.Count;
+        public List<Vertex> AdjacencyList { get; set; }
+
+        /// <summary>
+        /// Adds a vertex to the adjacenecy list
+        /// </summary>
+        /// <param name="vertex"></param>
+        public void AddVertex(Vertex vertex)
+        {
+            if(!VertexExists(vertex))
+            {
+                AdjacencyList.Add(vertex);
+            }
+        }
+
+        /// <summary>
+        /// This function adds an edge to the adjacency list by taking in
+        /// 2 vertex's one being the one we want to connect from and the other
+        /// being the one to connect to. The fuction doesnt need to know anything
+        /// about the edge, but it can be specified. It will default to a black
+        /// edge with no name and not directed so a weight of -1.
+        /// </summary>
+        /// <param name="fromVertex"></param>
+        /// <param name="toVertex"></param>
+        /// <param name="name"></param>
+        /// <param name="color"></param>
+        /// <param name="weight"></param>
+        /// <param name="direction"></param>
+        public void AddEdge(Vertex fromVertex, Vertex toVertex, string name = "",
+                            int color = GraphConstants.DEFAULT_EDGE_COLOR,
+                            int weight = -1, Direction direction = Direction.Undirected)
+        {
+
+        }
+
+        /// <summary>
+        /// Returns the weight between the two specified vertices
+        /// </summary>
+        /// <param name="fromVertex"></param>
+        /// <param name="toVertex"></param>
+        /// <returns></returns>
+        public int GetWeight(Vertex fromVertex, Vertex toVertex)
+        {
+            for (int i = 0; i < AdjacencyList.Count; i++)
+            {
+                if(AdjacencyList[i].Name.Equals(fromVertex.Name))
+                {
+                    for (int j = 0; j < AdjacencyList[i].Edges.Count; j++)
+                    {
+                        if(AdjacencyList[i].Edges[j].Direction == Direction.Undirected)
+                        {
+                            return -1;
+                        }
+                        else
+                        {
+                            if(AdjacencyList[i].Edges[j].Second == toVertex.ID)
+                            {
+                                return AdjacencyList[i].Edges[j].Weight;
+                            }
+                        }
+                    }
+                }  
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Checks if the vertex doesn't already exist in the adjacency list
+        /// </summary>
+        /// <param name="vertexToCheck"></param>
+        /// <returns></returns>
+        private bool VertexExists(Vertex vertexToCheck)
+        {
+            foreach (var vertex in AdjacencyList)
+            {
+                if(vertex.Name.Equals(vertexToCheck.Name))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

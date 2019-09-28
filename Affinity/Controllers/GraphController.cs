@@ -37,7 +37,7 @@ namespace Affinity.Controllers
             vertex.Name = "A";
             vertex.XPos = 200;
             vertex.YPos = 300;
-            vertex.Color = Color.Aqua.ToArgb();
+            vertex.Color = Color.White.ToArgb();
             vertex.Edges = new List<Edge>
             {
                 new Edge

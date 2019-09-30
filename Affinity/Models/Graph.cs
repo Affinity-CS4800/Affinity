@@ -53,7 +53,7 @@ namespace Affinity.Models
     public class Graph
     {
         public int VertexCount => AdjacencyList.Count;
-        private int EdgeCount = 0;
+        private int EdgeCount;
         public List<Vertex> AdjacencyList { get; set; }
 
         public Graph()

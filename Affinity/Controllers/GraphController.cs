@@ -7,15 +7,26 @@ using Newtonsoft.Json;
 using Affinity.Models;
 using System.Drawing;
 using FirebaseAdmin.Auth;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Affinity.Controllers
 {
     public class GraphController : Controller
     {
         [Route("/graph")]
+        //[Authorize]
         public async Task<IActionResult> Index()
         {
-            return View();
+            //Generate ID and check if unique in the database
+
+
+            //Replace 0 with the ID when a valid one is generated 
+            return RedirectToRoute(new
+            {
+                Controller = "Graph",
+                Action = "GetSpecificGraph",
+                id = 0
+            });   
         }
 
         [Route("/graph/{id}")]

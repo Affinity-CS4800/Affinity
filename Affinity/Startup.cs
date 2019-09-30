@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Affinity
 {
@@ -37,7 +38,7 @@ namespace Affinity
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);
 
-            services.AddAuthentication().AddJwtBearer(options =>
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.Authority = "https://securetoken.google.com/my-firebase-project";
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -81,10 +82,9 @@ namespace Affinity
                 context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000");
                 // A header that gives an added layer of security that helps to detect and mitigate certain types of attacks, including XSS and data injection attacks
                 // These atacks are used for everything from data theft to site defacement to distribution of malware. 
-                // context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; child-src 'none'; frame-ancestors 'none'; frame-src 'none';");
+                context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; child-src 'none'; frame-ancestors 'none'; frame-src 'none';");
 
                 //Need to remove these in the IIS or IIS Express config file manually since this wont remove it.
-                //I dont have access to modify content in the C: drive so this will be a low vulnerability when scanned (Dynamic scans only)
                 context.Response.Headers.Remove("Server");
                 context.Response.Headers.Remove("X-Powered-By");
 
@@ -93,8 +93,9 @@ namespace Affinity
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-            app.UseAuthentication();
             app.UseCookiePolicy();
+
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {

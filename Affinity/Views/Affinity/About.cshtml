@@ -1,6 +1,27 @@
 ﻿@{
     ViewData["Title"] = "About Affinity";
 }
-<h1>@ViewData["Title"]</h1>
 
+@section styles {
+    <style>
+        p {
+            color: blue;
+        }
+    </style>
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>{{ message }}</p>
 <p>We are a group of College students who have fun with graphs.</p>
+
+
+@section scripts {
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue!'
+            }
+        })
+    </script>
+}

@@ -1,16 +1,15 @@
 
 (function(){
     // Initialize the FirebaseUI Widget using Firebase.
-    var ui = new firebaseui.auth.AuthUI(firebase.auth()); 
+    var ui = new firebaseui.auth.AuthUI(firebase.auth());
     var uiConfig = {
         callbacks: {
-          signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+            signInSuccessWithAuthResult: function (authResult, redirectUrl) {
                 // User successfully signed in.
                 // Return type determines whether we continue the redirect automatically
                 // or whether we leave that to developer to handle.
                 //If this is a new user && his provider is password (username/password registeration) && his email is not verified,
-                if (authResult.additionalUserInfo.isNewUser && authResult.additionalUserInfo.providerId == 'password' && !authResult.user.emailVerified)
-                {
+                if (authResult.additionalUserInfo.isNewUser && authResult.additionalUserInfo.providerId == 'password' && !authResult.user.emailVerified) {
                     // To apply the default browser preference instead of explicitly setting it.
                     // firebase.auth().useDeviceLanguage();
 
@@ -22,8 +21,7 @@
 
                 //If this is not a new user && his provider is password (username/password registeration) && his email is not verified.
                 //On the other hand, the UI shows the user a button to resend the verification email.
-                else if (!authResult.additionalUserInfo.isNewUser && authResult.additionalUserInfo.providerId == 'password' && !authResult.user.emailVerified)
-                {
+                else if (!authResult.additionalUserInfo.isNewUser && authResult.additionalUserInfo.providerId == 'password' && !authResult.user.emailVerified) {
                     // To apply the default browser preference instead of explicitly setting it.
                     // firebase.auth().useDeviceLanguage();
 
@@ -34,10 +32,8 @@
                         authResult.user.sendEmailVerification();
                 }
                 //Otherwise an old user login normally.
-                else 
-                    return true;
-                  
-                
+                else
+                    return true;    
           },
           uiShown: function() {
             // The widget is rendered.

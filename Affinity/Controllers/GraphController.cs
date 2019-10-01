@@ -14,11 +14,10 @@ namespace Affinity.Controllers
     public class GraphController : Controller
     {
         [Route("/graph")]
-        //[Authorize]
+        //0[Authorize]
         public async Task<IActionResult> Index()
         {
             //Generate ID and check if unique in the database
-
 
             //Replace 0 with the ID when a valid one is generated 
             return RedirectToRoute(new

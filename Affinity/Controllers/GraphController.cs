@@ -14,7 +14,7 @@ namespace Affinity.Controllers
     public class GraphController : Controller
     {
         [Route("/graph")]
-        //0[Authorize]
+        //[Authorize]
         public async Task<IActionResult> Index()
         {
             //Generate ID and check if unique in the database

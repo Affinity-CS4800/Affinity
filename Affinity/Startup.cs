@@ -38,6 +38,7 @@ namespace Affinity
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);
+            services.AddHttpContextAccessor();
 
             //services.AddFirebaseAuthentication("https://securetoken.google.com/ID", "ID");
 
@@ -93,8 +94,6 @@ namespace Affinity
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
-
-            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {

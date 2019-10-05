@@ -12,6 +12,7 @@
 }
 
 <h1>Login</h1>
+
 <div v-if="!user">
     <p>{{ message }}</p>
     <div id="firebaseui-auth-container"></div>
@@ -22,6 +23,7 @@
     <h2>Welcome, {{ user.displayName }}</h2>
     <p>Your email is {{ user.email }}</p>
 </div>
+
 
 @section scripts {
     <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -104,9 +106,9 @@
                 firebase.auth().onAuthStateChanged(user => {
                     if (user) {
                         this.user = user;
-                        user.getIdToken().then(function(idToken) {
+                        user.getIdToken().then(function (idToken) {
                             document.cookie = "aff_t=" + idToken;
-                        }); 
+                        });
                     }
                     // If not a valid user, reset token
                     else {
@@ -121,14 +123,15 @@
                         alert("valid user");
                         alert(this.user.email);
                         firebase.auth().signOut().then(function () {
-                            // Successfully signed in.
-                        }).catch(function(error) {
+                            // Successfully signed out.
+                        }).catch(function (error) {
                             // An error happened.
                         });
+                        window.location.reload(true);
                     }
                     // If not a valid user, reset token
                     else {
-                       alert("invalid user");
+                        alert("invalid user");
                     }
                 }
             }

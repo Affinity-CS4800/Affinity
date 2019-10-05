@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AspNetCore.Firebase.Authentication.Extensions;
+using Affinity.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Affinity
 {
@@ -35,6 +37,9 @@ namespace Affinity
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddDbContext<AffinityDbcontext>(options =>
+            options.UseSqlServer(Configuration.GetConnectionString("AffinityDbcontext")));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);

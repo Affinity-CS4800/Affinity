@@ -23,17 +23,27 @@ namespace Affinity.Controllers
 
 
         [Route("/graph")]
-        public async Task<IActionResult> Index()
+        public async Task<string> Index()
         {
-            //Generate ID and check if unique in the database
+            Random rand = new Random();
+            string tempID = "";
+            int randomNum;
+            while (tempID.Length < 8)
+            {
+                randomNum = rand.Next(128);
+                if ((randomNum >= 49 && randomNum <= 57) || (randomNum >= 97 && randomNum <= 102))
+                {
+                    tempID += Convert.ToChar(randomNum);
+                }
+            }
 
-            //Replace 0 with the ID when a valid one is generated 
-            return RedirectToRoute(new
+            return tempID;
+            /*return RedirectToRoute(new
             {
                 Controller = "Graph",
                 Action = "GetSpecificGraph",
                 id = 0
-            });   
+            });*/   
         }
 
         [Route("/graph/{id}")]

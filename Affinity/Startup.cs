@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AspNetCore.Firebase.Authentication.Extensions;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 
 namespace Affinity
 {
@@ -22,6 +24,11 @@ namespace Affinity
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromFile("path to the json file"),
+            });
         }
 
         public IConfiguration Configuration { get; }
@@ -38,8 +45,8 @@ namespace Affinity
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.AddDbContext<AffinityDbcontext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("AffinityDbcontext")));
+            //services.AddDbContext<AffinityDbcontext>(options =>
+            //options.UseSqlServer(Configuration.GetConnectionString("AffinityDbcontext")));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);

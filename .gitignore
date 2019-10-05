@@ -6,6 +6,9 @@
 # Ignore Firebase JS 
 firebase.js
 
+#Ignore 
+affinity-firebase-adminsdk.json
+
 # User-specific files
 *.suo
 *.user
@@ -331,3 +334,6 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# Frontend config file
+Affinity/wwwroot/js/*.js

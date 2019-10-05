@@ -39,6 +39,9 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Affinity" asp-action="Privacy">Privacy</a>
                             </li>
+                            <li class="nav-item sign-out-button" id="sign-out">
+                                <button type="button" class="sign-out-button" v-on:click="signOut">Sign Out</button>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -61,5 +64,7 @@
     <script src="~/js/vue.js"></script>
 
     @RenderSection("Scripts", required: false)
+
 </body>
+
 </html>

@@ -110,9 +110,27 @@
                     }
                     // If not a valid user, reset token
                     else {
+                        this.user = user;
                         document.cookie = "aff_t=";
                     }
                 });
+            },
+            methods: {
+                signOut: function (event) {
+                    if (this.user) {
+                        alert("valid user");
+                        alert(this.user.email);
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed in.
+                        }).catch(function(error) {
+                            // An error happened.
+                        });
+                    }
+                    // If not a valid user, reset token
+                    else {
+                       alert("invalid user");
+                    }
+                }
             }
         })
     </script>

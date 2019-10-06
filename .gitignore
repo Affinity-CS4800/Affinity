@@ -331,3 +331,6 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# Frontend config file
+Affinity/wwwroot/js/*.js

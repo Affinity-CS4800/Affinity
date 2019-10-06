@@ -4,3 +4,47 @@
 <h1>@ViewData["Title"]</h1>
 
 <p>Use this page to detail your site's privacy policy.</p>
+
+@section scripts {
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+    <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
+    <script type="text/javascript" src="~/js/firebase.js"></script>
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue!'
+            },
+            created: function () {
+                // When user logs in, store it in this Vue app's data.
+                // Add cookie storing user token.
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        this.user = user;
+                        user.getIdToken().then(function (idToken) {
+                            document.cookie = "aff_t=" + idToken;
+                        });
+                    }
+                    // Reset user
+                    else {
+                        this.user = user;
+                    }
+                });
+            },
+            methods: {
+                signOut: function (event) {
+                    if (this.user) {
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed out.
+                        }).catch(function (error) {
+                            // An error happened.
+                        });
+                        window.location.reload(true); // refresh page
+                    }
+                }
+            }
+        })
+    </script>
+}

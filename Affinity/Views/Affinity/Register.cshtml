@@ -33,19 +33,9 @@
                 message: 'Hello Vue!'
             },
             created: function () {
-                // When user logs in, store it in this Vue app's data.
-                // Add cookie storing user token.
+                // Store user
                 firebase.auth().onAuthStateChanged(user => {
-                    if (user) {
-                        this.user = user;
-                        user.getIdToken().then(function (idToken) {
-                            document.cookie = "aff_t=" + idToken;
-                        });
-                    }
-                    // Reset user
-                    else {
-                        this.user = user;
-                    }
+                    this.user = user;
                 });
             },
             methods: {

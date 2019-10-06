@@ -37,7 +37,7 @@
             el: '#app',
             data: {
                 message: 'Hello Vue!',
-                user: {}
+                user: null
             },
             mounted: function () {
                 // Initialize the FirebaseUI Widget using Firebase.
@@ -74,8 +74,6 @@
                             //Otherwise an old user login normally.
                             else
                                 return true;
-
-
                         },
                         uiShown: function () {
                             // The widget is rendered.
@@ -83,6 +81,7 @@
                             document.getElementById('loader').style.display = 'none';
                         }
                     },
+                    'credentialHelper': firebaseui.auth.CredentialHelper.NONE,
                     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
                     signInFlow: 'popup',
                     signInSuccessUrl: '',
@@ -113,7 +112,6 @@
                     // Reset user
                     else {
                         this.user = user;
-                        // document.cookie = "aff_t=";  // unnecessary because token is invalidated
                     }
                 });
             },
@@ -127,7 +125,6 @@
                         });
                         window.location.reload(true); // refresh page
                     }
-                    // If not a valid user, reset token
                 }
             }
         })

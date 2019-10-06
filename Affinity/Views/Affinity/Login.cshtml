@@ -110,29 +110,24 @@
                             document.cookie = "aff_t=" + idToken;
                         });
                     }
-                    // If not a valid user, reset token
+                    // Reset user
                     else {
                         this.user = user;
-                        document.cookie = "aff_t=";
+                        // document.cookie = "aff_t=";  // unnecessary because token is invalidated
                     }
                 });
             },
             methods: {
                 signOut: function (event) {
                     if (this.user) {
-                        alert("valid user");
-                        alert(this.user.email);
                         firebase.auth().signOut().then(function () {
                             // Successfully signed out.
                         }).catch(function (error) {
                             // An error happened.
                         });
-                        window.location.reload(true);
+                        window.location.reload(true); // refresh page
                     }
                     // If not a valid user, reset token
-                    else {
-                        alert("invalid user");
-                    }
                 }
             }
         })

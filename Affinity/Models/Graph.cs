@@ -23,7 +23,8 @@ namespace Affinity.Models
         public int Color { get; set; }
         [StringLength(8)]
         public string Name { get; set; }
-        public List<Edge> Edges { get; set; }
+
+        public IList<VertexEdge> VertexEdges { get; set; }
     }
 
     public class Edge
@@ -37,6 +38,17 @@ namespace Affinity.Models
         [Range(-1,2000)]
         public int Weight { get; set; }
         public string Name { get; set; }
+
+        public IList<VertexEdge> VertexEdges { get; set; }
+    }
+
+    public class VertexEdge
+    {
+        public int VertexID { get; set; }
+        public Vertex Vertex { get; set; }
+
+        public int EdgeID { get; set; }
+        public Edge Edge { get; set; }
     }
 
     public static class GraphConstants
@@ -48,139 +60,139 @@ namespace Affinity.Models
         public const int DEFAULT_EDGE_COLOR = -16777216; //ARGB For BLACK
     }
 
-    //Directed graph, Undirected graph, multigraph?
-    //Make it so its assumed to be a directed graph but does not need to be?
-    public class Graph
-    {
-        public int VertexCount => AdjacencyList.Count;
-        private int EdgeCount;
-        public List<Vertex> AdjacencyList { get; set; }
+    ////Directed graph, Undirected graph, multigraph?
+    ////Make it so its assumed to be a directed graph but does not need to be?
+    //public class Graph
+    //{
+    //    public int VertexCount => AdjacencyList.Count;
+    //    private int EdgeCount;
+    //    public List<Vertex> AdjacencyList { get; set; }
 
-        public Graph()
-        {
-            AdjacencyList = new List<Vertex>();
-        }
+    //    public Graph()
+    //    {
+    //        AdjacencyList = new List<Vertex>();
+    //    }
 
-        /// <summary>
-        /// Adds a vertex to the adjacenecy list
-        /// </summary>
-        /// <param name="vertex"></param>
-        public void AddVertex(Vertex vertex)
-        {
-            if(!VertexExists(vertex) && VertexCount < GraphConstants.VERTEX_MAX)
-            {
-                AdjacencyList.Add(vertex);
-                AdjacencyList[VertexCount - 1].Edges = new List<Edge>();
-            }
-        }
+    //    /// <summary>
+    //    /// Adds a vertex to the adjacenecy list
+    //    /// </summary>
+    //    /// <param name="vertex"></param>
+    //    public void AddVertex(Vertex vertex)
+    //    {
+    //        if(!VertexExists(vertex) && VertexCount < GraphConstants.VERTEX_MAX)
+    //        {
+    //            AdjacencyList.Add(vertex);
+    //            AdjacencyList[VertexCount - 1].VertexEdges = new List<VertexEdge>();
+    //        }
+    //    }
 
-        /// <summary>
-        /// This function adds an edge to the adjacency list by taking in
-        /// 2 vertex's one being the one we want to connect from and the other
-        /// being the one to connect to. The fuction doesnt need to know anything
-        /// about the edge, but it can be specified. It will default to a black
-        /// edge with no name and not directed so a weight of -1.
-        /// </summary>
-        /// <param name="fromVertex"></param>
-        /// <param name="toVertex"></param>
-        /// <param name="name"></param>
-        /// <param name="color"></param>
-        /// <param name="weight"></param>
-        /// <param name="direction"></param>
-        public void AddEdge(Vertex fromVertex, Vertex toVertex, string name = "",
-                            int color = GraphConstants.DEFAULT_EDGE_COLOR,
-                            int weight = -1, Direction direction = Direction.Undirected)
-        {
-            if(VertexExists(fromVertex) && VertexExists(toVertex) && EdgeCount < GraphConstants.EDGE_MAX)
-            {
-                int vertexIndex = FindVertex(fromVertex);
+    //    /// <summary>
+    //    /// This function adds an edge to the adjacency list by taking in
+    //    /// 2 vertex's one being the one we want to connect from and the other
+    //    /// being the one to connect to. The fuction doesnt need to know anything
+    //    /// about the edge, but it can be specified. It will default to a black
+    //    /// edge with no name and not directed so a weight of -1.
+    //    /// </summary>
+    //    /// <param name="fromVertex"></param>
+    //    /// <param name="toVertex"></param>
+    //    /// <param name="name"></param>
+    //    /// <param name="color"></param>
+    //    /// <param name="weight"></param>
+    //    /// <param name="direction"></param>
+    //    public void AddEdge(Vertex fromVertex, Vertex toVertex, string name = "",
+    //                        int color = GraphConstants.DEFAULT_EDGE_COLOR,
+    //                        int weight = -1, Direction direction = Direction.Undirected)
+    //    {
+    //        if(VertexExists(fromVertex) && VertexExists(toVertex) && EdgeCount < GraphConstants.EDGE_MAX)
+    //        {
+    //            int vertexIndex = FindVertex(fromVertex);
 
-                //Vertex not found
-                //Add some sort of error thing???
-                if(vertexIndex == -1)
-                {
-                    return;
-                }
+    //            //Vertex not found
+    //            //Add some sort of error thing???
+    //            if(vertexIndex == -1)
+    //            {
+    //                return;
+    //            }
 
-                AdjacencyList[vertexIndex].Edges.Add(new Edge { Name = name, Color = color, Direction = direction, First = fromVertex.ID, Second = toVertex.ID, Weight = weight, ID = EdgeCount++ });
-            }
-        }
+    //            AdjacencyList[vertexIndex].VertexEdges.Add(new Edge { Name = name, Color = color, Direction = direction, First = fromVertex.ID, Second = toVertex.ID, Weight = weight, ID = EdgeCount++ });
+    //        }
+    //    }
 
-        /// <summary>
-        /// Returns the weight between the two specified vertices
-        /// </summary>
-        /// <param name="fromVertex"></param>
-        /// <param name="toVertex"></param>
-        /// <returns></returns>
-        public int GetWeight(Vertex fromVertex, Vertex toVertex)
-        {
-            int vertexIndex = FindVertex(fromVertex);
+    //    /// <summary>
+    //    /// Returns the weight between the two specified vertices
+    //    /// </summary>
+    //    /// <param name="fromVertex"></param>
+    //    /// <param name="toVertex"></param>
+    //    /// <returns></returns>
+    //    public int GetWeight(Vertex fromVertex, Vertex toVertex)
+    //    {
+    //        int vertexIndex = FindVertex(fromVertex);
 
-            if(vertexIndex == -1)
-            {
-                return -1;
-            }
+    //        if(vertexIndex == -1)
+    //        {
+    //            return -1;
+    //        }
 
-            for (int j = 0; j < AdjacencyList[vertexIndex].Edges.Count; j++)
-            {
-                if(AdjacencyList[vertexIndex].Edges[j].Direction == Direction.Undirected)
-                {
-                    return -1;
-                }
-                else
-                {
-                    if(AdjacencyList[vertexIndex].Edges[j].Second == toVertex.ID)
-                    {
-                        return AdjacencyList[vertexIndex].Edges[j].Weight;
-                    }
-                }
-            } 
+    //        for (int j = 0; j < AdjacencyList[vertexIndex].VertexEdges.Count; j++)
+    //        {
+    //            if(AdjacencyList[vertexIndex].Edges[j].Direction == Direction.Undirected)
+    //            {
+    //                return -1;
+    //            }
+    //            else
+    //            {
+    //                if(AdjacencyList[vertexIndex].Edges[j].Second == toVertex.ID)
+    //                {
+    //                    return AdjacencyList[vertexIndex].Edges[j].Weight;
+    //                }
+    //            }
+    //        } 
 
-            return -1;
-        }
+    //        return -1;
+    //    }
 
-        /// <summary>
-        /// Checks if the vertex doesn't already exist in the adjacency list
-        /// </summary>
-        /// <param name="vertexToCheck"></param>
-        /// <returns></returns>
-        private bool VertexExists(Vertex vertexToCheck)
-        {
-            foreach (var vertex in AdjacencyList)
-            {
-                if(vertex.Name.Equals(vertexToCheck.Name))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+    //    /// <summary>
+    //    /// Checks if the vertex doesn't already exist in the adjacency list
+    //    /// </summary>
+    //    /// <param name="vertexToCheck"></param>
+    //    /// <returns></returns>
+    //    private bool VertexExists(Vertex vertexToCheck)
+    //    {
+    //        foreach (var vertex in AdjacencyList)
+    //        {
+    //            if(vertex.Name.Equals(vertexToCheck.Name))
+    //            {
+    //                return true;
+    //            }
+    //        }
+    //        return false;
+    //    }
 
-        public void SaveGraph()
-        {
+    //    public void SaveGraph()
+    //    {
 
-        }
+    //    }
 
-        public void InitGraphFromDB()
-        {
+    //    public void InitGraphFromDB()
+    //    {
 
-        }
+    //    }
 
-        private int FindVertex(Vertex vertex)
-        {
-            for (int i = 0; i < VertexCount; i++)
-            {
-                if (AdjacencyList[i].ID == vertex.ID)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
+    //    private int FindVertex(Vertex vertex)
+    //    {
+    //        for (int i = 0; i < VertexCount; i++)
+    //        {
+    //            if (AdjacencyList[i].ID == vertex.ID)
+    //            {
+    //                return i;
+    //            }
+    //        }
+    //        return -1;
+    //    }
 
-        public string PrintAdjacencyList()
-        {
-            return JsonConvert.SerializeObject(AdjacencyList, Formatting.Indented);
-        }
-    }
+    //    public string PrintAdjacencyList()
+    //    {
+    //        return JsonConvert.SerializeObject(AdjacencyList, Formatting.Indented);
+    //    }
+    //}
 }

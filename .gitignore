@@ -6,6 +6,9 @@
 # Ignore Firebase JS 
 firebase.js
 
+#Ignore 
+affinity-firebase-adminsdk.json
+
 # User-specific files
 *.suo
 *.user

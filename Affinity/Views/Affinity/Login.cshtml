@@ -111,6 +111,7 @@
                     // Reset user
                     else {
                         this.user = user;
+                        document.cookie = "aff_t=";
                     }
                 });
             },
@@ -119,6 +120,7 @@
                     if (this.user) {
                         firebase.auth().signOut().then(function () {
                             // Successfully signed out.
+                            document.cookie = "aff_t=";
                         }).catch(function (error) {
                             // An error happened.
                         });

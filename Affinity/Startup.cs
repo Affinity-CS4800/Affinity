@@ -27,7 +27,7 @@ namespace Affinity
 
             FirebaseApp.Create(new AppOptions()
             {
-                Credential = GoogleCredential.FromFile("path to the json file"),
+                Credential = GoogleCredential.FromFile("Json file"),
             });
         }
 

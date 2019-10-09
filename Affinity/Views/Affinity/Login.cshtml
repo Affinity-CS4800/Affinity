@@ -12,6 +12,7 @@
 }
 
 <h1>Login</h1>
+
 <div v-if="!user">
     <p>{{ message }}</p>
     <div id="firebaseui-auth-container"></div>
@@ -22,6 +23,7 @@
     <h2>Welcome, {{ user.displayName }}</h2>
     <p>Your email is {{ user.email }}</p>
 </div>
+
 
 @section scripts {
     <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -34,7 +36,7 @@
             el: '#app',
             data: {
                 message: 'Hello Vue!',
-                user: {}
+                user: null
             },
             mounted: function () {
                 // Initialize the FirebaseUI Widget using Firebase.
@@ -71,8 +73,6 @@
                             //Otherwise an old user login normally.
                             else
                                 return true;
-
-
                         },
                         uiShown: function () {
                             // The widget is rendered.
@@ -80,6 +80,7 @@
                             document.getElementById('loader').style.display = 'none';
                         }
                     },
+                    'credentialHelper': firebaseui.auth.CredentialHelper.NONE,
                     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
                     signInFlow: 'popup',
                     signInSuccessUrl: '',
@@ -103,15 +104,29 @@
                 firebase.auth().onAuthStateChanged(user => {
                     if (user) {
                         this.user = user;
-                        user.getIdToken().then(function(idToken) {
+                        user.getIdToken().then(function (idToken) {
                             document.cookie = "aff_t=" + idToken;
-                        }); 
+                        });
                     }
-                    // If not a valid user, reset token
+                    // Reset user
                     else {
+                        this.user = user;
                         document.cookie = "aff_t=";
                     }
                 });
+            },
+            methods: {
+                signOut: function (event) {
+                    if (this.user) {
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed out.
+                            document.cookie = "aff_t=";
+                        }).catch(function (error) {
+                            // An error happened.
+                        });
+                        window.location.reload(true); // refresh page
+                    }
+                }
             }
         })
     </script>

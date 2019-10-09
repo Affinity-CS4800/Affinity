@@ -15,7 +15,7 @@ namespace Affinity.Models
         {
             string idToken = httpContextAccessor.HttpContext.Request.Cookies["aff_t"];
 
-            if(idToken == null)
+            if(string.IsNullOrWhiteSpace(idToken))
             {
                 return false;
             }

@@ -1,7 +1,120 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "New Graph";
 }
 
-<h1>You created a new graph?</h1>
+@section styles {
+    <style>
+        #mynetwork {
+            border: 1px solid lightgray;
+            width: 80%;
+            height: 60vh;
+            margin: 0 auto;
+        }
+        #eventSpan {
+            display: block;
+            margin-bottom: 1rem;
+        }
+    </style>
+}
 
+<h1>Graph</h1>
+
+<div class="graph">
+    <div id="mynetwork"></div>
+    <span id="eventSpan"></span>
+</div>
+
+
+@section scripts {
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network@latest/dist/vis-network.js"></script>
+    <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
+    <script type="text/javascript" src="~/js/firebase.js"></script>
+    <script type="text/javascript">
+
+        const NODES = [
+            { id: 0, x: 0, y: 0, color: 0, name: 'A', edges: [0, 1] },
+            { id: 1, x: 0, y: 0, color: 0, name: 'B', edges: [2] },
+            { id: 2, x: 0, y: 0, color: 0, name: 'C', edges: [] }
+        ];
+
+        const EDGES = [
+            { id: 0, first: 0, second: 1, direction: 0, color: 0, weight: -1 },
+            { id: 1, first: 0, second: 2, direction: 0, color: 0, weight: -1 },
+            { id: 2, first: 1, second: 2, direction: 0, color: 0, weight: -1 }
+        ];
+
+        function getVisDataSet() {
+            // Convert our DB data to vis data.
+            const nodes = [], edges = [];
+
+            for (node of NODES) {
+                nodes.push({ id: node.id, label: node.name });
+            }
+
+            for (edge of EDGES) {
+                edges.push({ from: edge.first, to: edge.second });
+            }
+
+            return {
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(edges)
+            };
+        }
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Graphers!',
+                user: null
+            },
+            mounted: function () {
+                const options = {
+                    autoResize: true,
+                    height: "100%",
+                    width: "100%",
+                    interaction: { hover: true },
+                    manipulation: {
+                        enabled: true
+                    },
+                    "nodes": {
+                        "physics": false
+                    }
+                };
+                const network = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
+            },
+            created: function () {
+                // When user logs in, store it in this Vue app's data.
+                // Add cookie storing user token.
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        this.user = user;
+                        user.getIdToken().then(function (idToken) {
+                            document.cookie = "aff_t=" + idToken;
+                        });
+                    }
+                    // Reset user
+                    else {
+                        this.user = user;
+                        document.cookie = "aff_t=";
+                    }
+                });
+            },
+            methods: {
+                signOut: function (event) {
+                    if (this.user) {
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed out.
+                            document.cookie = "aff_t=";
+                        }).catch(function (error) {
+                            // An error happened.
+                        });
+                        window.location.reload(true); // refresh page
+                    }
+                }
+            }
+        })
+    </script>
+}

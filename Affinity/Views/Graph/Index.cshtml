@@ -37,13 +37,14 @@
         const NODES = [
             { id: 0, x: 0, y: 0, color: 0, name: 'A', edges: [0, 1] },
             { id: 1, x: 0, y: 0, color: 0, name: 'B', edges: [2] },
-            { id: 2, x: 0, y: 0, color: 0, name: 'C', edges: [] }
+            { id: 2, x: 0, y: 0, color: 0, name: 'C', edges: [] },
+            { id: 3, x: 0, y: 0, color: 0, name: 'D', edges: [] }
         ];
 
         const EDGES = [
             { id: 0, first: 0, second: 1, direction: 0, color: 0, weight: -1 },
             { id: 1, first: 0, second: 2, direction: 0, color: 0, weight: -1 },
-            { id: 2, first: 1, second: 2, direction: 0, color: 0, weight: -1 }
+            { id: 2, first: 1, second: 3, direction: 0, color: 0, weight: -1 }
         ];
 
         function getVisDataSet() {

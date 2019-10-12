@@ -16,10 +16,13 @@
               integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" />
     </environment>
     <link rel="stylesheet" href="~/css/site.css" />
+    <style>      
+        [v-cloak] {
+            display: none;
+            opacity: 0;
+        }
+    </style>
     @RenderSection("Styles", required: false)
-    @RenderSection("fbStyles", required: false)
-    @RenderSection("fbScripts", required: false)
-    @RenderSection("loginScript", required: false)
 </head>
 <body>
     <div id="app">
@@ -32,21 +35,23 @@
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                        <ul class="navbar-nav flex-grow-1">
+                        <ul class="navbar-nav flex-grow-1" v-cloak>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Affinity" asp-action="Index">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Affinity" asp-action="Privacy">Privacy</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Graph" asp-action="Index">Graph</a>
                             </li>
-                            <li class="nav-item sign-out-button" id="sign-out">
+                            <li class="nav-item" v-if="user === null">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Affinity" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item sign-out-button" v-if="user" id="sign-out">
                                 <button type="button" class="sign-out-button" v-on:click="signOut">Sign Out</button>
                             </li>
                         </ul>
                     </div>
                 </div>
             </nav>
-            <p>{{ message }}</p>
         </header>
         <main role="main" class="pb-3">
             @RenderBody()

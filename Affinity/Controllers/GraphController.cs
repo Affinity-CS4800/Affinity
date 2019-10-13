@@ -9,18 +9,57 @@ using System.Drawing;
 using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using RestSharp;
+using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace Affinity.Controllers
 {
     public class GraphController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private String API_KEY;
 
         public GraphController(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
+            API_KEY = "";
+            using (StreamReader reader = new StreamReader("API_KEY.txt"))
+            {
+                API_KEY = reader.ReadLine();
+            }           
         }
 
+        public String getDatabaseUrl()
+        {
+            if (API_KEY == "") return "error";
+            RestClient client = new RestClient("https://api.heroku.com/");
+            RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
+            req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
+            req.AddHeader("Authorization", "Bearer " + API_KEY);
+            String response = client.Execute(req).Content.ToLower();
+            
+            if(response.Contains("error"))
+            {
+                return "error";
+            }
+  
+            JObject config = JObject.Parse(response);
+            JProperty dbUrlProperty = config.Property("database_url");
+            if(dbUrlProperty == null)
+            {
+                return "error";
+            } else
+            {
+                return dbUrlProperty.Value.ToString();
+            }
+        }
+
+        [Route("/dbtest")]
+        public IActionResult dbTest()
+        {
+            return Json(new { url = getDatabaseUrl() });
+        }
 
         [Route("/graph")]
         public async Task<string> Index()

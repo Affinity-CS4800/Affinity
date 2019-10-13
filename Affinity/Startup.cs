@@ -25,10 +25,10 @@ namespace Affinity
         {
             Configuration = configuration;
 
-            FirebaseApp.Create(new AppOptions()
-            {
-                Credential = GoogleCredential.FromFile("Json file"),
-            });
+            //FirebaseApp.Create(new AppOptions()
+            //{
+            //    Credential = GoogleCredential.FromFile("Json file"),
+            //});
         }
 
         public IConfiguration Configuration { get; }

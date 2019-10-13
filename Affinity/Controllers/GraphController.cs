@@ -18,7 +18,7 @@ namespace Affinity.Controllers
     public class GraphController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private String API_KEY;
+        private string API_KEY;
 
         public GraphController(IHttpContextAccessor httpContextAccessor)
         {
@@ -30,14 +30,14 @@ namespace Affinity.Controllers
             }           
         }
 
-        public String getDatabaseUrl()
+        public string getDatabaseUrl()
         {
             if (API_KEY == "") return "error";
             RestClient client = new RestClient("https://api.heroku.com/");
             RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
             req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
             req.AddHeader("Authorization", "Bearer " + API_KEY);
-            String response = client.Execute(req).Content.ToLower();
+            string response = client.Execute(req).Content.ToLower();
             
             if(response.Contains("error"))
             {
@@ -49,7 +49,8 @@ namespace Affinity.Controllers
             if(dbUrlProperty == null)
             {
                 return "error";
-            } else
+            }
+            else
             {
                 return dbUrlProperty.Value.ToString();
             }

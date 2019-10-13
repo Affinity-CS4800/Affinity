@@ -337,3 +337,6 @@ ASALocalRun/
 
 # Frontend config file
 Affinity/wwwroot/js/*.js
+
+Affinity/API_KEY.txt
+Affinity/gOAuth.json

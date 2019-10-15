@@ -27,12 +27,16 @@ namespace Affinity.Controllers
             using (StreamReader reader = new StreamReader("API_KEY.txt"))
             {
                 API_KEY = reader.ReadLine();
-            }           
+            }
         }
 
-        public string getDatabaseUrl()
+        public string GetDatabaseUrl()
         {
-            if (API_KEY == "") return "error";
+            if (API_KEY == "")
+            {
+                return "error";
+            }
+
             RestClient client = new RestClient("https://api.heroku.com/");
             RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
             req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
@@ -46,20 +50,19 @@ namespace Affinity.Controllers
   
             JObject config = JObject.Parse(response);
             JProperty dbUrlProperty = config.Property("database_url");
+
             if(dbUrlProperty == null)
             {
                 return "error";
             }
-            else
-            {
-                return dbUrlProperty.Value.ToString();
-            }
+            
+            return dbUrlProperty.Value.ToString();
         }
 
         [Route("/dbtest")]
-        public IActionResult dbTest()
+        public IActionResult DbTest()
         {
-            return Json(new { url = getDatabaseUrl() });
+            return Json(new { url = GetDatabaseUrl() });
         }
 
         [Route("/graph")]
@@ -110,7 +113,7 @@ namespace Affinity.Controllers
             return Json(new { id = "2", value = "GetGraphs" });
         }
 
-        [Route("/api/testneighbors")]
+        [Route("/api/testgraph")]
         public string TestGraphNeighbors()
         {
             Graph graph = new Graph();
@@ -226,10 +229,18 @@ namespace Affinity.Controllers
 
             foreach (Edge edge in Edges)
             {
-                graph.AddEdge(edge.First, edge.Second);
+                graph.AddEdge(edge.First, edge.Second, "", edge.Color, edge.Weight, edge.Direction);
             }
 
-            return JsonConvert.SerializeObject(graph.GetNeighbors(vertex), Formatting.Indented);
+            string output = "";
+
+            output += JsonConvert.SerializeObject(graph.GetNeighbors(vertex), Formatting.Indented);
+
+            output += JsonConvert.SerializeObject(graph.Dijkstra(vertex), Formatting.Indented);
+
+            output += $"\nGraph distance from {vertex.ID} to {vertex4.ID} is: {graph.CalculateGraphDistance(vertex, vertex4)}";
+
+            return output;
         }
     }
 }

@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using Newtonsoft.Json;
 using FibonacciHeap;
+using System.Diagnostics;
 
 public enum Direction
 {
@@ -56,6 +57,7 @@ namespace Affinity.Models
     {
         public int VertexCount => AdjacencyList.Count;
         private int EdgeCount;
+        private bool isDirected;
         public List<Vertex> AdjacencyList { get; set; }
 
         public Graph()
@@ -83,8 +85,8 @@ namespace Affinity.Models
         /// about the edge, but it can be specified. It will default to a black
         /// edge with no name and not directed so a weight of -1.
         /// </summary>
-        /// <param name="fromVertex"></param>
-        /// <param name="toVertex"></param>
+        /// <param name="fromVertexID"></param>
+        /// <param name="toVertexID"></param>
         /// <param name="name"></param>
         /// <param name="color"></param>
         /// <param name="weight"></param>
@@ -95,14 +97,10 @@ namespace Affinity.Models
         {
             if (VertexExists(AdjacencyList[FindVertex(fromVertexID)]) && VertexExists(AdjacencyList[FindVertex(toVertexID)]) && EdgeCount < GraphConstants.EDGE_MAX)
             {
+                //Vertex exists no need to check if its -1 or not
                 int vertexIndex = FindVertex(fromVertexID);
 
-                //Vertex not found
-                //Add some sort of error thing???
-                if (vertexIndex == -1)
-                {
-                    return;
-                }
+                isDirected |= direction == Direction.DirectedAtFirst || direction == Direction.DirectedAtSecond;
 
                 AdjacencyList[vertexIndex].Edges.Add(new Edge { Name = name, Color = color, Direction = direction, First = fromVertexID, Second = toVertexID, Weight = weight, ID = EdgeCount++ });
             }
@@ -188,41 +186,22 @@ namespace Affinity.Models
             return JsonConvert.SerializeObject(AdjacencyList, Formatting.Indented);
         }
 
-
-        //1     function Dijkstra(Graph, source):
-        //2      dist[source] ← 0                           // Initialization
-        //3
-        //4      create vertex priority queue Q
-        //5
-        //6      for each vertex v in Graph:           
-        //7          if v ≠ source
-        //8              dist[v] ← INFINITY                 // Unknown distance from source to v
-        //9          prev[v] ← UNDEFINED                    // Predecessor of v
-        //10
-        //11         Q.add_with_priority(v, dist[v])
-        //12
-        //13
-        //14     while Q is not empty:                      // The main loop
-        //15         u ← Q.extract_min()                    // Remove and return best vertex
-        //16         for each neighbor v of u:              // only v that are still in Q
-        //17             alt ← dist[u] + length(u, v)
-        //18             if alt<dist[v]
-        //19                 dist[v] ← alt
-        //20                 prev[v] ← u
-        //21                 Q.decrease_priority(v, alt)
-        //22
-        //23     return dist, prev
-
         //Used for finding the Graph geodesic on a weighted graph
         //Using a Fibonacci Heap gives us O(E + V log V)
         public Tuple<int[],int[]> Dijkstra(Vertex startVertex)
         {
+            var watch = Stopwatch.StartNew();
+
             int[] dist = new int[VertexCount]; //distance
             int[] prev = new int[VertexCount]; //predecessors of v
 
             dist[startVertex.ID] = 0;
 
-            FibonacciHeap<Vertex,int> priorityQueue = new FibonacciHeap<Vertex,int>(int.MinValue);
+            //Our priority queue made of a fibonacci heap for better performance
+            FibonacciHeap<Vertex, int> priorityQueue = new FibonacciHeap<Vertex, int>(int.MinValue);
+
+            //Keep track of the fibonacci nodes
+            List<FibonacciHeapNode<Vertex, int>> fibonacciHeapNodes = new List<FibonacciHeapNode<Vertex, int>>();
 
             //Init the distance and the prev arrays
             foreach(Vertex v in AdjacencyList)
@@ -233,7 +212,10 @@ namespace Affinity.Models
                 }
                 prev[v.ID] = -1; //Undefined predecessor
 
-                priorityQueue.Insert(new FibonacciHeapNode<Vertex,int>(v, dist[v.ID]));
+                FibonacciHeapNode<Vertex, int> heapNode = new FibonacciHeapNode<Vertex, int>(v, dist[v.ID]);
+
+                priorityQueue.Insert(heapNode);
+                fibonacciHeapNodes.Add(heapNode);
             }
 
             while(!priorityQueue.IsEmpty())
@@ -242,15 +224,19 @@ namespace Affinity.Models
 
                 foreach (Vertex v in GetNeighbors(u))
                 {
-                    var alt = dist[u.ID]; // + length(u,v);
+                    var alt = dist[u.ID] + Length(u,v);
                     if (alt < dist[v.ID])
                     {
                         dist[v.ID] = alt;
                         prev[v.ID] = u.ID;
-                        priorityQueue.DecreaseKey(new FibonacciHeapNode<Vertex, int>(v, dist[v.ID]), alt);
+                        priorityQueue.DecreaseKey(fibonacciHeapNodes[v.ID], alt);
                     }
                 }
             }
+
+            watch.Stop();
+
+            Debug.WriteLine($"Dijkstra took: {watch.ElapsedMilliseconds}ms");
 
             return Tuple.Create(dist, prev);
         }
@@ -262,7 +248,7 @@ namespace Affinity.Models
             //For each edge that is attached to this vertex
             foreach(Edge edge in AdjacencyList[FindVertex(vertex.ID)].Edges)
             {
-                //Directed at us so it is not a neighboring vertice!
+                //Directed at us so it is not a neighboring vertex -> Move to next
                 if(edge.Direction == Direction.DirectedAtFirst)
                 {
                     continue;
@@ -277,15 +263,82 @@ namespace Affinity.Models
             return neighboringVertices;
         }
 
-        //Used for finding the Graph geodesic on an unweighted graph
-        public void BFS()
+        private int Length(Vertex v, Vertex u)
         {
+            foreach(Edge edge in v.Edges)
+            {
+                if(edge.First == v.ID && edge.Second == u.ID)
+                {
+                    return edge.Weight;
+                }
+            }
 
+            return 0;
         }
 
-        public int CalculateGraphDistance()
+        //Used for finding the Graph geodesic on an unweighted graph
+        //TODO::FINISH IMPLEMENTING
+        public int[] BFS(Vertex vertex)
         {
-            return 0;
+            bool[] visited = new bool[VertexCount];
+            Queue<Vertex> vertexQueue = new Queue<Vertex>();
+
+            vertexQueue.Enqueue(vertex);
+            visited[vertex.ID] = true;
+
+            while(vertexQueue.Count != 0)
+            {
+                Vertex v = vertexQueue.Dequeue();
+
+                if(!visited[v.ID])
+                {
+                    visited[v.ID] = true;
+
+                    foreach(Edge edge in v.Edges)
+                    {
+                        if(!visited[edge.Second])
+                        {
+                            vertexQueue.Enqueue(AdjacencyList[edge.Second]);
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public int CalculateGraphDistance(Vertex u, Vertex v)
+        {
+            int distance = 0;
+
+            if (isDirected)
+            {
+                //Perform dijkstra to find the pathing for smallest path
+                var dijkstra = Dijkstra(u);
+                
+                int parent = dijkstra.Item2[v.ID];
+
+                //Cant get there from this node!
+                if (parent == -1)
+                {
+                    return 0;
+                }
+
+                while (parent != u.ID)
+                {
+                    parent = dijkstra.Item2[parent];
+                    distance++;
+                }
+
+                return distance;
+            }
+            else
+            {
+                var parents = BFS(u);
+
+                return distance;
+            }
+            
         }
     }
 }

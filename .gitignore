@@ -8,6 +8,7 @@ firebase.js
 
 #Ignore 
 affinity-firebase-adminsdk.json
+API_KEY.txt
 
 # User-specific files
 *.suo

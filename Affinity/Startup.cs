@@ -53,20 +53,6 @@ namespace Affinity
             services.AddHttpContextAccessor();
 
             //services.AddFirebaseAuthentication("https://securetoken.google.com/ID", "ID");
-
-
-            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-            //{
-            //    options.Authority = "https://securetoken.google.com/ID";
-            //    options.TokenValidationParameters = new TokenValidationParameters
-            //    {
-            //        ValidateIssuer = true,
-            //        ValidIssuer = "https://securetoken.google.com/ID",
-            //        ValidateAudience = true,
-            //        ValidAudience = "ID",
-            //        ValidateLifetime = true
-            //    };
-            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

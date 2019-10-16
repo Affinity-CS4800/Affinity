@@ -118,7 +118,7 @@ namespace Affinity.Controllers
         {
             Graph graph = new Graph();
 
-            Vertex vertex = new Vertex
+            Vertex vertex1 = new Vertex
             {
                 Name = "A",
                 ID = 0,
@@ -154,7 +154,7 @@ namespace Affinity.Controllers
                 Color = Color.Aqua.ToArgb()
             };
 
-            graph.AddVertex(vertex);
+            graph.AddVertex(vertex1);
             graph.AddVertex(vertex2);
             graph.AddVertex(vertex3);
             graph.AddVertex(vertex4);
@@ -234,11 +234,15 @@ namespace Affinity.Controllers
 
             string output = "";
 
-            output += JsonConvert.SerializeObject(graph.GetNeighbors(vertex), Formatting.Indented);
+            output += JsonConvert.SerializeObject(graph.GetNeighbors(vertex1), Formatting.Indented);
 
-            output += JsonConvert.SerializeObject(graph.Dijkstra(vertex), Formatting.Indented);
+            output += JsonConvert.SerializeObject(graph.Dijkstra(vertex1), Formatting.Indented);
 
-            output += $"\nGraph distance from {vertex.ID} to {vertex4.ID} is: {graph.CalculateGraphDistance(vertex, vertex4)}";
+            output += $"\nGraph distance from {vertex1.ID} to {vertex2.ID} is: {graph.CalculateGraphDistance(vertex1, vertex2)}";
+            output += $"\nGraph distance from {vertex1.ID} to {vertex3.ID} is: {graph.CalculateGraphDistance(vertex1, vertex3)}";
+            output += $"\nGraph distance from {vertex1.ID} to {vertex4.ID} is: {graph.CalculateGraphDistance(vertex1, vertex4)}";
+
+            output += $"\nGraph Diameter is: {graph.CalculateGraphDiameter(graph)}";
 
             return output;
         }

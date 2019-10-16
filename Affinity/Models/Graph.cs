@@ -188,7 +188,7 @@ namespace Affinity.Models
 
         //Used for finding the Graph geodesic on a weighted graph
         //Using a Fibonacci Heap gives us O(E + V log V)
-        public Tuple<int[],int[]> Dijkstra(Vertex startVertex)
+        public Tuple<int[], int[]> Dijkstra(Vertex startVertex)
         {
             var watch = Stopwatch.StartNew();
 
@@ -204,9 +204,9 @@ namespace Affinity.Models
             List<FibonacciHeapNode<Vertex, int>> fibonacciHeapNodes = new List<FibonacciHeapNode<Vertex, int>>();
 
             //Init the distance and the prev arrays
-            foreach(Vertex v in AdjacencyList)
+            foreach (Vertex v in AdjacencyList)
             {
-                if(v.ID != startVertex.ID)
+                if (v.ID != startVertex.ID)
                 {
                     dist[v.ID] = int.MaxValue; //Infinity
                 }
@@ -218,13 +218,13 @@ namespace Affinity.Models
                 fibonacciHeapNodes.Add(heapNode);
             }
 
-            while(!priorityQueue.IsEmpty())
+            while (!priorityQueue.IsEmpty())
             {
                 var u = priorityQueue.RemoveMin().Data; //Gets the vertex that has the min value in the p-queue
 
                 foreach (Vertex v in GetNeighbors(u))
                 {
-                    var alt = dist[u.ID] + Length(u,v);
+                    var alt = dist[u.ID] + Length(u, v);
                     if (alt < dist[v.ID])
                     {
                         dist[v.ID] = alt;
@@ -246,15 +246,15 @@ namespace Affinity.Models
             List<Vertex> neighboringVertices = new List<Vertex>();
 
             //For each edge that is attached to this vertex
-            foreach(Edge edge in AdjacencyList[FindVertex(vertex.ID)].Edges)
+            foreach (Edge edge in AdjacencyList[FindVertex(vertex.ID)].Edges)
             {
                 //Directed at us so it is not a neighboring vertex -> Move to next
-                if(edge.Direction == Direction.DirectedAtFirst)
+                if (edge.Direction == Direction.DirectedAtFirst)
                 {
                     continue;
                 }
                 //If the edge has no direction or we are currently pointing to the other vertex we should add!
-                else if(edge.Direction == Direction.DirectedAtSecond || edge.Direction == Direction.Undirected)
+                else if (edge.Direction == Direction.DirectedAtSecond || edge.Direction == Direction.Undirected)
                 {
                     neighboringVertices.Add(AdjacencyList[FindVertex(edge.Second)]);
                 }
@@ -265,9 +265,9 @@ namespace Affinity.Models
 
         private int Length(Vertex v, Vertex u)
         {
-            foreach(Edge edge in v.Edges)
+            foreach (Edge edge in v.Edges)
             {
-                if(edge.First == v.ID && edge.Second == u.ID)
+                if (edge.First == v.ID && edge.Second == u.ID)
                 {
                     return edge.Weight;
                 }
@@ -286,17 +286,17 @@ namespace Affinity.Models
             vertexQueue.Enqueue(vertex);
             visited[vertex.ID] = true;
 
-            while(vertexQueue.Count != 0)
+            while (vertexQueue.Count != 0)
             {
                 Vertex v = vertexQueue.Dequeue();
 
-                if(!visited[v.ID])
+                if (!visited[v.ID])
                 {
                     visited[v.ID] = true;
 
-                    foreach(Edge edge in v.Edges)
+                    foreach (Edge edge in v.Edges)
                     {
-                        if(!visited[edge.Second])
+                        if (!visited[edge.Second])
                         {
                             vertexQueue.Enqueue(AdjacencyList[edge.Second]);
                         }
@@ -315,13 +315,18 @@ namespace Affinity.Models
             {
                 //Perform dijkstra to find the pathing for smallest path
                 var dijkstra = Dijkstra(u);
-                
+
                 int parent = dijkstra.Item2[v.ID];
 
                 //Cant get there from this node!
                 if (parent == -1)
                 {
                     return 0;
+                }
+
+                if (parent == u.ID)
+                {
+                    return 1;
                 }
 
                 while (parent != u.ID)
@@ -338,7 +343,36 @@ namespace Affinity.Models
 
                 return distance;
             }
-            
+
+        }
+
+        public int CalculateGraphDiameter(Graph graph)
+        {
+            int diameter = 0;
+
+            foreach (Vertex vertex in AdjacencyList)
+            {
+                Debug.WriteLine($"Checking Dijkstra on {vertex.Name}");
+                var dijkstra = graph.Dijkstra(vertex);
+
+                foreach (Vertex otherVertex in AdjacencyList)
+                {
+                    if (vertex.ID == otherVertex.ID)
+                    {
+                        continue;
+                    }
+
+                    int distance = graph.CalculateGraphDistance(vertex, otherVertex);
+
+                    Debug.WriteLine(distance);
+
+                    if (distance > diameter)
+                    {
+                        diameter = distance;
+                    }
+                }
+            }
+            return diameter;
         }
     }
 }

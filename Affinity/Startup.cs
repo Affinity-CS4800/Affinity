@@ -18,6 +18,7 @@ using Newtonsoft.Json.Linq;
 using Google.Apis.Auth.OAuth2;
 using System.Diagnostics;
 using System.IO;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace Affinity
 {
@@ -64,8 +65,15 @@ namespace Affinity
 
             Debug.WriteLine(dbUrlProperty.Value.ToString());
 
-            //services.AddDbContext<AffinityDbcontext>(options =>
-            //options.UseSqlServer(Configuration.GetConnectionString("AffinityDbcontext")));
+            var builder = new PostgreSqlConnectionStringBuilder(dbUrlProperty.Value.ToString())
+            {
+                Pooling = true,
+                TrustServerCertificate = true,
+                SslMode = SslMode.Require
+            };
+
+            services.AddEntityFrameworkNpgsql()
+                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(builder.ConnectionString));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);

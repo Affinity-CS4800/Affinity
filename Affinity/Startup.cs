@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using AspNetCore.Firebase.Authentication.Extensions;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
 using FirebaseAdmin;
@@ -51,8 +49,6 @@ namespace Affinity
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);
             services.AddHttpContextAccessor();
-
-            //services.AddFirebaseAuthentication("https://securetoken.google.com/ID", "ID");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

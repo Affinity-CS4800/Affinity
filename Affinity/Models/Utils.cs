@@ -30,5 +30,25 @@ namespace Affinity.Models
                 return false;
             }           
         }
+        public static async Task<FirebaseToken> GetUserFirebaseToken(IHttpContextAccessor httpContextAccessor)
+        {
+            string idToken = httpContextAccessor.HttpContext.Request.Cookies["aff_t"];
+
+            if (string.IsNullOrWhiteSpace(idToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+                return decodedToken;
+            }
+            catch (FirebaseAuthException)
+            {
+                return null;
+            }
+        }
+
     }
 }

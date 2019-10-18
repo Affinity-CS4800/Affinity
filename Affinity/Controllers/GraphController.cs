@@ -12,17 +12,20 @@ using Microsoft.AspNetCore.Http;
 using RestSharp;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using Microsoft.EntityFrameworkCore;
 
 namespace Affinity.Controllers
 {
     public class GraphController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly AffinityDbcontext _affinityDbContext;
         private string API_KEY;
 
-        public GraphController(IHttpContextAccessor httpContextAccessor)
+        public GraphController(IHttpContextAccessor httpContextAccessor, AffinityDbcontext affinityDbcontext)
         {
             _httpContextAccessor = httpContextAccessor;
+            _affinityDbContext = affinityDbcontext;
             API_KEY = "";
             using (StreamReader reader = new StreamReader("API_KEY.txt"))
             {
@@ -68,25 +71,57 @@ namespace Affinity.Controllers
         [Route("/graph")]
         public async Task<string> Index()
         {
+            bool unique = false;
             Random rand = new Random();
-            string tempID = "";
+            string tempID;
             int randomNum;
-            while (tempID.Length < 8)
+            do
             {
-                randomNum = rand.Next(128);
-                if ((randomNum >= 49 && randomNum <= 57) || (randomNum >= 97 && randomNum <= 102))
+                tempID = "";
+                while (tempID.Length < 8)
                 {
-                    tempID += Convert.ToChar(randomNum);
+                    randomNum = rand.Next(53) + 49;
+                    if ((randomNum >= 49 && randomNum <= 57) || (randomNum >= 97 && randomNum <= 102))
+                    {
+                        tempID += Convert.ToChar(randomNum);
+                    }
                 }
+
+                var idList = _affinityDbContext.Users.AsNoTracking().Include(g => g.GraphIds).ToList();
+                foreach(var i in idList)
+                {
+                    if (i == tempID)
+                    {
+                        unique = false;
+                        break;
+                    }
+                    else
+                        unique = true;
+                }
+
+
+            } while (!unique);
+
+            if ((await Utils.CheckFirebaseToken(_httpContextAccessor)))
+            {
+                var user = await Utils.GetUserFirbaseToken(_httpContextAccessor);
+                var count = await _affinityDbContext.Users.Where(u => u.UId == user.Uid).CountAsync();
+
+                if (count == 0)
+                {
+                    _affinityDbContext.Users.Add(new User { UId = user.Uid, GraphIds = new List<GraphID>() });
+                }
+                _affinityDbContext.Users.Add(new GraphID { graphID = tempID });
+
+
             }
 
-            return tempID;
-            /*return RedirectToRoute(new
+            return RedirectToRoute(new
             {
                 Controller = "Graph",
                 Action = "GetSpecificGraph",
-                id = 0
-            });*/   
+                id = tempID
+            }); 
         }
 
         [Route("/graph/{id}")]

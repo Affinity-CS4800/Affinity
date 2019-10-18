@@ -3,15 +3,17 @@ using System;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Affinity.Migrations
 {
     [DbContext(typeof(AffinityDbcontext))]
-    partial class AffinityDbcontextModelSnapshot : ModelSnapshot
+    [Migration("20191018224442_UserTable")]
+    partial class UserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,20 +47,20 @@ namespace Affinity.Migrations
                     b.ToTable("Edges");
                 });
 
-            modelBuilder.Entity("Affinity.Models.GraphID", b =>
+            modelBuilder.Entity("Affinity.Models.StringID", b =>
                 {
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("UserID");
+                    b.Property<string>("GraphID");
 
-                    b.Property<string>("graphID");
+                    b.Property<int?>("UserID");
 
                     b.HasKey("ID");
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("GraphID");
+                    b.ToTable("StringID");
                 });
 
             modelBuilder.Entity("Affinity.Models.User", b =>
@@ -99,7 +101,7 @@ namespace Affinity.Migrations
                         .HasForeignKey("VertexID");
                 });
 
-            modelBuilder.Entity("Affinity.Models.GraphID", b =>
+            modelBuilder.Entity("Affinity.Models.StringID", b =>
                 {
                     b.HasOne("Affinity.Models.User")
                         .WithMany("GraphIds")

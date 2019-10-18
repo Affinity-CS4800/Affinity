@@ -13,7 +13,11 @@ using Microsoft.IdentityModel.Tokens;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
 using FirebaseAdmin;
+using RestSharp;
+using Newtonsoft.Json.Linq;
 using Google.Apis.Auth.OAuth2;
+using System.Diagnostics;
+using System.IO;
 
 namespace Affinity
 {
@@ -42,6 +46,23 @@ namespace Affinity
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            string API_KEY = "";
+            using (StreamReader reader = new StreamReader("API_KEY.txt"))
+            {
+                API_KEY = reader.ReadLine();
+            }
+
+            RestClient client = new RestClient("https://api.heroku.com/");
+            RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
+            req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
+            req.AddHeader("Authorization", "Bearer " + API_KEY);
+            string response = client.Execute(req).Content.ToLower();
+
+            JObject config = JObject.Parse(response);
+            JProperty dbUrlProperty = config.Property("database_url");
+
+            Debug.WriteLine(dbUrlProperty.Value.ToString());
 
             //services.AddDbContext<AffinityDbcontext>(options =>
             //options.UseSqlServer(Configuration.GetConnectionString("AffinityDbcontext")));

@@ -29,7 +29,7 @@
     <!-- The core Firebase JS SDK is always required and must be listed first -->
     <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
-    <script type="text/javascript" src="https://unpkg.com/vis-network@latest/dist/vis-network.js"></script>
+    <script type="text/javascript" src="~/js/vis-network.js"></script>
     <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
     <script type="text/javascript" src="~/js/firebase.js"></script>
     <script type="text/javascript">
@@ -79,14 +79,39 @@
                     height: "100%",
                     width: "100%",
                     interaction: { hover: true },
-                    manipulation: {
-                        enabled: true
-                    },
                     "nodes": {
                         "physics": false
+                    },
+                    physics: {
+                        barnesHut: {
+                            gravitationalConstant: 0,
+                            centralGravity: 0,
+                            springConstant: 0,
+                        }
+                    },
+                    edges: {
+                        smooth: false
+                    },
+                    manipulation: {
+                        enabled: true
                     }
                 };
                 const network = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
+
+                network.on("click", function (properties) {
+                   
+                    if (properties.nodes.length == 0 && properties.edges.length == 0) {
+                        network._performAddNode(properties);
+                    }
+                    else if (properties.nodes.length != 0) {
+                        //clicked on a node
+                    }
+                    else if (properties.edges.length != 0) {
+                        //clicked on an edge
+                    }
+                });
+                
+
             },
             created: function () {
                 // When user logs in, store it in this Vue app's data.

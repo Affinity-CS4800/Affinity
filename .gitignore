@@ -330,4 +330,4 @@ ASALocalRun/
 .mfractor/
 
 # Frontend config file
-Affinity/wwwroot/js/*.js
+Affinity/wwwroot/js/FIREBASE_CONFIG.js

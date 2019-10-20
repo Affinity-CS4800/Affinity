@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Affinity.Migrations
 {
     [DbContext(typeof(AffinityDbcontext))]
-    [Migration("20191018224442_UserTable")]
-    partial class UserTable
+    [Migration("20191020003221_InitDB")]
+    partial class InitDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,7 +23,7 @@ namespace Affinity.Migrations
 
             modelBuilder.Entity("Affinity.Models.Edge", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int>("DBID")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("Color");
@@ -32,35 +32,23 @@ namespace Affinity.Migrations
 
                     b.Property<int>("First");
 
+                    b.Property<string>("GraphID");
+
+                    b.Property<int>("ID");
+
                     b.Property<string>("Name");
 
                     b.Property<int>("Second");
 
-                    b.Property<int?>("VertexID");
+                    b.Property<int?>("VertexDBID");
 
                     b.Property<int>("Weight");
 
-                    b.HasKey("ID");
+                    b.HasKey("DBID");
 
-                    b.HasIndex("VertexID");
+                    b.HasIndex("VertexDBID");
 
                     b.ToTable("Edges");
-                });
-
-            modelBuilder.Entity("Affinity.Models.StringID", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("GraphID");
-
-                    b.Property<int?>("UserID");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("StringID");
                 });
 
             modelBuilder.Entity("Affinity.Models.User", b =>
@@ -68,7 +56,9 @@ namespace Affinity.Migrations
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("UId");
+                    b.Property<string>("GraphID");
+
+                    b.Property<string>("UID");
 
                     b.HasKey("ID");
 
@@ -77,10 +67,14 @@ namespace Affinity.Migrations
 
             modelBuilder.Entity("Affinity.Models.Vertex", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int>("DBID")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("Color");
+
+                    b.Property<string>("GraphID");
+
+                    b.Property<int>("ID");
 
                     b.Property<string>("Name")
                         .HasMaxLength(8);
@@ -89,7 +83,7 @@ namespace Affinity.Migrations
 
                     b.Property<int>("YPos");
 
-                    b.HasKey("ID");
+                    b.HasKey("DBID");
 
                     b.ToTable("Vertices");
                 });
@@ -98,14 +92,7 @@ namespace Affinity.Migrations
                 {
                     b.HasOne("Affinity.Models.Vertex")
                         .WithMany("Edges")
-                        .HasForeignKey("VertexID");
-                });
-
-            modelBuilder.Entity("Affinity.Models.StringID", b =>
-                {
-                    b.HasOne("Affinity.Models.User")
-                        .WithMany("GraphIds")
-                        .HasForeignKey("UserID");
+                        .HasForeignKey("VertexDBID");
                 });
 #pragma warning restore 612, 618
         }

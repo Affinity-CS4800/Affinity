@@ -13,6 +13,7 @@ using RestSharp;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace Affinity.Controllers
 {
@@ -69,12 +70,13 @@ namespace Affinity.Controllers
         }
 
         [Route("/graph")]
-        public async Task<string> Index()
+        public async Task<IActionResult> Index()
         {
-            bool unique = false;
+            bool unique = true;
             Random rand = new Random();
             string tempID;
             int randomNum;
+
             do
             {
                 tempID = "";
@@ -87,53 +89,56 @@ namespace Affinity.Controllers
                     }
                 }
 
-                var idList = _affinityDbContext.Users.AsNoTracking().Include(g => g.GraphIds).ToList();
-                foreach(var i in idList)
+                var idList = _affinityDbContext.Users.AsNoTracking().Select(id => id.GraphID).Distinct();
+                foreach(var id in idList)
                 {
-                    if (i == tempID)
+                    if(id == tempID)
                     {
                         unique = false;
                         break;
                     }
                     else
+                    {
                         unique = true;
+                    }
                 }
-
-
             } while (!unique);
 
-            if ((await Utils.CheckFirebaseToken(_httpContextAccessor)))
+            //If user is logged in
+            if (await Utils.CheckFirebaseToken(_httpContextAccessor))
             {
-                var user = await Utils.GetUserFirbaseToken(_httpContextAccessor);
-                var count = await _affinityDbContext.Users.Where(u => u.UId == user.Uid).CountAsync();
+                //Get the token!
+                var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+                int graphsMadeByUser = await _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).CountAsync();
 
-                if (count == 0)
+                //User has less than the max amount of graphs saved
+                if (graphsMadeByUser < GraphConstants.MAX_GRAPHS)
                 {
-                    _affinityDbContext.Users.Add(new User { UId = user.Uid, GraphIds = new List<GraphID>() });
+                    await _affinityDbContext.AddAsync(new User { UID = userToken.Uid, GraphID = tempID });
+                    await _affinityDbContext.SaveChangesAsync();
                 }
-                _affinityDbContext.Users.Add(new GraphID { graphID = tempID });
-
-
             }
 
-            return RedirectToRoute(new
-            {
-                Controller = "Graph",
-                Action = "GetSpecificGraph",
-                id = tempID
-            }); 
+            //_httpContextAccessor.HttpContext.Response.Cookies.Append("GraphID", tempID);
+
+            //Debug.WriteLine(_httpContextAccessor.HttpContext.Request.Cookies["GraphID"]);
+
+            return RedirectToAction("GetSpecificGraph", "Graph", new { token = tempID });
         }
 
-        [Route("/graph/{id}")]
-        public async Task<IActionResult> GetSpecificGraph()
+        [Route("/graph/{token:length(8)}")]
+        public async Task<string> GetSpecificGraph(string token)
         {
             bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
             if (!authenticated)
             {
-                return RedirectToAction("Login","Affinity");
+                //return RedirectToAction("Login","Affinity");
             }
 
-            return Json(new { id = "1", value = "GetSpecificGraph" });
+            var graph = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == "d9147ab4").ToListAsync();
+            var graph2 = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == "d9147ab4").ToListAsync();
+
+            return JsonConvert.SerializeObject(graph) + "\n" + JsonConvert.SerializeObject(graph2);
         }
 
         [Route("/graphs")]
@@ -148,10 +153,10 @@ namespace Affinity.Controllers
             return Json(new { id = "2", value = "GetGraphs" });
         }
 
-        [Route("/api/testgraph")]
-        public string TestGraphNeighbors()
+        [Route("/api/testaddtodb")]
+        public void TestAddToDB()
         {
-            Graph graph = new Graph();
+            //Graph graph = new Graph();
 
             Vertex vertex1 = new Vertex
             {
@@ -160,6 +165,7 @@ namespace Affinity.Controllers
                 XPos = 200,
                 YPos = 300,
                 Color = Color.Aqua.ToArgb(),
+                GraphID = "d9147ab4"
             };
 
             Vertex vertex2 = new Vertex
@@ -168,7 +174,8 @@ namespace Affinity.Controllers
                 ID = 1,
                 XPos = 400,
                 YPos = 300,
-                Color = Color.Aqua.ToArgb()
+                Color = Color.Aqua.ToArgb(),
+                GraphID = "d9147ab4"
             };
 
             Vertex vertex3 = new Vertex
@@ -177,7 +184,8 @@ namespace Affinity.Controllers
                 ID = 2,
                 XPos = 300,
                 YPos = 200,
-                Color = Color.Aqua.ToArgb()
+                Color = Color.Aqua.ToArgb(),
+                GraphID = "d9147ab4"
             };
 
             Vertex vertex4 = new Vertex
@@ -186,13 +194,14 @@ namespace Affinity.Controllers
                 ID = 3,
                 XPos = 500,
                 YPos = 400,
-                Color = Color.Aqua.ToArgb()
+                Color = Color.Aqua.ToArgb(),
+                GraphID = "d9147ab4"
             };
 
-            graph.AddVertex(vertex1);
-            graph.AddVertex(vertex2);
-            graph.AddVertex(vertex3);
-            graph.AddVertex(vertex4);
+            //graph.AddVertex(vertex1);
+            //graph.AddVertex(vertex2);
+            //graph.AddVertex(vertex3);
+            //graph.AddVertex(vertex4);
 
             var Edges = new List<Edge>
             {
@@ -202,7 +211,8 @@ namespace Affinity.Controllers
                     First = 0,
                     Second = 3,
                     Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 },
                 new Edge
                 {
@@ -210,7 +220,8 @@ namespace Affinity.Controllers
                     First = 0,
                     Second = 2,
                     Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 },
                 new Edge
                 {
@@ -218,7 +229,8 @@ namespace Affinity.Controllers
                     First = 1,
                     Second = 2,
                     Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 },
                 new Edge
                 {
@@ -226,7 +238,8 @@ namespace Affinity.Controllers
                     First = 2,
                     Second = 0,
                     Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 },
                 new Edge
                 {
@@ -234,7 +247,8 @@ namespace Affinity.Controllers
                     First = 2,
                     Second = 1,
                     Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 },
                 new Edge
                 {
@@ -242,7 +256,8 @@ namespace Affinity.Controllers
                     First = 2,
                     Second = 3,
                     Direction = Direction.DirectedAtSecond,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 },
                 new Edge
                 {
@@ -250,7 +265,8 @@ namespace Affinity.Controllers
                     First = 3,
                     Second = 1,
                     Direction = Direction.DirectedAtSecond,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 },
                 new Edge
                 {
@@ -258,28 +274,38 @@ namespace Affinity.Controllers
                     First = 3,
                     Second = 0,
                     Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb()
+                    Color = Color.Black.ToArgb(),
+                    GraphID = "d9147ab4"
                 }
             };
 
+
+            _affinityDbContext.Vertices.Add(vertex1);
+            _affinityDbContext.Vertices.Add(vertex2);
+            _affinityDbContext.Vertices.Add(vertex3);
+            _affinityDbContext.Vertices.Add(vertex4);
+
             foreach (Edge edge in Edges)
             {
-                graph.AddEdge(edge.First, edge.Second, "", edge.Color, edge.Weight, edge.Direction);
+                //graph.AddEdge(edge.First, edge.Second, "", edge.Color, edge.Weight, edge.Direction);
+                _affinityDbContext.Edges.Add(edge);
             }
 
-            string output = "";
+            _affinityDbContext.SaveChanges();
 
-            output += JsonConvert.SerializeObject(graph.GetNeighbors(vertex1), Formatting.Indented);
+            //string output = "";
 
-            output += JsonConvert.SerializeObject(graph.Dijkstra(vertex1), Formatting.Indented);
+            //output += JsonConvert.SerializeObject(graph.GetNeighbors(vertex1), Formatting.Indented);
 
-            output += $"\nGraph distance from {vertex1.ID} to {vertex2.ID} is: {graph.CalculateGraphDistance(vertex1, vertex2)}";
-            output += $"\nGraph distance from {vertex1.ID} to {vertex3.ID} is: {graph.CalculateGraphDistance(vertex1, vertex3)}";
-            output += $"\nGraph distance from {vertex1.ID} to {vertex4.ID} is: {graph.CalculateGraphDistance(vertex1, vertex4)}";
+            //output += JsonConvert.SerializeObject(graph.Dijkstra(vertex1), Formatting.Indented);
 
-            output += $"\nGraph Diameter is: {graph.CalculateGraphDiameter(graph)}";
+            //output += $"\nGraph distance from {vertex1.ID} to {vertex2.ID} is: {graph.CalculateGraphDistance(vertex1, vertex2)}";
+            //output += $"\nGraph distance from {vertex1.ID} to {vertex3.ID} is: {graph.CalculateGraphDistance(vertex1, vertex3)}";
+            //output += $"\nGraph distance from {vertex1.ID} to {vertex4.ID} is: {graph.CalculateGraphDistance(vertex1, vertex4)}";
 
-            return output;
+            //output += $"\nGraph Diameter is: {graph.CalculateGraphDiameter(graph)}";
+
+            //return output;
         }
     }
 }

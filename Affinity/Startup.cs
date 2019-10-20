@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
 using FirebaseAdmin;
@@ -18,7 +12,6 @@ using Newtonsoft.Json.Linq;
 using Google.Apis.Auth.OAuth2;
 using System.Diagnostics;
 using System.IO;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace Affinity
 {
@@ -28,10 +21,10 @@ namespace Affinity
         {
             Configuration = configuration;
 
-            //FirebaseApp.Create(new AppOptions()
-            //{
-            //    Credential = GoogleCredential.FromFile("Json file"),
-            //});
+            FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromFile("C:\\Users\\bryce\\Desktop\\Affinity\\Affinity\\wwwroot\\Google\\affinity-firebase-adminsdk.json")
+            });
         }
 
         public IConfiguration Configuration { get; }
@@ -123,6 +116,10 @@ namespace Affinity
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Affinity}/{action=Index}/{id?}");
+
+                routes.MapRoute(
+                    name: "graph",
+                    template: "{controller=Graph}/{action=GetSpecificGraph}/{token:length(8)}");
             });
         }
     }

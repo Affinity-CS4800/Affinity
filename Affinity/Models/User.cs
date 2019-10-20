@@ -9,14 +9,9 @@ namespace Affinity.Models
     public class User
     {
         public int ID { get; set; }
-        public string UId { get; set; }
-        public ICollection<GraphID> GraphIds { get; set; }
+        //Firebase ID
+        public string UID { get; set; }
+        //Unique GraphID used to get vertex/edges
+        public string GraphID { get; set; }
     }
-    public class GraphID
-    {
-        public int ID { get; set; }
-        public string graphID { get; set; }
-    }
-
-
 }

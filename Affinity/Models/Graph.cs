@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using System.Drawing;
 using Newtonsoft.Json;
 using FibonacciHeap;
@@ -19,6 +21,11 @@ namespace Affinity.Models
 {
     public class Vertex
     {
+        [Key]
+        public int DBID { get; set; }
+
+        public string GraphID { get; set; }
+
         public int ID { get; set; }
         public int XPos { get; set; }
         public int YPos { get; set; }
@@ -26,11 +33,17 @@ namespace Affinity.Models
         [StringLength(8)]
         public string Name { get; set; }
 
+        [NotMapped]
         public ICollection<Edge> Edges { get; set; }
     }
 
     public class Edge
     {
+        [Key]
+        public int DBID { get; set; }
+
+        public string GraphID { get; set; }
+
         public int ID { get; set; }
         public int First { get; set; }
         public int Second { get; set; }
@@ -49,6 +62,8 @@ namespace Affinity.Models
         public static int EDGE_MAX = 3200;
 
         public const int DEFAULT_EDGE_COLOR = -16777216; //ARGB For BLACK
+
+        public const int MAX_GRAPHS = 5;
     }
 
     //Directed graph, Undirected graph, multigraph?

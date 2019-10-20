@@ -14,7 +14,6 @@
 <h1>Login</h1>
 
 <div v-if="!user">
-    <p>{{ message }}</p>
     <div id="firebaseui-auth-container"></div>
     <div id="loader">Loading...</div>
 </div>
@@ -36,8 +35,7 @@
         var app = new Vue({
             el: '#app',
             data: {
-                message: 'Hello Vue!',
-                user: null
+                user: false
             },
             mounted: function () {
                 // Initialize the FirebaseUI Widget using Firebase.

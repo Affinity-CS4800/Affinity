@@ -10,6 +10,7 @@
             height: 60vh;
             margin: 0 auto;
         }
+
         #eventSpan {
             display: block;
             margin-bottom: 1rem;
@@ -18,6 +19,18 @@
 }
 
 <h1>Graph</h1>
+
+<div v-if="drawMode">
+    <h2>You're in draw mode.</h2>
+
+    <h2>You're drawing {{currentElement}}.</h2>
+    <button id="switchDrawElement">Switch to drawing {{otherElement}}.</button>
+
+</div>
+<div v-else>
+    <h2>You're in edit mode.</h2>
+</div>
+
 
 <div class="graph">
     <div id="mynetwork"></div>
@@ -70,7 +83,11 @@
         var app = new Vue({
             el: '#app',
             data: {
-                user: false
+                user: false,
+                drawMode: true,
+                drawNodes: true,
+                currentElement: "nodes",
+                otherElement: "edges"
             },
             mounted: function () {
                 const options = {
@@ -92,25 +109,44 @@
                         smooth: false
                     },
                     manipulation: {
-                        enabled: true
+                        enabled: true,
+                        addNode: function (data, callback) {                     
+                            callback(data);
+                            network.addNodeMode();
+                        },
+                        addEdge: function (data, callback) {
+                            if (data.from == data.to) {
+                                var r = confirm("Do you want to connect the node to itself?");
+                                if (r === true) {
+                                    callback(data);
+                                }
+                            }
+                            else {
+                                callback(data);
+                            }
+                            network.addEdgeMode();
+                        }
                     }
                 };
                 const network = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
+                network.addNodeMode();
 
-                network.on("click", function (properties) {
-                   
-                    if (properties.nodes.length == 0 && properties.edges.length == 0) {
-                        network._performAddNode(properties);
+                vue = this;
+
+                document.getElementById('switchDrawElement').addEventListener('click', function () {
+                    if (vue.drawNodes == true) {
+                        vue.currentElement = "edges";
+                        vue.otherElement = "nodes";
+                        network.addEdgeMode();
+                        vue.drawNodes = false;
                     }
-                    else if (properties.nodes.length != 0) {
-                        //clicked on a node
-                    }
-                    else if (properties.edges.length != 0) {
-                        //clicked on an edge
+                    else {
+                        vue.currentElement = "nodes";
+                        vue.otherElement = "edges";
+                        network.addNodeMode();
+                        vue.drawNodes = true;
                     }
                 });
-                
-
             },
             created: function () {
                 // When user logs in, store it in this Vue app's data.

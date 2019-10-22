@@ -47812,11 +47812,6 @@
     return this.manipulation.addNodeMode.apply(this.manipulation, arguments);
   };
 
-  //Added by Affinity so that _performAddNode is seen as a function and can be directly called
-  Network.prototype._performAddNode = function () {
-    return this.manipulation._performAddNode.apply(this.manipulation, arguments);
-  };
-
   Network.prototype.editNode = function () {
     return this.manipulation.editNode.apply(this.manipulation, arguments);
   };

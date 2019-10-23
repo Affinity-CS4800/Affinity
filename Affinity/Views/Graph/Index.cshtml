@@ -23,8 +23,8 @@
 <div v-if="drawMode">
     <h2>You're in draw mode.</h2>
 
-    <h2>You're drawing {{currentElement}}.</h2>
-    <button id="switchDrawElement">Switch to drawing {{otherElement}}.</button>
+    <h2>You're drawing {{drawNodes ? "nodes." : "edges."}}.</h2>
+    <button id="switchDrawElement" v-on:click="swapDrawMode()">Switch to drawing {{ drawNodes ? "edges." : "nodes."}}.</button>
 
 </div>
 <div v-else>
@@ -79,6 +79,7 @@
                 edges: new vis.DataSet(edges)
             };
         }
+        let NETWORK;
 
         var app = new Vue({
             el: '#app',
@@ -86,8 +87,7 @@
                 user: false,
                 drawMode: true,
                 drawNodes: true,
-                currentElement: "nodes",
-                otherElement: "edges"
+                network: null
             },
             mounted: function () {
                 const options = {
@@ -112,41 +112,35 @@
                         enabled: true,
                         addNode: function (data, callback) {                     
                             callback(data);
-                            network.addNodeMode();
+                            NETWORK.addNodeMode();
                         },
                         addEdge: function (data, callback) {
                             if (data.from == data.to) {
-                                var r = confirm("Do you want to connect the node to itself?");
-                                if (r === true) {
+                                if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
                                 }
                             }
                             else {
                                 callback(data);
                             }
-                            network.addEdgeMode();
+                            NETWORK.addEdgeMode();
                         }
                     }
                 };
-                const network = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
-                network.addNodeMode();
-
+                NETWORK = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
+                NETWORK.addNodeMode();
                 vue = this;
 
-                document.getElementById('switchDrawElement').addEventListener('click', function () {
+                /*document.getElementById('switchDrawElement').addEventListener('click', function () {
                     if (vue.drawNodes == true) {
-                        vue.currentElement = "edges";
-                        vue.otherElement = "nodes";
-                        network.addEdgeMode();
+                        NETWORK.addEdgeMode();
                         vue.drawNodes = false;
                     }
                     else {
-                        vue.currentElement = "nodes";
-                        vue.otherElement = "edges";
-                        network.addNodeMode();
+                        NETWORK.addNodeMode();
                         vue.drawNodes = true;
                     }
-                });
+                });*/
             },
             created: function () {
                 // When user logs in, store it in this Vue app's data.
@@ -166,6 +160,14 @@
                 });
             },
             methods: {
+                swapDrawMode: function (event) {
+                    this.drawNodes = !this.drawNodes;
+                    if (this.drawNodes) {
+                        NETWORK.addNodeMode();
+                    } else {
+                        NETWORK.addEdgeMode();
+                    }
+                },
                 signOut: function (event) {
                     if (this.user) {
                         firebase.auth().signOut().then(function () {

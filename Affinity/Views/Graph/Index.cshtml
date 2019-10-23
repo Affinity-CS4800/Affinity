@@ -23,9 +23,10 @@
 <div v-if="drawMode">
     <h2>You're in draw mode.</h2>
 
-    <h2>You're drawing {{drawNodes ? "nodes." : "edges."}}.</h2>
-    <button id="switchDrawElement" v-on:click="swapDrawMode()">Switch to drawing {{ drawNodes ? "edges." : "nodes."}}.</button>
-
+    <h2 v-cloak>You're drawing {{drawNodes ? "nodes." : "edges."}}.</h2>
+    <button id="switchDrawElement" v-cloak v-on:click="swapDrawMode()">Switch to drawing {{ drawNodes ? "edges." : "nodes."}}.</button>
+    <button v-on:click="undo()">Undo</button>
+    <button v-on:click="redo()">Redo</button>
 </div>
 <div v-else>
     <h2>You're in edit mode.</h2>
@@ -61,8 +62,74 @@
         ];
 
     </script>
+    <script>
+        // Snapshot Model
+        const ACTION_ADD_VERTEX = "0";
+        const ACTION_ADD_EDGE = "1";
+        
+        const SNAPSHOT = {
+            0: []
+        }
+        const REDO_STACK = [];
+        let CURRENT_SNAPSHOT = 0;
+
+        function addNodeAction(vertexId) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: vertexId });
+        }
+
+        function addEdgeAction(from_, to_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_ADD_EDGE,
+                from: from_,
+                to: to_
+            });
+        }
+
+        function undoLastAction(drawNodes) {
+            if (SNAPSHOT[CURRENT_SNAPSHOT].length > 0) {
+                const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
+
+                switch (lastAction.action) {
+                    case ACTION_ADD_VERTEX:
+                        NETWORK.storePositions();
+                        vertex = VIS_NODES.get(lastAction.id);
+                        lastAction.x = vertex.x;
+                        lastAction.y = vertex.y;
+                        VIS_NODES.remove(lastAction.id);
+                        break;
+                }
+
+                REDO_STACK.push(lastAction);
+                if (drawNodes) {
+                    NETWORK.addNodeMode();
+                } else {
+                    NETWORK.addEdgeMode();
+                }
+            }
+        }
+
+        function redoLastAction(drawNodes) {
+            if (REDO_STACK.length > 0) {
+                const lastAction = REDO_STACK.pop();
+                switch (lastAction.action) {
+                    case ACTION_ADD_VERTEX:
+                        VIS_NODES.add({ id: lastAction.id, label: "", x: lastAction.x, y: lastAction.y });
+                        addNodeAction(lastAction.id);
+                        break;
+                }
+                if (drawNodes) {
+                    NETWORK.addNodeMode();
+                } else {
+                    NETWORK.addEdgeMode();
+                }
+            }
+        }
+    </script>
     <script type="text/javascript">
+        let NETWORK;
+        let VIS_NODES, VIS_EDGES;
         function getVisDataSet() {
+
             // Convert our DB data to vis data.
             const nodes = [], edges = [];
 
@@ -74,12 +141,14 @@
                 edges.push({ from: edge.first, to: edge.second });
             }
 
+            VIS_NODES = new vis.DataSet(nodes);
+            VIS_EDGES = new vis.DataSet(edges);
+
             return {
-                nodes: new vis.DataSet(nodes),
-                edges: new vis.DataSet(edges)
+                nodes: VIS_NODES,
+                edges: VIS_EDGES
             };
         }
-        let NETWORK;
 
         var app = new Vue({
             el: '#app',
@@ -112,6 +181,7 @@
                         enabled: true,
                         addNode: function (data, callback) {                     
                             callback(data);
+                            addNodeAction(data.id);
                             NETWORK.addNodeMode();
                         },
                         addEdge: function (data, callback) {
@@ -123,24 +193,13 @@
                             else {
                                 callback(data);
                             }
+                            addEdgeAction(data.from, data.to);
                             NETWORK.addEdgeMode();
                         }
                     }
                 };
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
                 NETWORK.addNodeMode();
-                vue = this;
-
-                /*document.getElementById('switchDrawElement').addEventListener('click', function () {
-                    if (vue.drawNodes == true) {
-                        NETWORK.addEdgeMode();
-                        vue.drawNodes = false;
-                    }
-                    else {
-                        NETWORK.addNodeMode();
-                        vue.drawNodes = true;
-                    }
-                });*/
             },
             created: function () {
                 // When user logs in, store it in this Vue app's data.
@@ -160,6 +219,12 @@
                 });
             },
             methods: {
+                undo: function (event) {
+                    undoLastAction(this.drawNodes);
+                },
+                redo: function (event) {
+                    redoLastAction(this.drawNodes);
+                },
                 swapDrawMode: function (event) {
                     this.drawNodes = !this.drawNodes;
                     if (this.drawNodes) {

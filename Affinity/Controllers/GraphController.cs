@@ -127,18 +127,18 @@ namespace Affinity.Controllers
         }
 
         [Route("/graph/{token:length(8)}")]
-        public async Task<string> GetSpecificGraph(string token)
+        public async Task<IActionResult> GetSpecificGraph(string token)
         {
             bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
             if (!authenticated)
             {
-                //return RedirectToAction("Login","Affinity");
+                return RedirectToAction("Login","Affinity");
             }
+            //d9147ab4
+            var graph = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
+            var graph2 = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
 
-            var graph = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == "d9147ab4").ToListAsync();
-            var graph2 = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == "d9147ab4").ToListAsync();
-
-            return JsonConvert.SerializeObject(graph) + "\n" + JsonConvert.SerializeObject(graph2);
+            return Content(JsonConvert.SerializeObject(graph) + "\n" + JsonConvert.SerializeObject(graph2));
         }
 
         [Route("/graphs")]

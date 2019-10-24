@@ -123,7 +123,9 @@ namespace Affinity.Controllers
 
             //Debug.WriteLine(_httpContextAccessor.HttpContext.Request.Cookies["GraphID"]);
 
-            return RedirectToAction("GetSpecificGraph", "Graph", new { token = tempID });
+            RedirectToAction("GetSpecificGraph", "Graph", new { token = tempID });
+
+            return View();
         }
 
         [Route("/graph/{token:length(8)}")]

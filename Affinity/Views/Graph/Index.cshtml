@@ -1,7 +1,269 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "New Graph";
 }
 
-<h1>You created a new graph?</h1>
+@section styles {
+    <style>
+        #mynetwork {
+            border: 1px solid lightgray;
+            width: 80%;
+            height: 60vh;
+            margin: 0 auto;
+        }
 
+        #eventSpan {
+            display: block;
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+
+<h1>Graph</h1>
+
+<div v-if="drawMode">
+    <h2>You're in draw mode.</h2>
+
+    <h2 v-cloak>You're drawing {{drawNodes ? "nodes." : "edges."}}.</h2>
+    <button id="switchDrawElement" v-cloak v-on:click="swapDrawMode()">Switch to drawing {{ drawNodes ? "edges." : "nodes."}}.</button>
+    <button v-on:click="undo()">Undo</button>
+    <button v-on:click="redo()">Redo</button>
+</div>
+<div v-else>
+    <h2>You're in edit mode.</h2>
+</div>
+
+
+<div class="graph">
+    <div id="mynetwork"></div>
+    <span id="eventSpan"></span>
+</div>
+
+
+@section scripts {
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+    <script type="text/javascript" src="~/js/vis-network.js"></script>
+    <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
+    <script type="text/javascript" src="~/js/firebase.js"></script>
+    <script type="text/javascript">
+
+        const NODES = [
+            { id: 0, x: 0, y: 0, color: 0, name: 'A', edges: [0, 1] },
+            { id: 1, x: 0, y: 0, color: 0, name: 'B', edges: [2] },
+            { id: 2, x: 0, y: 0, color: 0, name: 'C', edges: [] },
+            { id: 3, x: 0, y: 0, color: 0, name: 'D', edges: [] }
+        ];
+
+        const EDGES = [
+            { id: 0, first: 0, second: 1, direction: 0, color: 0, weight: -1 },
+            { id: 1, first: 0, second: 2, direction: 0, color: 0, weight: -1 },
+            { id: 2, first: 1, second: 3, direction: 0, color: 0, weight: -1 }
+        ];
+
+    </script>
+    <script>
+
+        $(document).ready(function() {
+          getGraphData();
+        });
+
+        function getGraphData() {
+            var token = "d9147ab4";
+            $.ajax({
+                type: "GET",
+                url: "/graph/" + token,
+                cache: false,
+                success: function (data) {
+
+                }
+            });
+        }
+    </script>
+    
+    <script>
+        // Snapshot Model
+        const ACTION_ADD_VERTEX = "0";
+        const ACTION_ADD_EDGE = "1";
+        
+        const SNAPSHOT = {
+            0: []
+        }
+        const REDO_STACK = [];
+        let CURRENT_SNAPSHOT = 0;
+
+        function addNodeAction(vertexId) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: vertexId });
+        }
+
+        function addEdgeAction(from_, to_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_ADD_EDGE,
+                from: from_,
+                to: to_
+            });
+        }
+
+        function undoLastAction(drawNodes) {
+            if (SNAPSHOT[CURRENT_SNAPSHOT].length > 0) {
+                const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
+
+                switch (lastAction.action) {
+                    case ACTION_ADD_VERTEX:
+                        NETWORK.storePositions();
+                        vertex = VIS_NODES.get(lastAction.id);
+                        lastAction.x = vertex.x;
+                        lastAction.y = vertex.y;
+                        VIS_NODES.remove(lastAction.id);
+                        break;
+                }
+
+                REDO_STACK.push(lastAction);
+                if (drawNodes) {
+                    NETWORK.addNodeMode();
+                } else {
+                    NETWORK.addEdgeMode();
+                }
+            }
+        }
+
+        function redoLastAction(drawNodes) {
+            if (REDO_STACK.length > 0) {
+                const lastAction = REDO_STACK.pop();
+                switch (lastAction.action) {
+                    case ACTION_ADD_VERTEX:
+                        VIS_NODES.add({ id: lastAction.id, label: "", x: lastAction.x, y: lastAction.y });
+                        addNodeAction(lastAction.id);
+                        break;
+                }
+                if (drawNodes) {
+                    NETWORK.addNodeMode();
+                } else {
+                    NETWORK.addEdgeMode();
+                }
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        let NETWORK;
+        let VIS_NODES, VIS_EDGES;
+        function getVisDataSet() {
+
+            // Convert our DB data to vis data.
+            const nodes = [], edges = [];
+
+            for (node of NODES) {
+                nodes.push({ id: node.id, label: node.name });
+            }
+
+            for (edge of EDGES) {
+                edges.push({ from: edge.first, to: edge.second });
+            }
+
+            VIS_NODES = new vis.DataSet(nodes);
+            VIS_EDGES = new vis.DataSet(edges);
+
+            return {
+                nodes: VIS_NODES,
+                edges: VIS_EDGES
+            };
+        }
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                user: false,
+                drawMode: true,
+                drawNodes: true,
+                network: null
+            },
+            mounted: function () {
+                const options = {
+                    autoResize: true,
+                    height: "100%",
+                    width: "100%",
+                    interaction: { hover: true },
+                    "nodes": {
+                        "physics": false
+                    },
+                    physics: {
+                        barnesHut: {
+                            gravitationalConstant: 0,
+                            centralGravity: 0,
+                            springConstant: 0,
+                        }
+                    },
+                    edges: {
+                        smooth: false
+                    },
+                    manipulation: {
+                        enabled: true,
+                        addNode: function (data, callback) {                     
+                            callback(data);
+                            addNodeAction(data.id);
+                            NETWORK.addNodeMode();
+                        },
+                        addEdge: function (data, callback) {
+                            if (data.from == data.to) {
+                                if (confirm("Do you want to connect the node to itself?")) {
+                                    callback(data);
+                                }
+                            }
+                            else {
+                                callback(data);
+                            }
+                            addEdgeAction(data.from, data.to);
+                            NETWORK.addEdgeMode();
+                        }
+                    }
+                };
+                NETWORK = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
+                NETWORK.addNodeMode();
+            },
+            created: function () {
+                // When user logs in, store it in this Vue app's data.
+                // Add cookie storing user token.
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        this.user = user;
+                        user.getIdToken().then(function (idToken) {
+                            document.cookie = "aff_t=" + idToken;
+                        });
+                    }
+                    // Reset user
+                    else {
+                        this.user = user;
+                        document.cookie = "aff_t=";
+                    }
+                });
+            },
+            methods: {
+                undo: function (event) {
+                    undoLastAction(this.drawNodes);
+                },
+                redo: function (event) {
+                    redoLastAction(this.drawNodes);
+                },
+                swapDrawMode: function (event) {
+                    this.drawNodes = !this.drawNodes;
+                    if (this.drawNodes) {
+                        NETWORK.addNodeMode();
+                    } else {
+                        NETWORK.addEdgeMode();
+                    }
+                },
+                signOut: function (event) {
+                    if (this.user) {
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed out.
+                            document.cookie = "aff_t=";
+                        }).catch(function (error) {
+                            // An error happened.
+                        });
+                        window.location.reload(true); // refresh page
+                    }
+                }
+            }
+        })
+    </script>
+}

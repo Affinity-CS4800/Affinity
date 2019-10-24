@@ -337,7 +337,11 @@ ASALocalRun/
 .mfractor/
 
 # Frontend config file
+<<<<<<< HEAD
 Affinity/wwwroot/js/*.js
 
 Affinity/API_KEY.txt
 Affinity/gOAuth.json
+=======
+Affinity/wwwroot/js/FIREBASE_CONFIG.js
+>>>>>>> master

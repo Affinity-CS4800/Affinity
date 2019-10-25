@@ -95,12 +95,12 @@
             SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_DELETE_VERTEX, id: vertexId });
         }
 
-        function deleteNodeEdgeAction(vertexId, from_, to_) {
+        function deleteNodeEdgeAction(vertexId, connectedEdges) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_DELETE_VERTEX_N_EDGE,
                 id: vertexId,
-                from: from_,
-                to: to_
+                from: vertexId,
+                to: connectedEdges
             });
         }
 
@@ -224,8 +224,13 @@
                             addEdgeAction(data.from, data.to);
                             NETWORK.addEdgeMode();
                         },
-                        deleteNode: function (data, callback) {                     
-                            deleteNodeAction(data.id);
+                        deleteNode: function (data, callback) {
+                            if (NETWORK.getConnectedEdges(data.id) != null) {
+                                deleteNodeEdgeAction(data.id, NETWORK.getConnectedEdges(data.id));
+                            }
+                            else {
+                                deleteNodeAction(data.id);
+                            }
                             callback(data);
                         },
                         deleteEdge: function (data, callback) {
@@ -237,13 +242,14 @@
                 };
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
                 NETWORK.addNodeMode();
+
                 NETWORK.on('click', function () {
                     if (app.deleteMode) {
                         NETWORK.deleteSelected();
                     } else if (app.drawNodes) {
                         NETWORK.addNodeMode();
                     } else {
-                        console.log('Node mode: ' + app.drawNodes);
+                        //console.log('Node mode: ' + app.drawNodes);
                         NETWORK.addEdgeMode();
                     } 
                 });

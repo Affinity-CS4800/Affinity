@@ -137,10 +137,15 @@ namespace Affinity.Controllers
                 return RedirectToAction("Login","Affinity");
             }
             //d9147ab4
-            var graph = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
-            var graph2 = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
+            var vertices = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
+            var edges = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
 
-            return Content(JsonConvert.SerializeObject(graph) + "\n" + JsonConvert.SerializeObject(graph2));
+            GraphDataJson graphData = new GraphDataJson();
+
+            graphData.Vertices = vertices;
+            graphData.Edges = edges;
+
+            return Content(JsonConvert.SerializeObject(graphData));
         }
 
         [Route("/graphs")]

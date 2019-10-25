@@ -2,6 +2,8 @@
     ViewData["Title"] = "New Graph";
 }
 
+@using System.Drawing;
+
 @section styles {
     <style>
         #mynetwork {
@@ -48,25 +50,9 @@
     <script type="text/javascript" src="~/js/firebase.js"></script>
     <script type="text/javascript">
 
-        const NODES = [
-            { id: 0, x: 0, y: 0, color: 0, name: 'A', edges: [0, 1] },
-            { id: 1, x: 0, y: 0, color: 0, name: 'B', edges: [2] },
-            { id: 2, x: 0, y: 0, color: 0, name: 'C', edges: [] },
-            { id: 3, x: 0, y: 0, color: 0, name: 'D', edges: [] }
-        ];
+        const NODES = [];
 
-        const EDGES = [
-            { id: 0, first: 0, second: 1, direction: 0, color: 0, weight: -1 },
-            { id: 1, first: 0, second: 2, direction: 0, color: 0, weight: -1 },
-            { id: 2, first: 1, second: 3, direction: 0, color: 0, weight: -1 }
-        ];
-
-    </script>
-    <script>
-
-        $(document).ready(function() {
-          getGraphData();
-        });
+        const EDGES = [];
 
         function getGraphData() {
             var token = "d9147ab4";
@@ -74,18 +60,31 @@
                 type: "GET",
                 url: "/graph/" + token,
                 cache: false,
+                async: false,
                 success: function (data) {
-
+                    var result = jQuery.parseJSON(data);
+                    $.each(result, function (key, value) {
+                        $.each(value, function (key2, value) {
+                            if (key === "Vertices") {
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: 0, name: value.Name })
+                            } else {
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: 0, color: 0, weight: value.Weight })
+                            }
+                        });
+                    });
                 }
             });
+
+            return getVisDataSet();
         }
+
     </script>
-    
+
     <script>
         // Snapshot Model
         const ACTION_ADD_VERTEX = "0";
         const ACTION_ADD_EDGE = "1";
-        
+
         const SNAPSHOT = {
             0: []
         }
@@ -153,15 +152,18 @@
             const nodes = [], edges = [];
 
             for (node of NODES) {
-                nodes.push({ id: node.id, label: node.name });
+                nodes.push({ id: node.id, label: node.name, color: node.color });
             }
 
             for (edge of EDGES) {
-                edges.push({ from: edge.first, to: edge.second });
+                edges.push({ from: edge.first, to: edge.second, color: 0 });
             }
 
             VIS_NODES = new vis.DataSet(nodes);
             VIS_EDGES = new vis.DataSet(edges);
+
+            console.log(VIS_NODES);
+            console.log(VIS_EDGES);
 
             return {
                 nodes: VIS_NODES,
@@ -198,7 +200,7 @@
                     },
                     manipulation: {
                         enabled: true,
-                        addNode: function (data, callback) {                     
+                        addNode: function (data, callback) {
                             callback(data);
                             addNodeAction(data.id);
                             NETWORK.addNodeMode();
@@ -217,7 +219,7 @@
                         }
                     }
                 };
-                NETWORK = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
+                NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
                 NETWORK.addNodeMode();
             },
             created: function () {

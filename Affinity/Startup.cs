@@ -23,7 +23,7 @@ namespace Affinity
 
             FirebaseApp.Create(new AppOptions
             {
-                Credential = GoogleCredential.FromFile("/Users/brycecallender/Desktop/Affinity/Affinity/affinity-firebase-adminsdk.json")
+                Credential = GoogleCredential.FromFile("C:\\Users\\bryce\\Desktop\\Affinity\\Affinity\\wwwroot\\Google\\affinity-firebase-adminsdk.json")
             });
         }
 

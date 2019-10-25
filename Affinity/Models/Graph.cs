@@ -66,6 +66,12 @@ namespace Affinity.Models
         public const int MAX_GRAPHS = 5;
     }
 
+    public class GraphDataJson
+    {
+        public List<Vertex> Vertices { get; set; }
+        public List<Edge> Edges { get; set; }
+    }
+
     //Directed graph, Undirected graph, multigraph?
     //Make it so its assumed to be a directed graph but does not need to be?
     public class Graph

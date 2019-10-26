@@ -140,10 +140,11 @@ namespace Affinity.Controllers
             var vertices = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
             var edges = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
 
-            GraphDataJson graphData = new GraphDataJson();
-
-            graphData.Vertices = vertices;
-            graphData.Edges = edges;
+            GraphDataJson graphData = new GraphDataJson
+            {
+                Vertices = vertices,
+                Edges = edges
+            };
 
             return Content(JsonConvert.SerializeObject(graphData));
         }

@@ -65,10 +65,10 @@
                     var result = jQuery.parseJSON(data);
                     $.each(result, function (key, value) {
                         $.each(value, function (key2, value) {
-                            if (key === "Vertices") {
-                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: 0, name: value.Name })
+                          if (key === "Vertices") {
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: value.Color.toString(16), name: value.Name })
                             } else {
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: 0, color: 0, weight: value.Weight })
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: 0, weight: value.Weight })
                             }
                         });
                     });
@@ -143,8 +143,7 @@
             }
         }
     </script>
-    <script type="text/javascript">
-        let NETWORK;
+    <script type="text/javascript">let NETWORK;
         let VIS_NODES, VIS_EDGES;
         function getVisDataSet() {
 
@@ -152,11 +151,14 @@
             const nodes = [], edges = [];
 
             for (node of NODES) {
-                nodes.push({ id: node.id, label: node.name, color: node.color });
+                nodes.push({ id: node.id, label: node.name, color: node.color, font: { color: '#FFFFFFFF' } });
             }
 
             for (edge of EDGES) {
-                edges.push({ from: edge.first, to: edge.second, color: 0 });
+                edges.push({
+                    from: edge.first, to: edge.second, color: edge.color,
+                    arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
+                    label: edge.weight.toString(), font: { align: 'middle' } });
             }
 
             VIS_NODES = new vis.DataSet(nodes);
@@ -266,6 +268,5 @@
                     }
                 }
             }
-        })
-    </script>
+        })</script>
 }

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Affinity.Models;
 using Microsoft.Extensions.Logging;
-using FluentDateTime;
 
 namespace Affinity.Controllers
 {
@@ -34,12 +33,6 @@ namespace Affinity.Controllers
             return View();
         }
 
-        [Route("/api/testjson")]
-        public IActionResult TestJson()
-        {
-            return Json(new { id = 1, value = "hello" });
-        }
-
         [Route("/api/pdf")]
         public void TestPDF()
         {
@@ -49,24 +42,10 @@ namespace Affinity.Controllers
             doc.Close();
         }
 
-        [Route("/api/tomorrow")]
-        public string TestDateTomorrow()
-        {
-            return DateTime.Now.NextDay().ToLongDateString();
-        }
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-
-        
-        [Route("/api/logging-test")]
-        public string TestLogging()
-        {
-            ILoggerFactory loggerFactory = new LoggerFactory();
-            return loggerFactory.ToString();
         }
     }
 }

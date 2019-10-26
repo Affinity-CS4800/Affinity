@@ -2,6 +2,8 @@
     ViewData["Title"] = "New Graph";
 }
 
+@using System.Drawing;
+
 @section styles {
     <style>
         #mynetwork {
@@ -50,25 +52,46 @@
     <script type="text/javascript" src="~/js/firebase.js"></script>
     <script type="text/javascript">
 
-        const NODES = [
-            { id: 0, x: 0, y: 0, color: 0, name: 'A', edges: [0, 1] },
-            { id: 1, x: 0, y: 0, color: 0, name: 'B', edges: [2] },
-            { id: 2, x: 0, y: 0, color: 0, name: 'C', edges: [] },
-            { id: 3, x: 0, y: 0, color: 0, name: 'D', edges: [] }
-        ];
+        const NODES = [];
 
-        const EDGES = [
-            { id: 0, first: 0, second: 1, direction: 0, color: 0, weight: -1 },
-            { id: 1, first: 0, second: 2, direction: 0, color: 0, weight: -1 },
-            { id: 2, first: 1, second: 3, direction: 0, color: 0, weight: -1 }
-        ];
+        const EDGES = [];
+
+        function getGraphData() {
+            var url = window.location.pathname;
+            url = url.split('/');
+            var token = url[url.length - 1];
+            console.log(token);
+            $.ajax({
+                type: "GET",
+                url: "/api/graphData/" + token,
+                cache: false,
+                async: false,
+                success: function (data) {
+                    var result = jQuery.parseJSON(data);
+                    $.each(result, function (key, value) {
+                        $.each(value, function (key2, value) {
+                            var argb = (value.Color >>> 0).toString(16);
+                            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+                            if (key === "Vertices") {
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
+                            } else {
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+                            }
+                        });
+                    });
+                }
+            });
+
+            return getVisDataSet();
+        }
 
     </script>
+
     <script>
         // Snapshot Model
         const ACTION_ADD_VERTEX = "0";
         const ACTION_ADD_EDGE = "1";
-
+      
         const ACTION_DELETE_VERTEX = "2";
         const ACTION_DELETE_VERTEX_N_EDGE = "3";
         const ACTION_DELETE_EDGE = "4";
@@ -161,15 +184,25 @@
             const nodes = [], edges = [];
 
             for (node of NODES) {
-                nodes.push({ id: node.id, label: node.name });
+                console.log(node.color);
+                nodes.push({ id: node.id, label: node.name, x: node.x, y: node.y,
+                             color: node.color, font: { color: '#FFFFFF' }
+                });
             }
 
             for (edge of EDGES) {
-                edges.push({ from: edge.first, to: edge.second });
+                edges.push({
+                    from: edge.first, to: edge.second, color: edge.color,
+                    arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
+                    label: edge.weight.toString(), font: { align: 'middle' }
+                });
             }
 
             VIS_NODES = new vis.DataSet(nodes);
             VIS_EDGES = new vis.DataSet(edges);
+
+            console.log(VIS_NODES);
+            console.log(VIS_EDGES);
 
             return {
                 nodes: VIS_NODES,
@@ -207,7 +240,7 @@
                     },
                     manipulation: {
                         enabled: true,
-                        addNode: function (data, callback) {                     
+                        addNode: function (data, callback) {
                             callback(data);
                             addNodeAction(data.id);
                             NETWORK.addNodeMode();
@@ -240,7 +273,7 @@
                         
                     }
                 };
-                NETWORK = new vis.Network(document.getElementById('mynetwork'), getVisDataSet(), options);
+                NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
                 NETWORK.addNodeMode();
 
                 NETWORK.on('click', function () {

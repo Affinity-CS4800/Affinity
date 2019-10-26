@@ -19,6 +19,7 @@ namespace Affinity
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseSetting("detailedErrors", "true")
                 .UseStartup<Startup>();
     }
 }

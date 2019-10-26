@@ -55,20 +55,25 @@
         const EDGES = [];
 
         function getGraphData() {
-            var token = "d9147ab4";
+            var url = window.location.pathname;
+            url = url.split('/');
+            var token = url[url.length - 1];
+            console.log(token);
             $.ajax({
                 type: "GET",
-                url: "/graph/" + token,
+                url: "/api/graphData/" + token,
                 cache: false,
                 async: false,
                 success: function (data) {
                     var result = jQuery.parseJSON(data);
                     $.each(result, function (key, value) {
                         $.each(value, function (key2, value) {
-                          if (key === "Vertices") {
-                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: value.Color.toString(16), name: value.Name })
+                            var argb = (value.Color >>> 0).toString(16);
+                            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+                            if (key === "Vertices") {
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
                             } else {
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: 0, weight: value.Weight })
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
                             }
                         });
                     });
@@ -143,7 +148,8 @@
             }
         }
     </script>
-    <script type="text/javascript">let NETWORK;
+    <script type="text/javascript">
+        let NETWORK;
         let VIS_NODES, VIS_EDGES;
         function getVisDataSet() {
 
@@ -151,14 +157,18 @@
             const nodes = [], edges = [];
 
             for (node of NODES) {
-                nodes.push({ id: node.id, label: node.name, color: node.color, font: { color: '#FFFFFFFF' } });
+                console.log(node.color);
+                nodes.push({ id: node.id, label: node.name, x: node.x, y: node.y,
+                             color: node.color, font: { color: '#FFFFFF' }
+                });
             }
 
             for (edge of EDGES) {
                 edges.push({
                     from: edge.first, to: edge.second, color: edge.color,
                     arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
-                    label: edge.weight.toString(), font: { align: 'middle' } });
+                    label: edge.weight.toString(), font: { align: 'middle' }
+                });
             }
 
             VIS_NODES = new vis.DataSet(nodes);
@@ -268,5 +278,6 @@
                     }
                 }
             }
-        })</script>
+        })
+    </script>
 }

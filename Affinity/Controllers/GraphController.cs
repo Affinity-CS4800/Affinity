@@ -119,13 +119,7 @@ namespace Affinity.Controllers
                 }
             }
 
-            //_httpContextAccessor.HttpContext.Response.Cookies.Append("GraphID", tempID);
-
-            //Debug.WriteLine(_httpContextAccessor.HttpContext.Request.Cookies["GraphID"]);
-
-            RedirectToAction("GetSpecificGraph", "Graph", new { token = tempID });
-
-            return View();
+            return RedirectToAction("GetSpecificGraph", "Graph", new { token = tempID });
         }
 
         [Route("/graph/{token:length(8)}")]
@@ -136,17 +130,17 @@ namespace Affinity.Controllers
             {
                 return RedirectToAction("Login","Affinity");
             }
-            //d9147ab4
-            var vertices = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
-            var edges = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
 
-            GraphDataJson graphData = new GraphDataJson
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+            var user = await _affinityDbContext.Users.AsNoTracking().Where(graph => graph.GraphID == token).FirstOrDefaultAsync();
+
+            //If the database found no graph id associated with the token or the user's UID does not match the one logged in then boot em to their graphs
+            if (user == null || user.UID != userToken.Uid)
             {
-                Vertices = vertices,
-                Edges = edges
-            };
+                return RedirectToAction("GetGraphs", "Graph");
+            }
 
-            return Content(JsonConvert.SerializeObject(graphData));
+            return View(nameof(Index));
         }
 
         [Route("/graphs")]
@@ -160,6 +154,30 @@ namespace Affinity.Controllers
 
             return Json(new { id = "2", value = "GetGraphs" });
         }
+
+        [Route("/api/graphData/{token:length(8)}")]
+        public async Task<IActionResult> GetGraphData(string token)
+        {
+            bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
+            if (!authenticated)
+            {
+                return RedirectToAction("Login", "Affinity");
+            }
+
+            //d9147ab4
+            //879443a4
+            var vertices = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
+            var edges = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).ToListAsync();
+
+            GraphDataJson graphData = new GraphDataJson
+            {
+                Vertices = vertices,
+                Edges = edges
+            };
+
+            return Content(JsonConvert.SerializeObject(graphData));
+        }
+
 
         [Route("/api/testaddtodb")]
         public void TestAddToDB()

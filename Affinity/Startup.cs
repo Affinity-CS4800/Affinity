@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using AspNetCore.Firebase.Authentication.Extensions;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
 using FirebaseAdmin;
+using RestSharp;
+using Newtonsoft.Json.Linq;
 using Google.Apis.Auth.OAuth2;
+using System.Diagnostics;
+using System.IO;
 
 namespace Affinity
 {
@@ -25,10 +21,10 @@ namespace Affinity
         {
             Configuration = configuration;
 
-            //FirebaseApp.Create(new AppOptions()
-            //{
-            //    Credential = GoogleCredential.FromFile("Json file"),
-            //});
+            FirebaseApp.Create(new AppOptions
+            {
+                Credential = GoogleCredential.FromFile("C:\\Users\\bryce\\Desktop\\Affinity\\Affinity\\wwwroot\\Google\\affinity-firebase-adminsdk.json")
+            });
         }
 
         public IConfiguration Configuration { get; }
@@ -45,28 +41,36 @@ namespace Affinity
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            //services.AddDbContext<AffinityDbcontext>(options =>
-            //options.UseSqlServer(Configuration.GetConnectionString("AffinityDbcontext")));
+            string API_KEY = "";
+            using (StreamReader reader = new StreamReader("API_KEY.txt"))
+            {
+                API_KEY = reader.ReadLine();
+            }
+
+            RestClient client = new RestClient("https://api.heroku.com/");
+            RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
+            req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
+            req.AddHeader("Authorization", "Bearer " + API_KEY);
+            string response = client.Execute(req).Content.ToLower();
+
+            JObject config = JObject.Parse(response);
+            JProperty dbUrlProperty = config.Property("database_url");
+
+            Debug.WriteLine(dbUrlProperty.Value.ToString());
+
+            var builder = new PostgreSqlConnectionStringBuilder(dbUrlProperty.Value.ToString())
+            {
+                Pooling = true,
+                TrustServerCertificate = true,
+                SslMode = SslMode.Require
+            };
+
+            services.AddEntityFrameworkNpgsql()
+                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(builder.ConnectionString));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);
             services.AddHttpContextAccessor();
-
-            //services.AddFirebaseAuthentication("https://securetoken.google.com/ID", "ID");
-
-
-            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-            //{
-            //    options.Authority = "https://securetoken.google.com/ID";
-            //    options.TokenValidationParameters = new TokenValidationParameters
-            //    {
-            //        ValidateIssuer = true,
-            //        ValidIssuer = "https://securetoken.google.com/ID",
-            //        ValidateAudience = true,
-            //        ValidAudience = "ID",
-            //        ValidateLifetime = true
-            //    };
-            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -112,6 +116,10 @@ namespace Affinity
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Affinity}/{action=Index}/{id?}");
+
+                routes.MapRoute(
+                    name: "graph",
+                    template: "{controller=Graph}/{action=GetSpecificGraph}/{token:length(8)}");
             });
         }
     }

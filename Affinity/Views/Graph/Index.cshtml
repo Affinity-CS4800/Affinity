@@ -1,7 +1,346 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "New Graph";
 }
 
-<h1>You created a new graph?</h1>
+@using System.Drawing;
 
+@section styles {
+    <style>
+        #mynetwork {
+            border: 1px solid lightgray;
+            width: 80%;
+            height: 60vh;
+            margin: 0 auto;
+        }
+
+        #eventSpan {
+            display: block;
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+
+<h1>Graph</h1>
+
+<div v-if="drawMode">
+    <h2>You're in draw mode.</h2>
+
+    <h2 v-if="deleteMode">You're deleting.</h2>
+    <h2 v-else>You're drawing {{drawNodes ? "nodes." : "edges."}}.</h2>
+    <button id="switchDrawElement" v-cloak v-on:click="swapDrawMode()">Switch to drawing {{ drawNodes ? "edges." : "nodes."}}</button>
+    <button id="switchDeleteElement" v-cloak v-on:click="swapDeleteMode()">{{ deleteMode ? "Currently on" : "Switch to"}} deletion mode.</button>
+    <button v-on:click="undo()">Undo</button>
+    <button v-on:click="redo()">Redo</button>
+</div>
+<div v-else>
+    <h2>You're in edit mode.</h2>
+</div>
+
+
+<div class="graph">
+    <div id="mynetwork"></div>
+    <span id="eventSpan"></span>
+</div>
+
+
+@section scripts {
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+    <script type="text/javascript" src="~/js/vis-network.js"></script>
+    <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
+    <script type="text/javascript" src="~/js/firebase.js"></script>
+    <script type="text/javascript">
+
+        const NODES = [];
+
+        const EDGES = [];
+
+        function getGraphData() {
+            var url = window.location.pathname;
+            url = url.split('/');
+            var token = url[url.length - 1];
+            console.log(token);
+            $.ajax({
+                type: "GET",
+                url: "/api/graphData/" + token,
+                cache: false,
+                async: false,
+                success: function (data) {
+                    var result = jQuery.parseJSON(data);
+                    $.each(result, function (key, value) {
+                        $.each(value, function (key2, value) {
+                            var argb = (value.Color >>> 0).toString(16);
+                            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+                            if (key === "Vertices") {
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
+                            } else {
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+                            }
+                        });
+                    });
+                }
+            });
+
+            return getVisDataSet();
+        }
+
+    </script>
+
+    <script>
+        // Snapshot Model
+        const ACTION_ADD_VERTEX = "0";
+        const ACTION_ADD_EDGE = "1";
+      
+        const ACTION_DELETE_VERTEX = "2";
+        const ACTION_DELETE_VERTEX_N_EDGE = "3";
+        const ACTION_DELETE_EDGE = "4";
+        
+        const SNAPSHOT = {
+            0: []
+        }
+        const REDO_STACK = [];
+        let CURRENT_SNAPSHOT = 0;
+
+        function addNodeAction(vertexId) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: vertexId });
+        }
+
+        function addEdgeAction(from_, to_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_ADD_EDGE,
+                from: from_,
+                to: to_
+            });
+        }
+
+        function deleteNodeAction(vertexId) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_DELETE_VERTEX, id: vertexId });
+        }
+
+        function deleteNodeEdgeAction(vertexId, connectedEdges) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_DELETE_VERTEX_N_EDGE,
+                id: vertexId,
+                from: vertexId,
+                to: connectedEdges
+            });
+        }
+
+        function deleteEdgeAction(from_, to_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_DELETE_EDGE,
+                from: from_,
+                to: to_
+            });
+        }
+
+        function undoLastAction(drawNodes) {
+            if (SNAPSHOT[CURRENT_SNAPSHOT].length > 0) {
+                const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
+
+                switch (lastAction.action) {
+                    case ACTION_ADD_VERTEX:
+                        NETWORK.storePositions();
+                        vertex = VIS_NODES.get(lastAction.id);
+                        lastAction.x = vertex.x;
+                        lastAction.y = vertex.y;
+                        VIS_NODES.remove(lastAction.id);
+                        break;
+                }
+
+                REDO_STACK.push(lastAction);
+                if (drawNodes) {
+                    NETWORK.addNodeMode();
+                } else {
+                    NETWORK.addEdgeMode();
+                }
+            }
+        }
+
+        function redoLastAction(drawNodes) {
+            if (REDO_STACK.length > 0) {
+                const lastAction = REDO_STACK.pop();
+                switch (lastAction.action) {
+                    case ACTION_ADD_VERTEX:
+                        VIS_NODES.add({ id: lastAction.id, label: "", x: lastAction.x, y: lastAction.y });
+                        addNodeAction(lastAction.id);
+                        break;
+                }
+                if (drawNodes) {
+                    NETWORK.addNodeMode();
+                } else {
+                    NETWORK.addEdgeMode();
+                }
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        let NETWORK;
+        let VIS_NODES, VIS_EDGES;
+        function getVisDataSet() {
+
+            // Convert our DB data to vis data.
+            const nodes = [], edges = [];
+
+            for (node of NODES) {
+                console.log(node.color);
+                nodes.push({ id: node.id, label: node.name, x: node.x, y: node.y,
+                             color: node.color, font: { color: '#FFFFFF' }
+                });
+            }
+
+            for (edge of EDGES) {
+                edges.push({
+                    from: edge.first, to: edge.second, color: edge.color,
+                    arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
+                    label: edge.weight.toString(), font: { align: 'middle' }
+                });
+            }
+
+            VIS_NODES = new vis.DataSet(nodes);
+            VIS_EDGES = new vis.DataSet(edges);
+
+            console.log(VIS_NODES);
+            console.log(VIS_EDGES);
+
+            return {
+                nodes: VIS_NODES,
+                edges: VIS_EDGES
+            };
+        }
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                user: false,
+                drawMode: true,
+                drawNodes: true,
+                deleteMode: false,
+                network: null
+            },
+            mounted: function () {
+                const options = {
+                    autoResize: true,
+                    height: "100%",
+                    width: "100%",
+                    interaction: { hover: true },
+                    "nodes": {
+                        "physics": false
+                    },
+                    physics: {
+                        barnesHut: {
+                            gravitationalConstant: 0,
+                            centralGravity: 0,
+                            springConstant: 0,
+                        }
+                    },
+                    edges: {
+                        smooth: false
+                    },
+                    manipulation: {
+                        enabled: true,
+                        addNode: function (data, callback) {
+                            callback(data);
+                            addNodeAction(data.id);
+                            NETWORK.addNodeMode();
+                        },
+                        addEdge: function (data, callback) {
+                            if (data.from == data.to) {
+                                if (confirm("Do you want to connect the node to itself?")) {
+                                    callback(data);
+                                }
+                            }
+                            else {
+                                callback(data);
+                            }
+                            addEdgeAction(data.from, data.to);
+                            NETWORK.addEdgeMode();
+                        },
+                        deleteNode: function (data, callback) {
+                            if (NETWORK.getConnectedEdges(data.id) != null) {
+                                deleteNodeEdgeAction(data.id, NETWORK.getConnectedEdges(data.id));
+                            }
+                            else {
+                                deleteNodeAction(data.id);
+                            }
+                            callback(data);
+                        },
+                        deleteEdge: function (data, callback) {
+                            deleteEdgeAction(data.from, data.to);
+                            callback(data);
+                        }
+                        
+                    }
+                };
+                NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
+                NETWORK.addNodeMode();
+
+                NETWORK.on('click', function () {
+                    if (app.deleteMode) {
+                        NETWORK.deleteSelected();
+                    } else if (app.drawNodes) {
+                        NETWORK.addNodeMode();
+                    } else {
+                        //console.log('Node mode: ' + app.drawNodes);
+                        NETWORK.addEdgeMode();
+                    } 
+                });
+            },
+            created: function () {
+                // When user logs in, store it in this Vue app's data.
+                // Add cookie storing user token.
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        this.user = user;
+                        user.getIdToken().then(function (idToken) {
+                            document.cookie = "aff_t=" + idToken;
+                        });
+                    }
+                    // Reset user
+                    else {
+                        this.user = user;
+                        document.cookie = "aff_t=";
+                    }
+                });
+            },
+            methods: {
+                undo: function (event) {
+                    undoLastAction(this.drawNodes);
+                },
+                redo: function (event) {
+                    redoLastAction(this.drawNodes);
+                },
+                swapDrawMode: function (event) {
+                    this.drawNodes = !this.drawNodes;
+                    if (this.drawNodes) {
+                        NETWORK.addNodeMode();
+                    } else {
+                        NETWORK.addEdgeMode();
+                    }
+                },
+                swapDeleteMode: function (event) {
+                    this.deleteMode = !this.deleteMode;
+                    if (this.drawNodes) {
+                        NETWORK.addNodeMode();
+                    } else {
+                        NETWORK.addEdgeMode();
+                    }
+                    
+                },
+                signOut: function (event) {
+                    if (this.user) {
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed out.
+                            document.cookie = "aff_t=";
+                        }).catch(function (error) {
+                            // An error happened.
+                        });
+                        window.location.reload(true); // refresh page
+                    }
+                }
+            }
+        })
+        
+    </script>
+}

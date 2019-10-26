@@ -3,14 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.Firebase.Authentication" Version="2.0.1" />
     <PackageReference Include="FibonacciHeap" Version="1.1.7" />
     <PackageReference Include="FirebaseAdmin" Version="1.9.0" />
-    <PackageReference Include="FluentDateTime" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.App">
       <PrivateAssets Condition="'%(PackageReference.Version)' == ''">all</PrivateAssets>
       <Publish Condition="'%(PackageReference.Version)' == ''">true</Publish>
@@ -24,10 +23,13 @@
     <PackageReference Include="Select.HtmlToPdf.NetCore" Version="18.4.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
     <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
     <Folder Include="Views\Graph\" />
   </ItemGroup>
 </Project>

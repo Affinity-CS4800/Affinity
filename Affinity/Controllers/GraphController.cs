@@ -27,46 +27,6 @@ namespace Affinity.Controllers
         {
             _httpContextAccessor = httpContextAccessor;
             _affinityDbContext = affinityDbcontext;
-            API_KEY = "";
-            using (StreamReader reader = new StreamReader("API_KEY.txt"))
-            {
-                API_KEY = reader.ReadLine();
-            }
-        }
-
-        public string GetDatabaseUrl()
-        {
-            if (API_KEY == "")
-            {
-                return "error";
-            }
-
-            RestClient client = new RestClient("https://api.heroku.com/");
-            RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
-            req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
-            req.AddHeader("Authorization", "Bearer " + API_KEY);
-            string response = client.Execute(req).Content.ToLower();
-            
-            if(response.Contains("error"))
-            {
-                return "error";
-            }
-  
-            JObject config = JObject.Parse(response);
-            JProperty dbUrlProperty = config.Property("database_url");
-
-            if(dbUrlProperty == null)
-            {
-                return "error";
-            }
-            
-            return dbUrlProperty.Value.ToString();
-        }
-
-        [Route("/dbtest")]
-        public IActionResult DbTest()
-        {
-            return Json(new { url = GetDatabaseUrl() });
         }
 
         [Route("/graph")]
@@ -125,17 +85,17 @@ namespace Affinity.Controllers
         [Route("/graph/{token:length(8)}")]
         public async Task<IActionResult> GetSpecificGraph(string token)
         {
-            bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
-            if (!authenticated)
-            {
-                return RedirectToAction("Login","Affinity");
-            }
+            //bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
+            //if (!authenticated)
+            //{
+            //    return RedirectToAction("Login","Affinity");
+            //}
 
             var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
             var user = await _affinityDbContext.Users.AsNoTracking().Where(graph => graph.GraphID == token).FirstOrDefaultAsync();
 
             //If the database found no graph id associated with the token or the user's UID does not match the one logged in then boot em to their graphs
-            if (user == null || user.UID != userToken.Uid)
+            if (user != null && userToken != null && user.UID != userToken.Uid)
             {
                 return RedirectToAction("GetGraphs", "Graph");
             }

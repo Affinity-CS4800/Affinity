@@ -25,7 +25,8 @@
 
 
 <h2 v-if="state=='delete'">You're deleting.</h2>
-<h2 v-else>You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
+<h2 v-else-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
+<h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
 <button v-on:click="changeMode('drawNodes')">Draw Nodes</button>
 <button v-on:click="changeMode('drawEdges')">Draw Edges</button>
 <button v-on:click="changeMode('delete')">Delete</button>

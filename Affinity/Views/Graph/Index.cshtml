@@ -22,19 +22,16 @@
 
 <h1>Graph</h1>
 
-<div v-if="drawMode">
-    <h2>You're in draw mode.</h2>
 
-    <h2 v-if="deleteMode">You're deleting.</h2>
-    <h2 v-else>You're drawing {{drawNodes ? "nodes." : "edges."}}.</h2>
-    <button id="switchDrawElement" v-cloak v-on:click="swapDrawMode()">Switch to drawing {{ drawNodes ? "edges." : "nodes."}}</button>
-    <button id="switchDeleteElement" v-cloak v-on:click="swapDeleteMode()">{{ deleteMode ? "Currently on" : "Switch to"}} deletion mode.</button>
-    <button v-on:click="undo()">Undo</button>
-    <button v-on:click="redo()">Redo</button>
-</div>
-<div v-else>
-    <h2>You're in edit mode.</h2>
-</div>
+
+<h2 v-if="state=='delete'">You're deleting.</h2>
+<h2 v-else>You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
+<button v-on:click="changeMode('drawNodes')">Draw Nodes</button>
+<button v-on:click="changeMode('drawEdges')">Draw Edges</button>
+<button v-on:click="changeMode('delete')">Delete</button>
+<button v-on:click="undo()">Undo</button>
+<button v-on:click="redo()">Redo</button>
+
 
 
 <div class="graph">
@@ -214,10 +211,7 @@
             el: '#app',
             data: {
                 user: false,
-                drawMode: true,
-                drawNodes: true,
-                deleteMode: false,
-                network: null
+                state: "drawNodes"
             },
             mounted: function () {
                 const options = {
@@ -275,17 +269,6 @@
                 };
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
                 NETWORK.addNodeMode();
-
-                NETWORK.on('click', function () {
-                    if (app.deleteMode) {
-                        NETWORK.deleteSelected();
-                    } else if (app.drawNodes) {
-                        NETWORK.addNodeMode();
-                    } else {
-                        //console.log('Node mode: ' + app.drawNodes);
-                        NETWORK.addEdgeMode();
-                    } 
-                });
             },
             created: function () {
                 // When user logs in, store it in this Vue app's data.
@@ -311,22 +294,28 @@
                 redo: function (event) {
                     redoLastAction(this.drawNodes);
                 },
-                swapDrawMode: function (event) {
-                    this.drawNodes = !this.drawNodes;
-                    if (this.drawNodes) {
-                        NETWORK.addNodeMode();
-                    } else {
-                        NETWORK.addEdgeMode();
+                changeMode: function (newMode) {
+                    if (this.state == newMode) {
+                        //clicked on same button, exit mode or do nothing?
                     }
-                },
-                swapDeleteMode: function (event) {
-                    this.deleteMode = !this.deleteMode;
-                    if (this.drawNodes) {
-                        NETWORK.addNodeMode();
-                    } else {
-                        NETWORK.addEdgeMode();
+                    else {
+                        if (this.state == "delete") {
+                            NETWORK.off('click');
+                        }
+                        this.state = newMode;
+                        if (newMode == "drawNodes") {
+                            NETWORK.addNodeMode();
+                        }
+                        else if (newMode == "drawEdges") {
+                            NETWORK.addEdgeMode();
+                        }
+                        else if (newMode == "delete") {
+                            NETWORK.disableEditMode();
+                            NETWORK.on('click', function () {
+                                NETWORK.deleteSelected();  
+                            });  
+                        }
                     }
-                    
                 },
                 signOut: function (event) {
                     if (this.user) {

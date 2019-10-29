@@ -112,7 +112,12 @@ namespace Affinity.Controllers
                 return RedirectToAction("Login", "Affinity");
             }
 
-            return Json(new { id = "2", value = "GetGraphs" });
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+            var graph = _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid)
+                .Select(g => g.GraphID)
+                .Distinct();
+
+            return Content(JsonConvert.SerializeObject(graph));
         }
 
         [Route("/api/graphData/{token:length(8)}")]

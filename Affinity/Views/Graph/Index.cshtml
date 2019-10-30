@@ -2,8 +2,6 @@
     ViewData["Title"] = "New Graph";
 }
 
-@using System.Drawing;
-
 @section styles {
     <style>
         #mynetwork {
@@ -34,7 +32,7 @@
 <button v-on:click="changeMode('selectMultiple')">Select Multiple</button>
 <button v-on:click="undo()">Undo</button>
 <button v-on:click="redo()">Redo</button>
-
+<div class="color-picker"></div>
 
 
 <div class="graph">
@@ -50,6 +48,7 @@
     <script type="text/javascript" src="~/js/vis-network.js"></script>
     <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
     <script type="text/javascript" src="~/js/firebase.js"></script>
+    <script type="text/javascript" src="~/js/pickr.min.js"></script>
     <script type="text/javascript">
 
         const NODES = [];
@@ -91,11 +90,11 @@
         // Snapshot Model
         const ACTION_ADD_VERTEX = "0";
         const ACTION_ADD_EDGE = "1";
-      
+
         const ACTION_DELETE_VERTEX = "2";
         const ACTION_DELETE_VERTEX_N_EDGE = "3";
         const ACTION_DELETE_EDGE = "4";
-        
+
         const SNAPSHOT = {
             0: []
         }
@@ -185,8 +184,9 @@
 
             for (node of NODES) {
                 console.log(node.color);
-                nodes.push({ id: node.id, label: node.name, x: node.x, y: node.y,
-                             color: node.color, font: { color: '#FFFFFF' }
+                nodes.push({
+                    id: node.id, label: node.name, x: node.x, y: node.y,
+                    color: node.color, font: { color: '#FFFFFF' }
                 });
             }
 
@@ -194,7 +194,7 @@
                 edges.push({
                     from: edge.first, to: edge.second, color: edge.color,
                     arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
-                    label: edge.weight.toString(), font: { align: 'middle' }
+                    label: edge.weight.toString(), font: { align: 'top' }
                 });
             }
 
@@ -270,6 +270,7 @@
 
                     }
                 };
+
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
                 NETWORK.addNodeMode();
             },
@@ -320,10 +321,38 @@
                         }
                         else if (newMode == "select") {
                             NETWORK.disableEditMode();
-                            NETWORK.on('click', function () {
+                            NETWORK.on('click', function (properties) {
                                 if (NETWORK.getSelectedNodes().length != 0) {
                                     NETWORK.selectNodes(NETWORK.getSelectedNodes(), false);
                                 }
+
+                                //Get the node that we have clicked on
+                                var node = properties.nodes;
+                                //Get the edge that we have clicked on
+                                var edge = properties.edges;
+
+                                //If we hit a node else we hit an edge or nothing
+                                if (node.length != 0) {
+                                    var newLabel = prompt("Please enter the new label name");
+
+                                    var updateNode = VIS_NODES.get(node)[0];
+
+                                    updateNode.label = newLabel;
+                                    updateNode.color = pickr.getColor().toHEXA().toString();
+
+                                    VIS_NODES.update(updateNode);
+
+                                } else if (edge.length != 0) {
+                                    var newLabel = prompt("Please enter the new weight");
+
+                                    var updateEdge = VIS_EDGES.get(edge)[0];
+
+                                    updateEdge.label = newLabel;
+                                    updateEdge.color = pickr.getColor().toHEXA().toString();
+
+                                    VIS_EDGES.update(updateEdge);
+                                }
+
                             });
                         }
                         else if (newMode == "selectMultiple") {
@@ -346,7 +375,7 @@
                                     else {
                                         currentNodes.push(String(NETWORK.getSelectedNodes()));
                                     }
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, {unselectAll: true, highlightEdges: false});
+                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                                 else {
                                     selectedEdge = NETWORK.getSelectedEdges()[0];
@@ -356,8 +385,8 @@
                                     }
                                     else {
                                         currentEdges.push(String(NETWORK.getSelectedEdges()));
-                                    }  
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, {unselectAll: true, highlightEdges: false});
+                                    }
+                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                             });
                         }
@@ -375,7 +404,42 @@
                     }
                 }
             }
-        })
-        
+        });
+
+        const pickr = Pickr.create({
+                    el: '.color-picker',
+                    theme: 'classic', // or 'monolith', or 'nano'
+
+                    swatches: [
+                        'rgba(255, 0, 0, 1)',
+                        'rgba(255, 127, 0, 1)',
+                        'rgba(255, 255, 0, 1)',
+                        'rgba(0, 255, 0, 1)',
+                        'rgba(0, 0, 255, 1)',
+                        'rgba(75, 0, 130, 1)',
+                        'rgba(139, 0, 255, 1)'
+                    ],
+
+                    components: {
+
+                        // Main components
+                        preview: true,
+                        opacity: true,
+                        hue: true,
+
+                        // Input / output Options
+                        interaction: {
+                            hex: true,
+                            rgba: true,
+                            hsla: true,
+                            hsva: true,
+                            cmyk: true,
+                            input: true,
+                            clear: true,
+                            save: true
+                        }
+                    }
+                });
+
     </script>
 }

@@ -15,6 +15,10 @@
             display: block;
             margin-bottom: 1rem;
         }
+
+        .pickr {
+            display: inline-block;
+        }
     </style>
 }
 
@@ -32,10 +36,53 @@
 <button v-on:click="changeMode('selectMultiple')">Select Multiple</button>
 <button v-on:click="undo()">Undo</button>
 <button v-on:click="redo()">Redo</button>
-<div class="color-picker"></div>
-
 
 <div class="graph">
+    <div>
+        <h2> Node Customization Options!</h2>
+        <label> Name: <input type="text" id="node-name"/></label>
+        <label> Color: <span class="color-picker"></span> </label>
+        <br />
+        <label> Size: <input type="number" min="1" max="20" id="node-size"/></label>
+        <label>
+            Font Color:
+            <select id="node-font-color">
+                <option value="#000000">
+                    Black
+                </option>
+                <option value="#FFFFFF">
+                    White
+                </option>
+            </select>
+        </label>
+        <br />
+        <button v-on:click="saveNodeChanges()"> Save Changes </button>
+    </div>
+    <div>
+        <h2> Edge Customization Options!</h2>
+        <label> Label/Weight: <input type="text" id="edge-value" /></label>
+        <label> Color: <span class="color-picker2"></span> </label>
+        <br />
+        <label> From: <input type="text" id="edge-from" /></label>
+        <label> To: <input type="text" id="edge-to" /></label>
+        <br />
+        <label>
+            Edge Font Align:
+            <select id="edge-font-align">
+                <option value="top">
+                    Top
+                </option>
+                <option value="middle">
+                    Middle
+                </option>
+                <option value="bottom">
+                    Bottom
+                </option>
+            </select>
+        </label>
+        <br />
+        <button v-on:click="saveEdgeChanges()"> Save Changes </button>
+    </div>
     <div id="mynetwork"></div>
     <span id="eventSpan"></span>
 </div>
@@ -59,7 +106,6 @@
             var url = window.location.pathname;
             url = url.split('/');
             var token = url[url.length - 1];
-            console.log(token);
             $.ajax({
                 type: "GET",
                 url: "/api/graphData/" + token,
@@ -183,7 +229,6 @@
             const nodes = [], edges = [];
 
             for (node of NODES) {
-                console.log(node.color);
                 nodes.push({
                     id: node.id, label: node.name, x: node.x, y: node.y,
                     color: node.color, font: { color: '#FFFFFF' }
@@ -201,9 +246,6 @@
             VIS_NODES = new vis.DataSet(nodes);
             VIS_EDGES = new vis.DataSet(edges);
 
-            console.log(VIS_NODES);
-            console.log(VIS_EDGES);
-
             return {
                 nodes: VIS_NODES,
                 edges: VIS_EDGES
@@ -214,7 +256,9 @@
             el: '#app',
             data: {
                 user: false,
-                state: "drawNodes"
+                state: "drawNodes",
+                editNode: null,
+                editEdge: null
             },
             mounted: function () {
                 const options = {
@@ -333,24 +377,45 @@
 
                                 //If we hit a node else we hit an edge or nothing
                                 if (node.length != 0) {
-                                    var newLabel = prompt("Please enter the new label name");
 
                                     var updateNode = VIS_NODES.get(node)[0];
 
-                                    updateNode.label = newLabel;
-                                    updateNode.color = pickr.getColor().toHEXA().toString();
+                                    editNode = updateNode;
 
-                                    VIS_NODES.update(updateNode);
+                                    document.getElementById('node-name').value = updateNode.label;
+
+                                    if (updateNode.font.color === '#FFFFFF') {
+                                        document.getElementById('node-font-color').value = "#FFFFFF";
+                                    } else {
+                                        document.getElementById('node-font-color').value = "#000000";
+                                    }
+                                  
+                                    pickr.setColor(updateNode.color);
 
                                 } else if (edge.length != 0) {
-                                    var newLabel = prompt("Please enter the new weight");
 
                                     var updateEdge = VIS_EDGES.get(edge)[0];
 
-                                    updateEdge.label = newLabel;
-                                    updateEdge.color = pickr.getColor().toHEXA().toString();
+                                    editEdge = updateEdge;
 
-                                    VIS_EDGES.update(updateEdge);
+                                    //Init the label editing
+                                    document.getElementById('edge-value').value = updateEdge.label;
+
+                                    //Set the color to what the current node is!
+                                    pickr2.setColor(updateEdge.color);
+
+                                    //Init the to and from
+                                    document.getElementById('edge-to').value = updateEdge.to;
+                                    document.getElementById('edge-from').value = updateEdge.from;
+
+                                    //Init the Alignment
+                                    if (updateEdge.font.align === 'top') {
+                                        document.getElementById('edge-font-align').value = "top";
+                                    } else if (updateEdge.font.align === 'middle') {
+                                        document.getElementById('edge-font-align').value = "middle";
+                                    } else {
+                                        document.getElementById('edge-font-align').value = "bottom";
+                                    }
                                 }
 
                             });
@@ -402,44 +467,107 @@
                         });
                         window.location.reload(true); // refresh page
                     }
+                },
+                saveNodeChanges: function () {
+
+                    editNode.label = document.getElementById('node-name').value;
+
+                    editNode.color = pickr.getColor().toHEXA().toString();
+
+                    editNode.font.color = document.getElementById('node-font-color').value;
+
+                    VIS_NODES.update(editNode);
+                },
+                saveEdgeChanges: function () {
+
+                    editEdge.label = document.getElementById('edge-value').value;
+
+                    editEdge.color = pickr2.getColor().toHEXA().toString();
+
+                    editEdge.font.align = document.getElementById('edge-font-align').value;
+
+                    editEdge.to = document.getElementById('edge-to').value;
+
+                    editEdge.from = document.getElementById('edge-from').value;
+
+                    VIS_EDGES.update(editEdge);
                 }
             }
         });
 
         const pickr = Pickr.create({
-                    el: '.color-picker',
-                    theme: 'classic', // or 'monolith', or 'nano'
+            el: '.color-picker',
+            theme: 'nano', // 'classic', 'monolith', or 'nano'
 
-                    swatches: [
-                        'rgba(255, 0, 0, 1)',
-                        'rgba(255, 127, 0, 1)',
-                        'rgba(255, 255, 0, 1)',
-                        'rgba(0, 255, 0, 1)',
-                        'rgba(0, 0, 255, 1)',
-                        'rgba(75, 0, 130, 1)',
-                        'rgba(139, 0, 255, 1)'
-                    ],
+            swatches: [
+                'rgba(255, 0, 0, 1)',
+                'rgba(255, 127, 0, 1)',
+                'rgba(0, 255, 0, 1)',
+                'rgba(0, 0, 255, 1)',
+                'rgba(75, 0, 130, 1)',
+                'rgba(139, 0, 255, 1)',
+                'rgba(0, 0, 0, 1)'
+            ],
 
-                    components: {
+            components: {
 
-                        // Main components
-                        preview: true,
-                        opacity: true,
-                        hue: true,
+                // Main components
+                preview: true,
+                opacity: true,
+                hue: true,
 
-                        // Input / output Options
-                        interaction: {
-                            hex: true,
-                            rgba: true,
-                            hsla: true,
-                            hsva: true,
-                            cmyk: true,
-                            input: true,
-                            clear: true,
-                            save: true
-                        }
-                    }
-                });
+                // Input / output Options
+                interaction: {
+                    hex: false,
+                    rgba: false,
+                    hsva: false,
+                    input: true,
+                    clear: true,
+                    save: true
+                }
+            }
+        });
+
+        const pickr2 = Pickr.create({
+            el: '.color-picker2',
+            theme: 'nano', // 'classic', 'monolith', or 'nano'
+
+            swatches: [
+                'rgba(255, 0, 0, 1)',
+                'rgba(255, 127, 0, 1)',
+                'rgba(0, 255, 0, 1)',
+                'rgba(0, 0, 255, 1)',
+                'rgba(75, 0, 130, 1)',
+                'rgba(139, 0, 255, 1)',
+                'rgba(0, 0, 0, 1)'
+            ],
+
+            components: {
+
+                // Main components
+                preview: true,
+                opacity: true,
+                hue: true,
+
+                // Input / output Options
+                interaction: {
+                    hex: false,
+                    rgba: false,
+                    hsva: false,
+                    input: true,
+                    clear: true,
+                    save: true
+                }
+            }
+        });
+
+        //Saves the new position for the nodes
+        NETWORK.on('dragEnd', function (properties) {
+            for (var i = 0; i < properties.nodes.length; i++) {
+                var nodeId = properties.nodes[i];
+                VIS_NODES.update({ id: nodeId, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
+            }
+        });
 
     </script>
 }

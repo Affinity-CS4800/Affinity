@@ -189,11 +189,10 @@
         }
 
         function updateNodeColor(vertexId, color_) {
-            console.log(convertHexToDecimal(color_));
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_NODE_RECOLOR,
                 id: vertexId,
-                color: color_
+                color: convertHexToDecimal(color_)
             });
         }
 
@@ -225,12 +224,11 @@
         }
 
         function updateEdgeColor(from_, to_, color_) {
-
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_EDGE_RECOLOR,
                 from: from_,
                 to: to_,
-                color: color_
+                color: convertHexToDecimal(color_)
             });
         }
 
@@ -255,6 +253,8 @@
                         lastAction.x = vertex.x;
                         lastAction.y = vertex.y;
                         VIS_NODES.remove(lastAction.id);
+                        break;
+                    case ACTION_ADD_EDGE:
                         break;
                 }
 
@@ -293,8 +293,8 @@
             } else { //#XXXXXXXX (Has an alpha value that is between 0-255)
                 hexString = color[7] + color[8] + color.slice(1,7);
             }
-            console.log(hexString);
-            return parseInt(hexString, 16);
+            //return the number as a signed integer 
+            return parseInt(hexString, 16) >> 0;
        }
 
     </script>

@@ -39,7 +39,8 @@ namespace Affinity.Controllers
         }
 
         [Route("/api/saveToDB")]
-        public async void GraphSaver(string json)
+        [HttpPost]
+        public async void GraphSaver([FromBody] string json)
         {
             JObject actions = JObject.Parse(json);
             string graphID = _httpContextAccessor.HttpContext.Request.Path;

@@ -36,6 +36,7 @@
 <button v-on:click="changeMode('selectMultiple')">Select Multiple</button>
 <button v-on:click="undo()">Undo</button>
 <button v-on:click="redo()">Redo</button>
+<button v-on:click="save()">Save</button>
 
 <div class="graph">
     <div>
@@ -592,6 +593,25 @@
                     }
 
                     VIS_EDGES.update(editEdge);
+                },
+                save: function () {
+                    console.log(JSON.stringify(SNAPSHOT));
+                    $.ajax({
+                        type: 'POST',
+                        url: '/api/saveToDB',
+                        accepts: "application/json",
+                        contentType: "application/json",
+                        data: JSON.stringify(SNAPSHOT),
+                        headers: {
+                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function () {
+                            alert('Saved');
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                          alert("Something went wrong!");
+                        }
+                    });
                 }
             }
         });

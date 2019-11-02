@@ -141,6 +141,14 @@
         const ACTION_DELETE_VERTEX_N_EDGE = "3";
         const ACTION_DELETE_EDGE = "4";
 
+        const ACTION_NODE_RECOLOR = "5";
+        const ACTION_NODE_RENAME = "6";
+        const ACTION_NODE_CHANGE_POS = "7";
+
+        const ACTION_EDGE_RENAME = "8";
+        const ACTION_EDGE_RECOLOR = "9";
+        const ACTION_EDGE_CHANGE_DIRECTION = "10";
+
         const SNAPSHOT = {
             0: []
         }
@@ -177,6 +185,62 @@
                 action: ACTION_DELETE_EDGE,
                 from: from_,
                 to: to_
+            });
+        }
+
+        function updateNodeColor(vertexId, color_) {
+            console.log(convertHexToDecimal(color_));
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_NODE_RECOLOR,
+                id: vertexId,
+                color: color_
+            });
+        }
+
+        function updateNodeName(vertexId, name_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_NODE_RENAME,
+                id: vertexId,
+                name: name_
+            });
+        }
+
+        function updateNodePos(vertexId, x_, y_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_NODE_CHANGE_POS,
+                id: vertexId,
+                x: x_,
+                y: y_
+
+            });
+        }
+
+        function updateEdgeLabel(from_, to_, name_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_EDGE_RENAME,
+                from: from_,
+                to: to_,
+                name: name_
+            });
+        }
+
+        function updateEdgeColor(from_, to_, color_) {
+
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_EDGE_RECOLOR,
+                from: from_,
+                to: to_,
+                color: color_
+            });
+        }
+
+        function updateEdgeDirection(from_, to_, newFrom_, newTo_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_EDGE_CHANGE_DIRECTION,
+                from: from_,
+                to: to_,
+                newFrom: newFrom_,
+                newTo: newTo_
             });
         }
 
@@ -219,6 +283,20 @@
                 }
             }
         }
+
+
+        function convertHexToDecimal(color) {
+            //#XXXXXX (No alpha means = 0xFF => 255 full alpha)
+            var hexString = "";
+            if (color.length === 7) {
+                hexString = "FF" + color.slice(1,color.length);
+            } else { //#XXXXXXXX (Has an alpha value that is between 0-255)
+                hexString = color[7] + color[8] + color.slice(1,7);
+            }
+            console.log(hexString);
+            return parseInt(hexString, 16);
+       }
+
     </script>
     <script type="text/javascript">
         let NETWORK;
@@ -389,7 +467,7 @@
                                     } else {
                                         document.getElementById('node-font-color').value = "#000000";
                                     }
-                                  
+
                                     pickr.setColor(updateNode.color);
 
                                 } else if (edge.length != 0) {
@@ -469,26 +547,49 @@
                     }
                 },
                 saveNodeChanges: function () {
+                    var newLabel = document.getElementById('node-name').value;
 
-                    editNode.label = document.getElementById('node-name').value;
+                    if (editNode.label !== newLabel) {
+                        editNode.label = newLabel;
+                        updateNodeName(editNode.id, newLabel);
+                    }
 
-                    editNode.color = pickr.getColor().toHEXA().toString();
+                    var newColor = pickr.getColor().toHEXA().toString();
+                    if (editNode.color !== newColor) {
+                        editNode.color = newColor;
+                        updateNodeColor(editNode.id, newColor);
+                    }
 
                     editNode.font.color = document.getElementById('node-font-color').value;
 
                     VIS_NODES.update(editNode);
                 },
                 saveEdgeChanges: function () {
+                    var newLabel = document.getElementById('edge-value').value;
 
-                    editEdge.label = document.getElementById('edge-value').value;
+                    if (editEdge.label !== newLabel) {
+                        editEdge.label = newLabel;
+                        updateEdgeLabel(editEdge.from, editEdge.to, newLabel);
+                    }
 
-                    editEdge.color = pickr2.getColor().toHEXA().toString();
+                    var newColor = pickr2.getColor().toHEXA().toString();
+
+                    if (editEdge.color !== newColor) {
+                        editEdge.color = newColor;
+                        updateEdgeColor(editEdge.from, editEdge.to, newColor);
+                    }
 
                     editEdge.font.align = document.getElementById('edge-font-align').value;
 
-                    editEdge.to = document.getElementById('edge-to').value;
 
-                    editEdge.from = document.getElementById('edge-from').value;
+                    var newTo = document.getElementById('edge-to').value;
+                    var newFrom = document.getElementById('edge-from').value;
+
+                    if (editEdge.from !== newFrom || editEdge.to !== newTo) {
+                        editEdge.from = newFrom;
+                        editEdge.to = to;
+                        updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
+                    }
 
                     VIS_EDGES.update(editEdge);
                 }
@@ -565,9 +666,10 @@
         NETWORK.on('dragEnd', function (properties) {
             for (var i = 0; i < properties.nodes.length; i++) {
                 var nodeId = properties.nodes[i];
+                console.log(properties);
                 VIS_NODES.update({ id: nodeId, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
+                updateNodePos(nodeId, properties.pointer.canvas.x, properties.pointer.canvas.y);
             }
         });
-
     </script>
 }

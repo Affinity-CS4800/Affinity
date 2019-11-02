@@ -48,7 +48,7 @@ namespace Affinity.Controllers
             {
                 foreach(var key in data.Value)
                 {
-                    string value = key["action"].ToString();
+                   string value = key["action"].ToString();
                    if (value == "0")
                    {
                         Vertex vertex = new Vertex
@@ -56,7 +56,6 @@ namespace Affinity.Controllers
                             Name = "",
                             ID = int.Parse(key["id"].ToString()),
                             GraphID = graphID
-
                         };
                         
                         _affinityDbContext.Vertices.Add(vertex);

@@ -1,76 +1,264 @@
-﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
+﻿@import url('https://fonts.googleapis.com/css?family=ABeeZee|Work+Sans&display=swap');
 
-a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
-}
-
-/* Sticky footer styles
--------------------------------------------------- */
-html {
-  font-size: 14px;
-}
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.border-top {
-  border-top: 1px solid #e5e5e5;
-}
-.border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+.hidden {
+    display: none;
 }
 
-.box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+h1, h2, h3, h4, h5, h6, .logo, .feature-name, .team-action {
+    font-family: 'GTEestiDisplay-Medium',-apple-system,system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';
+    letter-spacing: -2px;
 }
 
-button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
+p, span, .navigation {
+    font-family: "ABeeZee", serif;
 }
 
-/* Sticky footer styles
--------------------------------------------------- */
-html {
-  position: relative;
-  min-height: 100%;
+.navigation-menuLink {
+    font-weight: bold;
+    color: #333;
 }
 
-body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
-}
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  /* Set the fixed height of the footer here */
-  height: 60px;
-  line-height: 60px; /* Vertically center the text there */
+.logo {
+    padding: 0 .5rem;
+    font-weight: bold;
+    color: black;
+    font-size: 1.25rem;
+    cursor: pointer;
 }
 
-/* Nav bar
--------------------------------------------------- */
+    .logo a {
+        text-decoration: none;
+    }
+
+    .logo a:visited {
+        color: rgb(0,0,238);
+    }
+
+header {
+    background: #efefef;
+    margin-bottom: 1rem;
+    padding: 1rem 0;
+}
+
+.cta {
+    display: block;
+    padding: 2rem 1rem;
+    height: 90vh;
+    font-family: 'GTEestiDisplay-Medium',-apple-system,system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';
+}
+
+.cta-callout {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.cta-description {
+    line-height: 1.15;
+    margin-bottom: .5rem;
+}
+
+.features {
+    display: block;
+    background: #efefef;
+    padding: 2rem 0;
+}
+
+.feature {
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+
+@media(min-width: 800px) {
+
+    header {
+        padding-left: 4rem;
+        padding-right: 4rem;
+    }
+
+    .logo {
+        display: inline-block;
+        width: 50%;
+    }
+
+    .logo:visited {
+        color: 
+    }
+
+    .navigation {
+        display: inline-block;
+        width: 50%;
+    }
+
+    .navigation-menu {
+        list-style: none;
+        display: block;
+        float: right;
+    }
+
+    .navigation-menuItem {
+        display: inline-block;
+        margin-right: 1rem;
+        cursor: pointer;
+    }
+
+    .navigation-menuLink, .login-button {
+        padding: 0 .5rem;
+        text-decoration: none;
+        color: #666;
+    }
+
+        .navigation-menuLink:hover {
+            color: #111;
+        }
+
+    .login-button {
+        border-radius: 10px;
+        padding: .35rem .75rem;
+        font-weight: bold;
+        background-color: blue;
+        color: #efefef;
+    }
+
+    .cta {
+        clear: both;
+        background-image: url("../img/bg.JPG");
+        background-size: cover;
+        background-position: right;
+        padding: 8rem 0 0 4rem;
+    }
+
+    .cta-callout {
+        font-size: 2.5rem;
+    }
+
+    .cta-description {
+        font-size: 1.45rem;
+        color: grey;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .cta-action {
+        border: 0;
+        background: #468FF3;
+        font-weight: bold;
+        text-align: center;
+        padding: .5rem 5rem;
+        color: white;
+        font-size: 1.25rem;
+        cursor: pointer;
+        border-radius: 10px;
+    }
+
+        .cta-action:hover {
+            background: #3F69E5;
+        }
+
+    .features {
+        padding-top: 15vh;
+        background: linear-gradient(140deg, #00d2ff 0%, #3a47d5 80%);
+        color: white;
+    }
+
+    .feature {
+        margin: 0 auto 8rem auto;
+    }
+
+        .feature:nth-child(even) {
+            clear: both;
+        }
+
+    .feature-visual {
+        display: inline-block;
+        width: 60%;
+        vertical-align: top;
+    }
+
+    .feature-text {
+        display: inline-block;
+        width: 40%;
+        padding-top: 2rem;
+        vertical-align: middle;
+    }
+
+    .feature:nth-child(odd) .feature-visual {
+        float: right;
+    }
+
+    .feature:nth-child(odd) .feature-image {
+        margin-left: 10vw;
+    }
+
+    .feature:nth-child(odd) .feature-name {
+        padding-left: 5vw;
+        max-width: 40ch;
+    }
+
+    .feature:nth-child(odd) .feature-description {
+        padding-left: 5vw;
+        max-width: 40ch;
+    }
+
+    .clearfix:after {
+        content: ".";
+        visibility: hidden;
+        display: block;
+        height: 0;
+        clear: both;
+    }
+
+    .feature-image {
+        width: 70%;
+        margin: 0 0 0 5vw;
+        height: auto;
+    }
+
+    .feature-name {
+        font-size: 2.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        max-width: 35ch;
+        font-size: 1.15rem;
+    }
+
+    .team {
+        display: block;
+        padding: 20vh 0;
+        background: #333;
+        color: #efefef;
+    }
+
+    .team-callout, .team-description {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .team-action {
+        margin: 1rem auto;
+        display: block;
+        width: 20ch;
+        text-align: center;
+        border-radius: 5px;
+        background: blue;
+        color: white;
+        font-weight: bold;
+        letter-spacing: 0px;
+        padding: .5rem 0;
+        text-decoration: none;
+    }
+}
+
 .sign-out-button {
     display: inline-block;
     background-color: transparent;
     border: none;
-}
-
-.navbar {
-    list-style: none;
-    width: 100vw;
-    display: table;
-}
-
-.nav-item {
-    display: inline-block;
-    text-align: center;
-    margin: auto 0;
 }

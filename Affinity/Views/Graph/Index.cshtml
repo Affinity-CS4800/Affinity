@@ -219,7 +219,8 @@
             el: '#app',
             data: {
                 user: false,
-                state: "drawNodes"
+                state: "drawNodes",
+                nextNodeID: 0
             },
             mounted: function () {
                 const options = {
@@ -243,11 +244,13 @@
                     manipulation: {
                         enabled: true,
                         addNode: function (data, callback) {
+                            data.id = nextNodeID; 
+                            nextNodeID++;
                             callback(data);
                             addNodeAction(data.id);
                             NETWORK.addNodeMode();
                         },
-                        addEdge: function (data, callback) {
+                        addEdge: function (data, callback) {     
                             if (data.from == data.to) {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
@@ -276,6 +279,7 @@
                     }
                 };
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
+                nextNodeID = VIS_NODES.length;
                 NETWORK.addNodeMode();
             },
             created: function () {

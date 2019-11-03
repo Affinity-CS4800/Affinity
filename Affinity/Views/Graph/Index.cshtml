@@ -98,7 +98,6 @@
     <script type="text/javascript" src="~/js/firebase.js"></script>
     <script type="text/javascript" src="~/js/pickr.min.js"></script>
     <script type="text/javascript">
-
         const NODES = [];
 
         const EDGES = [];
@@ -129,9 +128,7 @@
             });
 
             return getVisDataSet();
-        }
-
-    </script>
+        }</script>
 
     <script>
         // Snapshot Model
@@ -299,8 +296,7 @@
        }
 
     </script>
-    <script type="text/javascript">
-        let NETWORK;
+    <script type="text/javascript">let NETWORK;
         let VIS_NODES, VIS_EDGES;
         function getVisDataSet() {
 
@@ -587,19 +583,21 @@
                     var newFrom = document.getElementById('edge-from').value;
 
                     if (editEdge.from !== newFrom || editEdge.to !== newTo) {
-                        editEdge.from = newFrom;
-                        editEdge.to = to;
                         updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
+                        editEdge.from = newFrom;
+                        editEdge.to = newTo;
                     }
 
                     VIS_EDGES.update(editEdge);
                 },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
+                    var url = window.location.pathname;
+                    url = url.split('/');
+                    var token = url[url.length - 1];
                     $.ajax({
                         type: 'POST',
-                        url: '/api/saveToDB',
-                        accepts: "application/json",
+                        url: '/api/saveToDB/' + token,
                         contentType: "application/json",
                         data: JSON.stringify(SNAPSHOT),
                         headers: {
@@ -608,8 +606,8 @@
                         success: function () {
                             alert('Saved');
                         },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                          alert("Something went wrong!");
+                        error: function (xhr, textStatus, errorThrown) {
+                            alert(errorThrown);
                         }
                     });
                 }
@@ -690,6 +688,5 @@
                 VIS_NODES.update({ id: nodeId, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
                 updateNodePos(nodeId, properties.pointer.canvas.x, properties.pointer.canvas.y);
             }
-        });
-    </script>
+        });</script>
 }

@@ -30,7 +30,6 @@ namespace Affinity.Controllers
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AffinityDbcontext _affinityDbContext;
-        private string API_KEY;
 
         public GraphController(IHttpContextAccessor httpContextAccessor, AffinityDbcontext affinityDbcontext)
         {
@@ -38,20 +37,18 @@ namespace Affinity.Controllers
             _affinityDbContext = affinityDbcontext;
         }
 
-        [Route("/api/saveToDB")]
+        [Route("/api/saveToDB/{graphID:length(8)}")]
         [HttpPost]
-        public async void GraphSaver([FromBody] string json)
+        public async Task GraphSaver([FromBody] JObject json, string graphID)
         {
-            JObject actions = JObject.Parse(json);
-            string graphID = _httpContextAccessor.HttpContext.Request.Path;
-            graphID = graphID.Substring(graphID.LastIndexOf('/'));
-            foreach (var data in actions)
+            foreach (var data in json)
             {
                 foreach(var key in data.Value)
                 {
-                   string value = key["action"].ToString();
-                   if (value == "0")
-                   {
+                    Debug.WriteLine(key);
+                    string value = key["action"].ToString();
+                    if (value == "0")
+                    {
                         Vertex vertex = new Vertex
                         {
                             Name = "",
@@ -60,9 +57,9 @@ namespace Affinity.Controllers
                         };
                         
                         _affinityDbContext.Vertices.Add(vertex);
-                   }
-                   else if(value == "1")
-                   {
+                    }
+                    else if(value == "1")
+                    {
                         Edge edge = new Edge
                         {
                             First = int.Parse(key["from"].ToString()),
@@ -72,14 +69,14 @@ namespace Affinity.Controllers
                         };
 
                         _affinityDbContext.Edges.Add(edge);
-                   }
-                   else if(value == "2")
-                   {
+                    }
+                    else if(value == "2")
+                    {
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         _affinityDbContext.Vertices.Remove(vertex);
-                   }
-                   else if(value == "3")
-                   {
+                    }
+                    else if(value == "3")
+                    {
                         var edges = _affinityDbContext.Edges.AsNoTracking().Where(v => v.First == int.Parse(key["from"].ToString()) || v.Second == int.Parse(key["from"].ToString()))
                             .Select(g => g.DBID).Distinct();
                         foreach(var edge in edges)
@@ -90,50 +87,49 @@ namespace Affinity.Controllers
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         _affinityDbContext.Vertices.Remove(vertex);
                     }
-                   else if(value == "4")
-                   {
+                    else if(value == "4")
+                    {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
                         _affinityDbContext.Edges.Remove(edge);
-                   }
-                   else if(value == "5")
-                   {
+                    }
+                    else if(value == "5")
+                    {
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         vertex.Color = int.Parse(key["color"].ToString());
                         _affinityDbContext.Vertices.Update(vertex);
-                   }
-                   else if (value == "6")
-                   {
+                    }
+                    else if (value == "6")
+                    {
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         vertex.Name = key["name"].ToString();
                         _affinityDbContext.Vertices.Update(vertex);
                     }
-                   else if (value == "7")
-                   {
+                    else if (value == "7")
+                    {
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
-                        vertex.XPos = int.Parse(key["x"].ToString());
-                        vertex.YPos = int.Parse(key["y"].ToString());
+                        vertex.XPos = (int)double.Parse(key["x"].ToString());
+                        vertex.YPos = (int)double.Parse(key["y"].ToString());
                         _affinityDbContext.Vertices.Update(vertex);
                     }
-                   else if (value == "8")
-                   {
+                    else if (value == "8")
+                    {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
                         edge.Weight = int.Parse(key["name"].ToString());
                         _affinityDbContext.Edges.Update(edge);
                     }
-                   else if (value == "9")
-                   {
+                    else if (value == "9")
+                    {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
                         edge.Color = int.Parse(key["color"].ToString());
                         _affinityDbContext.Edges.Update(edge);
                     }
-                   else if (value == "10")
-                   {
+                    else if (value == "10")
+                    {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
                         edge.First = int.Parse(key["newFrom"].ToString());
                         edge.Second = int.Parse(key["newTo"].ToString());
                         _affinityDbContext.Edges.Update(edge);
                     }
-
                 }
             }
 

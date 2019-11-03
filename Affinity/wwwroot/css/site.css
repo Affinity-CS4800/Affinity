@@ -256,9 +256,3 @@ header {
         text-decoration: none;
     }
 }
-
-.sign-out-button {
-    display: inline-block;
-    background-color: transparent;
-    border: none;
-}

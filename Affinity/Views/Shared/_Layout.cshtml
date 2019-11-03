@@ -18,12 +18,12 @@
         <header>
             <div class="logo"><a href="/">Affinity</a></div><nav class="navigation">
                 <ul class="navigation-menu">
-                    <li class="navigation-menuItem"><a class="navigation-menuLink" href="/graph">Graphs</a></li>
+                    <li class="navigation-menuItem"><a class="navigation-menuLink" href="/graphs">Graphs</a></li>
                     <li class="navigation-menuItem"><a class="navigation-menuLink" href="/about">About</a></li>
                     <li class="navigation-menuItem" v-if="user === null">
                         <a class="navigation-menuLink" asp-area="" asp-controller="Affinity" asp-action="Login">Login</a>
                     </li>
-                    <li class="navigation-menuItem"><a class="navigation-menuLink" href="/login">Sign up</a></li>
+                    <li class="navigation-menuItem" v-if="user === null"><a class="navigation-menuLink" href="/login">Sign up</a></li>
                     <li class="navigation-menuItem sign-out-button" v-if="user" id="sign-out">
                         <button type="button" class="navigation-menuLink" v-on:click="signOut">Sign Out</button>
                     </li>

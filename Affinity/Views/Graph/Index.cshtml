@@ -42,7 +42,7 @@
 
         .status {
             position: absolute;
-            top: 3rem;
+            top: 15rem;
             z-index: 2;
             color: #333;
             opacity: .25;
@@ -422,13 +422,13 @@
                     manipulation: {
                         enabled: true,
                         addNode: function (data, callback) {
-                            data.id = nextNodeID; 
+                            data.id = nextNodeID;
                             nextNodeID++;
                             callback(data);
                             addNodeAction(data.id);
                             NETWORK.addNodeMode();
                         },
-                        addEdge: function (data, callback) {     
+                        addEdge: function (data, callback) {
                             if (data.from == data.to) {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
@@ -459,76 +459,7 @@
                         deleteEdge: function (data, callback) {
                             deleteEdgeAction(VIS_EDGES.get(data.edges[0]));
                             callback(data);
-                        },
-                        saveNodeChanges: function () {
-                        var newLabel = document.getElementById('node-name').value;
-
-                        if (editNode.label !== newLabel) {
-                            editNode.label = newLabel;
-                            updateNodeName(editNode.id, newLabel);
                         }
-
-                        var newColor = pickr.getColor().toHEXA().toString();
-                        if (editNode.color !== newColor) {
-                            editNode.color = newColor;
-                            updateNodeColor(editNode.id, newColor);
-                        }
-
-                        editNode.font.color = document.getElementById('node-font-color').value;
-
-                        VIS_NODES.update(editNode);
-                    },
-                    saveEdgeChanges: function () {
-                        var newLabel = document.getElementById('edge-value').value;
-
-                        if (editEdge.label !== newLabel) {
-                            editEdge.label = newLabel;
-                            updateEdgeLabel(editEdge.from, editEdge.to, newLabel);
-                        }
-
-                        var newColor = pickr2.getColor().toHEXA().toString();
-
-                        if (editEdge.color !== newColor) {
-                            editEdge.color = newColor;
-                            updateEdgeColor(editEdge.from, editEdge.to, newColor);
-                        }
-
-                        editEdge.font.align = document.getElementById('edge-font-align').value;
-
-
-                        var newTo = document.getElementById('edge-to').value;
-                        var newFrom = document.getElementById('edge-from').value;
-
-                        if (editEdge.from !== newFrom || editEdge.to !== newTo) {
-                            updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
-                            editEdge.from = newFrom;
-                            editEdge.to = newTo;
-                        }
-
-                        VIS_EDGES.update(editEdge);
-                    },
-                    save: function () {
-                        console.log(JSON.stringify(SNAPSHOT));
-                        var url = window.location.pathname;
-                        url = url.split('/');
-                        var token = url[url.length - 1];
-                        $.ajax({
-                            type: 'POST',
-                            url: '/api/saveToDB/' + token,
-                            contentType: "application/json",
-                            data: JSON.stringify(SNAPSHOT),
-                            headers: {
-                                RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                            },
-                            success: function () {
-                                alert('Saved');
-                            },
-                            error: function (xhr, textStatus, errorThrown) {
-                                alert(errorThrown);
-                            }
-                        });
-                    }
-
                     }
                 };
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
@@ -559,71 +490,73 @@
                 redo: function (event) {
                     redoLastAction(this.drawNodes);
                 },
-                changeMode: function (newMode) {
-                    if (this.state == newMode) {
-                        //clicked on same button, exit mode or do nothing?
+                saveNodeChanges: function () {
+                    var newLabel = document.getElementById('node-name').value;
+
+                    if (editNode.label !== newLabel) {
+                        editNode.label = newLabel;
+                        updateNodeName(editNode.id, newLabel);
                     }
-                    else {
-                        if (this.state == "delete" || this.state == "select" || this.state == "selectMultiple") {
-                            NETWORK.off('click');
-                        }
-                        this.state = newMode;
-                        if (newMode == "drawNodes") {
-                            NETWORK.addNodeMode();
-                        }
-                        else if (newMode == "drawEdges") {
-                            NETWORK.addEdgeMode();
-                        }
-                        else if (newMode == "delete") {
-                            NETWORK.disableEditMode();
-                            NETWORK.on('click', function () {
-                                NETWORK.deleteSelected();
-                            });
-                        }
-                        else if (newMode == "select") {
-                            NETWORK.disableEditMode();
-                            NETWORK.on('click', function () {
-                                if (NETWORK.getSelectedNodes().length != 0) {
-                                    NETWORK.selectNodes(NETWORK.getSelectedNodes(), false);
-                                }
-                            });
-                        }
-                        else if (newMode == "selectMultiple") {
-                            NETWORK.disableEditMode();
-                            NETWORK.unselectAll();
-                            var currentNodes = NETWORK.getSelectedNodes();
-                            var currentEdges = NETWORK.getSelectedEdges();
-                            NETWORK.on('click', function () {
-                                if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
-                                    NETWORK.unselectAll();
-                                    currentNodes = [];
-                                    currentEdges = [];
-                                }
-                                else if (NETWORK.getSelectedNodes().length != 0) {
-                                    selectedNode = NETWORK.getSelectedNodes()[0];
-                                    var index = currentNodes.indexOf(String(selectedNode));
-                                    if (index != -1) {
-                                        currentNodes.splice(index, 1);
-                                    }
-                                    else {
-                                        currentNodes.push(String(NETWORK.getSelectedNodes()));
-                                    }
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
-                                }
-                                else {
-                                    selectedEdge = NETWORK.getSelectedEdges()[0];
-                                    var index = currentEdges.indexOf(String(selectedEdge));
-                                    if (index != -1) {
-                                        currentEdges.splice(index, 1);
-                                    }
-                                    else {
-                                        currentEdges.push(String(NETWORK.getSelectedEdges()));
-                                    }
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
-                                }
-                            });
-                        }
+
+                    var newColor = pickr.getColor().toHEXA().toString();
+                    if (editNode.color !== newColor) {
+                        editNode.color = newColor;
+                        updateNodeColor(editNode.id, newColor);
                     }
+
+                    editNode.font.color = document.getElementById('node-font-color').value;
+
+                    VIS_NODES.update(editNode);
+                },
+                saveEdgeChanges: function () {
+                    var newLabel = document.getElementById('edge-value').value;
+
+                    if (editEdge.label !== newLabel) {
+                        editEdge.label = newLabel;
+                        updateEdgeLabel(editEdge.from, editEdge.to, newLabel);
+                    }
+
+                    var newColor = pickr2.getColor().toHEXA().toString();
+
+                    if (editEdge.color !== newColor) {
+                        editEdge.color = newColor;
+                        updateEdgeColor(editEdge.from, editEdge.to, newColor);
+                    }
+
+                    editEdge.font.align = document.getElementById('edge-font-align').value;
+
+
+                    var newTo = document.getElementById('edge-to').value;
+                    var newFrom = document.getElementById('edge-from').value;
+
+                    if (editEdge.from !== newFrom || editEdge.to !== newTo) {
+                        updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
+                        editEdge.from = newFrom;
+                        editEdge.to = newTo;
+                    }
+
+                    VIS_EDGES.update(editEdge);
+                },
+                save: function () {
+                    console.log(JSON.stringify(SNAPSHOT));
+                    var url = window.location.pathname;
+                    url = url.split('/');
+                    var token = url[url.length - 1];
+                    $.ajax({
+                        type: 'POST',
+                        url: '/api/saveToDB/' + token,
+                        contentType: "application/json",
+                        data: JSON.stringify(SNAPSHOT),
+                        headers: {
+                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function () {
+                            alert('Saved');
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            alert(errorThrown);
+                        }
+                    });
                 },
                 changeMode: function (newMode) {
                     if (this.state == newMode) {
@@ -737,7 +670,9 @@
                                     NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                             });
-                        },
+                        }
+                    }
+                },
                 pdf: function (event) {
 
                     html2canvas(document.getElementById("mynetwork"), {
@@ -778,7 +713,7 @@
 
                         window.open(uri);
 
-                    }   
+                    }
                 },
                 signOut: function (event) {
                     if (this.user) {
@@ -792,8 +727,8 @@
                     }
                 }
             }
-        })
-         
+        });
+
         const pickr = Pickr.create({
             el: '.color-picker',
             theme: 'nano', // 'classic', 'monolith', or 'nano'

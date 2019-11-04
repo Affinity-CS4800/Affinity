@@ -132,7 +132,7 @@ header {
 
     .cta {
         clear: both;
-        background-image: url("../img/bg.JPG");
+        background: transparent;
         background-size: cover;
         background-position: right;
         padding: 8rem 0 0 4rem;

@@ -1,18 +1,22 @@
 ﻿@{
-    ViewData["Title"] = "About Affinity";
+    ViewData["Title"] = "About";
 }
 
 @section styles {
-    <style>
-        p {
-            color: blue;
-        }
-    </style>
 }
 
-<h1>@ViewData["Title"]</h1>
-<p>{{ message }}</p>
-<p>We are a group of College students who have fun with graphs.</p>
+    <section class="about">
+        <h2 class="about-title">Graphing our own way</h2>
+        <p class="about-description">For our Software Engineering class at Cal Poly Pomona, we set out to build a better online graph editor. Making and customizing graphs should be easy.
+         Our team:</p>
+        <ul class="team-list">
+            <li class="team-member">Kiana Ziglari</li>
+            <li class="team-member">Bryce Callender</li>
+            <li class="team-member">Jordan Laidig</li>
+            <li class="team-member">Thinh Nguyen</li>
+            <li class="team-member">Samuel Foster</li>
+        </ul>
+    </section>
 
 
 @section scripts {

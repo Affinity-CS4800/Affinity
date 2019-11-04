@@ -3,24 +3,17 @@
 }
 
 @section styles {
-    <style>
-        p {
-            color: blue;
-        }
-    </style>
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/4.2.0/firebaseui.css" />
 }
 
-<h1>Login</h1>
-
-<div v-if="!user">
+<div class="loginbox" v-if="!user">
+    <p>Login with your email and password. If you do not have an account, enter your email below to create one.</p>
     <div id="firebaseui-auth-container"></div>
     <div id="loader">Loading...</div>
 </div>
 
-<div v-else>
-    <h2>Welcome, {{ user.displayName }}</h2>
-    <p>Your email is {{ user.email }}</p>
+<div class="welcomebox" v-else>
+    <h2>Welcome, {{ user.displayName }}. View your <a href="/graphs">graphs.</a></h2>
 </div>
 
 

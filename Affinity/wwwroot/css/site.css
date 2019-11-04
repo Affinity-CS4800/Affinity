@@ -10,12 +10,12 @@
     display: none;
 }
 
-h1, h2, h3, h4, h5, h6, .logo, .feature-name, .team-action {
+h1, h2, h3, h4, h5, h6, .logo a, .feature-name, .team-action {
     font-family: 'GTEestiDisplay-Medium',-apple-system,system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';
     letter-spacing: -2px;
 }
 
-p, span, .navigation {
+p, span, .navigation, a {
     font-family: "ABeeZee", serif;
 }
 
@@ -258,5 +258,99 @@ header {
         letter-spacing: 0px;
         padding: .5rem 0;
         text-decoration: none;
+    }
+
+    .directory {
+        background: #222;
+        color: #efefef;
+        padding: 10vh 10rem;
+        display: block;
+    }
+
+    .directory h2 {
+        margin-bottom: 1rem;
+        color: #3a47d5;
+        opacity: .80;
+    }
+
+    .directory-about {
+        display:inline-block;
+        width: 50%;
+        font-size: .85rem;
+        padding: 0 1rem;
+    }
+
+    .directory-links {
+        display: inline-block;
+        width: 50%;
+        padding-left: 6rem;
+        vertical-align: top;
+    }
+
+    .directory a, .directory a:visited {
+        color: #666;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    .directory-links a {
+        display: block;
+        color: #444;
+        margin-bottom: .5rem;
+    }
+
+    .sign-out-button {
+        border: 0;
+        padding: .25rem 1rem;
+        font-size: .85rem;
+        background: #333;
+        color: #efefef;
+        font-weight: bold;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+
+    .sign-out-button:hover {
+        color: white;
+    }
+
+    .about {
+        display: block;
+        max-width: 85ch;
+        padding: 5vh 0 30vh 0;
+        margin: 0 auto;
+    }
+
+    .about-title {
+        line-height: 1.5;
+    }
+
+    .about-description {
+        margin-bottom: 1rem;
+    }
+
+    .team-list {
+        list-style: none;
+    }
+
+    .team-member {
+        font-weight: bold;
+        margin-bottom: .5rem;
+        font-family: "ABeeZee", sans-serif;
+    }
+
+    .loginbox {
+        padding: 10vh 0 20vh 0;
+    }
+
+    .loginbox p {
+        max-width: 30ch;
+        margin:0 auto 1rem auto;
+        font-weight: bold;
+        opacity: 0.7;
+    }
+
+    .welcomebox {
+        padding: 10vh 0 40vh 8rem;
     }
 }

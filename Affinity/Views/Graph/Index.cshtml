@@ -12,9 +12,10 @@
 
         #mynetwork {
             border: 1px solid lightgray;
-            width: 100%;
-            height: 100vh;
+            width: 90%;
+            height: 80vh;
             margin: 0 auto;
+            display: block;
         }
 
         .button-group {
@@ -80,9 +81,6 @@
         <h2> Edge Customization Options!</h2>
         <label> Label/Weight: <input type="text" id="edge-value" /></label>
         <label> Color: <span class="color-picker2"></span> </label>
-        <br />
-        <label> From: <input type="text" id="edge-from" /></label>
-        <label> To: <input type="text" id="edge-to" /></label>
         <br />
         <label>
             Edge Font Align:
@@ -179,7 +177,6 @@
 
         const ACTION_EDGE_RENAME = "8";
         const ACTION_EDGE_RECOLOR = "9";
-        const ACTION_EDGE_CHANGE_DIRECTION = "10";
 
         const SNAPSHOT = {
             0: []
@@ -223,73 +220,69 @@
             });
         }
 
-        function updateNodeColor(vertexId, color_) {
+        function recolorNodeAction(vertexId, prevColor_, color_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_NODE_RECOLOR,
                 id: vertexId,
-                color: convertHexToDecimal(color_)
+                prevColor: prevColor_,
+                color: color_
             });
         }
 
-        function updateNodeName(vertexId, name_) {
+        function renameNodeAction(vertexId, prevLabel_, label_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_NODE_RENAME,
                 id: vertexId,
-                name: name_
+                prevLabel: prevLabel_,
+                label: label_
             });
         }
 
-        function updateNodePos(vertexId, x_, y_) {
+        function repositionNodeAction(vertexId, prevX_, prevY_, x_, y_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_NODE_CHANGE_POS,
                 id: vertexId,
+                prevX: prevX_,
+                prevY: prevY_,
                 x: x_,
                 y: y_
 
             });
         }
 
-        function updateEdgeLabel(from_, to_, name_) {
+        function renameEdgeAction(id_, prevLabel_, label_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_EDGE_RENAME,
-                from: from_,
-                to: to_,
-                name: name_
+                id: id_,
+                prevLabel: prevLabel_,
+                label: label_,
             });
         }
 
-        function updateEdgeColor(from_, to_, color_) {
+        function recolorEdgeAction(id_, prevColor_, color_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_EDGE_RECOLOR,
-                from: from_,
-                to: to_,
-                color: convertHexToDecimal(color_)
+                id: id_,
+                prevColor: prevColor_,
+                color: color_
             });
         }
-
-        function updateEdgeDirection(from_, to_, newFrom_, newTo_) {
-            SNAPSHOT[CURRENT_SNAPSHOT].push({
-                action: ACTION_EDGE_CHANGE_DIRECTION,
-                from: from_,
-                to: to_,
-                newFrom: newFrom_,
-                newTo: newTo_
-            });
-        }
-
+        
         function convertHexToDecimal(color) {
             //#XXXXXX (No alpha means = 0xFF => 255 full alpha)
+            console.log("Color : " + color);
             var hexString = "";
             if (color.length === 7) {
                 hexString = "FF" + color.slice(1,color.length);
             } else { //#XXXXXXXX (Has an alpha value that is between 0-255)
                 hexString = color[7] + color[8] + color.slice(1,7);
             }
+            console.log("Hex string " + hexString);
             //return the number as a signed integer 
             return parseInt(hexString, 16) >> 0;
-       }
+        }
 
-       function undoLastAction(drawNodes) {
+       function undoLastAction(state) {
             if (SNAPSHOT[CURRENT_SNAPSHOT].length > 0) {
                 const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
 
@@ -316,18 +309,33 @@
                             VIS_EDGES.add(edge);
                         }
                         break;
+                    case ACTION_NODE_RECOLOR:
+                        VIS_NODES.update({ id: lastAction.id, color: lastAction.prevColor });
+                        break;
+                    case ACTION_NODE_RENAME:
+                        VIS_NODES.update({ id: lastAction.id, label: lastAction.prevLabel });
+                        break;
+                    case ACTION_NODE_CHANGE_POS:
+                        VIS_NODES.update({ id: lastAction.id, x: lastAction.prevX, y: lastAction.prevY });
+                        break;
+                    case ACTION_EDGE_RENAME:
+                        VIS_EDGES.update({ id: lastAction.id, label: lastAction.prevLabel });
+                        break;
+                    case ACTION_EDGE_RECOLOR:
+                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.prevColor });
+                        break;
                 }
 
                 REDO_STACK.push(lastAction);
-                if (drawNodes) {
+                if (state == "drawNodes") {
                     NETWORK.addNodeMode();
-                } else {
+                } else if (state == "drawEdges") {
                     NETWORK.addEdgeMode();
                 }
             }
         }
 
-        function redoLastAction(drawNodes) {
+        function redoLastAction(state) {
             if (REDO_STACK.length > 0) {
                 const lastAction = REDO_STACK.pop();
                 switch (lastAction.action) {
@@ -351,11 +359,30 @@
                         VIS_NODES.remove(lastAction.node.id);
                         deleteNodeEdgeAction(lastAction.node, lastAction.edges);
                         break;
-
+                    case ACTION_NODE_RECOLOR:
+                        VIS_NODES.update({ id: lastAction.id, color: lastAction.color });
+                        recolorNodeAction(lastAction.id, lastAction.prevColor, lastAction.color);
+                        break;
+                    case ACTION_NODE_RENAME:
+                        VIS_NODES.update({ id: lastAction.id, label: lastAction.label });
+                        renameNodeAction(lastAction.id, lastAction.prevLabel, lastAction.label);
+                        break;
+                    case ACTION_NODE_CHANGE_POS:
+                        VIS_NODES.update({ id: lastAction.id, x: lastAction.x, y: lastAction.y });
+                        repositionNodeAction(lastAction.id, lastAction.prevX, lastAction.prevY, lastAction.x, lastAction.y);
+                        break;
+                    case ACTION_EDGE_RENAME:
+                        VIS_EDGES.update({ id: lastAction.id, label: lastAction.label });
+                        renameEdgeAction(lastAction.id, lastAction.prevLabel, lastAction.label);
+                        break;
+                    case ACTION_EDGE_RECOLOR:
+                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.color });
+                        recolorEdgeAction(lastAction.id, lastAction.prevColor, lastAction.color);
+                        break;
                 }
-                if (drawNodes) {
+                if (state == "drawNodes") {
                     NETWORK.addNodeMode();
-                } else {
+                } else if (state == "drawEdges") {
                     NETWORK.addEdgeMode();
                 }
             }
@@ -406,6 +433,9 @@
                     height: "100%",
                     width: "100%",
                     interaction: { hover: true },
+                    layout: {
+                        randomSeed: undefined
+                    },
                     "nodes": {
                         "physics": false
                     },
@@ -429,15 +459,16 @@
                             NETWORK.addNodeMode();
                         },
                         addEdge: function (data, callback) {
-                            if (data.from == data.to) {
+                            if (data.from == data.to && this.state == "drawEdges") {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
+                                    addEdgeAction(data.id, data.from, data.to);
                                 }
                             }
                             else {
                                 callback(data);
+                                addEdgeAction(data.id, data.from, data.to);
                             }
-                            addEdgeAction(data.id, data.from, data.to);
                             NETWORK.addEdgeMode();
                         },
                         deleteNode: function (data, callback) {
@@ -485,23 +516,23 @@
             },
             methods: {
                 undo: function (event) {
-                    undoLastAction(this.drawNodes);
+                    undoLastAction(this.state);
                 },
                 redo: function (event) {
-                    redoLastAction(this.drawNodes);
+                    redoLastAction(this.state);
                 },
                 saveNodeChanges: function () {
                     var newLabel = document.getElementById('node-name').value;
 
                     if (editNode.label !== newLabel) {
+                        renameNodeAction(editNode.id, editNode.label, newLabel);
                         editNode.label = newLabel;
-                        updateNodeName(editNode.id, newLabel);
                     }
 
                     var newColor = pickr.getColor().toHEXA().toString();
                     if (editNode.color !== newColor) {
+                        recolorNodeAction(editNode.id, editNode.color, newColor);
                         editNode.color = newColor;
-                        updateNodeColor(editNode.id, newColor);
                     }
 
                     editNode.font.color = document.getElementById('node-font-color').value;
@@ -512,28 +543,19 @@
                     var newLabel = document.getElementById('edge-value').value;
 
                     if (editEdge.label !== newLabel) {
+                        renameEdgeAction(editEdge.id, editEdge.label, newLabel);
                         editEdge.label = newLabel;
-                        updateEdgeLabel(editEdge.from, editEdge.to, newLabel);
                     }
 
                     var newColor = pickr2.getColor().toHEXA().toString();
 
                     if (editEdge.color !== newColor) {
+                        recolorEdgeAction(editEdge.id, editEdge.color, newColor);
                         editEdge.color = newColor;
-                        updateEdgeColor(editEdge.from, editEdge.to, newColor);
                     }
 
                     editEdge.font.align = document.getElementById('edge-font-align').value;
-
-
-                    var newTo = document.getElementById('edge-to').value;
-                    var newFrom = document.getElementById('edge-from').value;
-
-                    if (editEdge.from !== newFrom || editEdge.to !== newTo) {
-                        updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
-                        editEdge.from = newFrom;
-                        editEdge.to = newTo;
-                    }
+                    // ADD ACTION FOR FONT ALIGN
 
                     VIS_EDGES.update(editEdge);
                 },
@@ -619,10 +641,6 @@
 
                                     //Set the color to what the current node is!
                                     pickr2.setColor(updateEdge.color);
-
-                                    //Init the to and from
-                                    document.getElementById('edge-to').value = updateEdge.to;
-                                    document.getElementById('edge-from').value = updateEdge.from;
 
                                     //Init the Alignment
                                     if (updateEdge.font.align === 'top') {
@@ -799,11 +817,13 @@
         NETWORK.on('dragEnd', function (properties) {
             for (var i = 0; i < properties.nodes.length; i++) {
                 var nodeId = properties.nodes[i];
-                console.log(properties);
+                const node = VIS_NODES.get(nodeId);
+                repositionNodeAction(nodeId, node.x, node.y, properties.pointer.canvas.x, properties.pointer.canvas.y);
                 VIS_NODES.update({ id: nodeId, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
-                updateNodePos(nodeId, properties.pointer.canvas.x, properties.pointer.canvas.y);
             }
         });
+
+        NETWORK.redraw();
 
     </script>
 }

@@ -63,6 +63,10 @@ header {
     margin-bottom: .5rem;
 }
 
+.cta-action {
+    text-decoration: none;
+}
+
 .features {
     display: block;
     background: #efefef;

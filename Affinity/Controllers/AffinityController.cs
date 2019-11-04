@@ -37,7 +37,8 @@ namespace Affinity.Controllers
         public void TestPDF()
         {
             SelectPdf.HtmlToPdf converter = new SelectPdf.HtmlToPdf();
-            SelectPdf.PdfDocument doc = converter.ConvertUrl("https://google.com");
+            SelectPdf.PdfDocument doc = converter.ConvertUrl("http://graphaffinity.com");
+
             doc.Save("pdf/test.pdf");
             doc.Close();
         }

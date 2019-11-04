@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "New Graph";
 }
 
@@ -47,11 +47,60 @@
             color: #333;
             opacity: .25;
         }
+      
+        
+        .pickr {
+            display: inline-block;
+        }
     </style>
 }
 
     <div class="graph">
-
+      <div>
+        <h2> Node Customization Options!</h2>
+        <label> Name: <input type="text" id="node-name"/></label>
+        <label> Color: <span class="color-picker"></span> </label>
+        <br />
+        <label> Size: <input type="number" min="1" max="20" id="node-size"/></label>
+        <label>
+            Font Color:
+            <select id="node-font-color">
+                <option value="#000000">
+                    Black
+                </option>
+                <option value="#FFFFFF">
+                    White
+                </option>
+            </select>
+        </label>
+        <br />
+        <button v-on:click="saveNodeChanges()"> Save Changes </button>
+    </div>
+    <div>
+        <h2> Edge Customization Options!</h2>
+        <label> Label/Weight: <input type="text" id="edge-value" /></label>
+        <label> Color: <span class="color-picker2"></span> </label>
+        <br />
+        <label> From: <input type="text" id="edge-from" /></label>
+        <label> To: <input type="text" id="edge-to" /></label>
+        <br />
+        <label>
+            Edge Font Align:
+            <select id="edge-font-align">
+                <option value="top">
+                    Top
+                </option>
+                <option value="middle">
+                    Middle
+                </option>
+                <option value="bottom">
+                    Bottom
+                </option>
+            </select>
+        </label>
+        <br />
+        <button v-on:click="saveEdgeChanges()"> Save Changes </button>
+    </div>
         <div class="button-group">
             <button v-on:click="changeMode('drawNodes')">Draw Nodes</button>
             <button v-on:click="changeMode('drawEdges')">Draw Edges</button>
@@ -81,8 +130,8 @@
     <script type="text/javascript" src="~/js/firebase.js"></script>
     <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
+    <script type="text/javascript" src="~/js/pickr.min.js"></script>
     <script type="text/javascript">
-
         const NODES = [];
 
         const EDGES = [];
@@ -114,9 +163,7 @@
 
             return getVisDataSet();
         }
-
     </script>
-
     <script>
         // Snapshot Model
         const ACTION_ADD_VERTEX = "0";
@@ -125,6 +172,14 @@
         const ACTION_DELETE_VERTEX = "2";
         const ACTION_DELETE_VERTEX_N_EDGE = "3";
         const ACTION_DELETE_EDGE = "4";
+      
+        const ACTION_NODE_RECOLOR = "5";
+        const ACTION_NODE_RENAME = "6";
+        const ACTION_NODE_CHANGE_POS = "7";
+
+        const ACTION_EDGE_RENAME = "8";
+        const ACTION_EDGE_RECOLOR = "9";
+        const ACTION_EDGE_CHANGE_DIRECTION = "10";
 
         const SNAPSHOT = {
             0: []
@@ -168,7 +223,73 @@
             });
         }
 
-        function undoLastAction(drawNodes) {
+        function updateNodeColor(vertexId, color_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_NODE_RECOLOR,
+                id: vertexId,
+                color: convertHexToDecimal(color_)
+            });
+        }
+
+        function updateNodeName(vertexId, name_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_NODE_RENAME,
+                id: vertexId,
+                name: name_
+            });
+        }
+
+        function updateNodePos(vertexId, x_, y_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_NODE_CHANGE_POS,
+                id: vertexId,
+                x: x_,
+                y: y_
+
+            });
+        }
+
+        function updateEdgeLabel(from_, to_, name_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_EDGE_RENAME,
+                from: from_,
+                to: to_,
+                name: name_
+            });
+        }
+
+        function updateEdgeColor(from_, to_, color_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_EDGE_RECOLOR,
+                from: from_,
+                to: to_,
+                color: convertHexToDecimal(color_)
+            });
+        }
+
+        function updateEdgeDirection(from_, to_, newFrom_, newTo_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_EDGE_CHANGE_DIRECTION,
+                from: from_,
+                to: to_,
+                newFrom: newFrom_,
+                newTo: newTo_
+            });
+        }
+
+        function convertHexToDecimal(color) {
+            //#XXXXXX (No alpha means = 0xFF => 255 full alpha)
+            var hexString = "";
+            if (color.length === 7) {
+                hexString = "FF" + color.slice(1,color.length);
+            } else { //#XXXXXXXX (Has an alpha value that is between 0-255)
+                hexString = color[7] + color[8] + color.slice(1,7);
+            }
+            //return the number as a signed integer 
+            return parseInt(hexString, 16) >> 0;
+       }
+
+       function undoLastAction(drawNodes) {
             if (SNAPSHOT[CURRENT_SNAPSHOT].length > 0) {
                 const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
 
@@ -259,7 +380,7 @@
                 edges.push({
                     from: edge.first, to: edge.second, color: edge.color,
                     arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
-                    label: edge.weight.toString(), font: { align: 'middle' }
+                    label: edge.weight.toString(), font: { align: 'top' }
                 });
             }
 
@@ -338,7 +459,75 @@
                         deleteEdge: function (data, callback) {
                             deleteEdgeAction(VIS_EDGES.get(data.edges[0]));
                             callback(data);
+                        },
+                        saveNodeChanges: function () {
+                        var newLabel = document.getElementById('node-name').value;
+
+                        if (editNode.label !== newLabel) {
+                            editNode.label = newLabel;
+                            updateNodeName(editNode.id, newLabel);
                         }
+
+                        var newColor = pickr.getColor().toHEXA().toString();
+                        if (editNode.color !== newColor) {
+                            editNode.color = newColor;
+                            updateNodeColor(editNode.id, newColor);
+                        }
+
+                        editNode.font.color = document.getElementById('node-font-color').value;
+
+                        VIS_NODES.update(editNode);
+                    },
+                    saveEdgeChanges: function () {
+                        var newLabel = document.getElementById('edge-value').value;
+
+                        if (editEdge.label !== newLabel) {
+                            editEdge.label = newLabel;
+                            updateEdgeLabel(editEdge.from, editEdge.to, newLabel);
+                        }
+
+                        var newColor = pickr2.getColor().toHEXA().toString();
+
+                        if (editEdge.color !== newColor) {
+                            editEdge.color = newColor;
+                            updateEdgeColor(editEdge.from, editEdge.to, newColor);
+                        }
+
+                        editEdge.font.align = document.getElementById('edge-font-align').value;
+
+
+                        var newTo = document.getElementById('edge-to').value;
+                        var newFrom = document.getElementById('edge-from').value;
+
+                        if (editEdge.from !== newFrom || editEdge.to !== newTo) {
+                            updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
+                            editEdge.from = newFrom;
+                            editEdge.to = newTo;
+                        }
+
+                        VIS_EDGES.update(editEdge);
+                    },
+                    save: function () {
+                        console.log(JSON.stringify(SNAPSHOT));
+                        var url = window.location.pathname;
+                        url = url.split('/');
+                        var token = url[url.length - 1];
+                        $.ajax({
+                            type: 'POST',
+                            url: '/api/saveToDB/' + token,
+                            contentType: "application/json",
+                            data: JSON.stringify(SNAPSHOT),
+                            headers: {
+                                RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                            },
+                            success: function () {
+                                alert('Saved');
+                            },
+                            error: function (xhr, textStatus, errorThrown) {
+                                alert(errorThrown);
+                            }
+                        });
+                    }
 
                     }
                 };
@@ -436,6 +625,119 @@
                         }
                     }
                 },
+                changeMode: function (newMode) {
+                    if (this.state == newMode) {
+                        //clicked on same button, exit mode or do nothing?
+                    }
+                    else {
+                        if (this.state == "delete" || this.state == "select" || this.state == "selectMultiple") {
+                            NETWORK.off('click');
+                        }
+                        this.state = newMode;
+                        if (newMode == "drawNodes") {
+                            NETWORK.addNodeMode();
+                        }
+                        else if (newMode == "drawEdges") {
+                            NETWORK.addEdgeMode();
+                        }
+                        else if (newMode == "delete") {
+                            NETWORK.disableEditMode();
+                            NETWORK.on('click', function () {
+                                NETWORK.deleteSelected();
+                            });
+                        }
+                        else if (newMode == "select") {
+                            NETWORK.disableEditMode();
+                            NETWORK.on('click', function (properties) {
+                                if (NETWORK.getSelectedNodes().length != 0) {
+                                    NETWORK.selectNodes(NETWORK.getSelectedNodes(), false);
+                                }
+
+                                //Get the node that we have clicked on
+                                var node = properties.nodes;
+                                //Get the edge that we have clicked on
+                                var edge = properties.edges;
+
+                                //If we hit a node else we hit an edge or nothing
+                                if (node.length != 0) {
+
+                                    var updateNode = VIS_NODES.get(node)[0];
+
+                                    editNode = updateNode;
+
+                                    document.getElementById('node-name').value = updateNode.label;
+
+                                    if (updateNode.font.color === '#FFFFFF') {
+                                        document.getElementById('node-font-color').value = "#FFFFFF";
+                                    } else {
+                                        document.getElementById('node-font-color').value = "#000000";
+                                    }
+
+                                    pickr.setColor(updateNode.color);
+
+                                } else if (edge.length != 0) {
+
+                                    var updateEdge = VIS_EDGES.get(edge)[0];
+
+                                    editEdge = updateEdge;
+
+                                    //Init the label editing
+                                    document.getElementById('edge-value').value = updateEdge.label;
+
+                                    //Set the color to what the current node is!
+                                    pickr2.setColor(updateEdge.color);
+
+                                    //Init the to and from
+                                    document.getElementById('edge-to').value = updateEdge.to;
+                                    document.getElementById('edge-from').value = updateEdge.from;
+
+                                    //Init the Alignment
+                                    if (updateEdge.font.align === 'top') {
+                                        document.getElementById('edge-font-align').value = "top";
+                                    } else if (updateEdge.font.align === 'middle') {
+                                        document.getElementById('edge-font-align').value = "middle";
+                                    } else {
+                                        document.getElementById('edge-font-align').value = "bottom";
+                                    }
+                                }
+
+                            });
+                        }
+                        else if (newMode == "selectMultiple") {
+                            NETWORK.disableEditMode();
+                            NETWORK.unselectAll();
+                            var currentNodes = NETWORK.getSelectedNodes();
+                            var currentEdges = NETWORK.getSelectedEdges();
+                            NETWORK.on('click', function () {
+                                if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
+                                    NETWORK.unselectAll();
+                                    currentNodes = [];
+                                    currentEdges = [];
+                                }
+                                else if (NETWORK.getSelectedNodes().length != 0) {
+                                    selectedNode = NETWORK.getSelectedNodes()[0];
+                                    var index = currentNodes.indexOf(String(selectedNode));
+                                    if (index != -1) {
+                                        currentNodes.splice(index, 1);
+                                    }
+                                    else {
+                                        currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                    }
+                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                }
+                                else {
+                                    selectedEdge = NETWORK.getSelectedEdges()[0];
+                                    var index = currentEdges.indexOf(String(selectedEdge));
+                                    if (index != -1) {
+                                        currentEdges.splice(index, 1);
+                                    }
+                                    else {
+                                        currentEdges.push(String(NETWORK.getSelectedEdges()));
+                                    }
+                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                }
+                            });
+                        },
                 pdf: function (event) {
 
                     html2canvas(document.getElementById("mynetwork"), {
@@ -491,6 +793,82 @@
                 }
             }
         })
+         
+        const pickr = Pickr.create({
+            el: '.color-picker',
+            theme: 'nano', // 'classic', 'monolith', or 'nano'
+
+            swatches: [
+                'rgba(255, 0, 0, 1)',
+                'rgba(255, 127, 0, 1)',
+                'rgba(0, 255, 0, 1)',
+                'rgba(0, 0, 255, 1)',
+                'rgba(75, 0, 130, 1)',
+                'rgba(139, 0, 255, 1)',
+                'rgba(0, 0, 0, 1)'
+            ],
+
+            components: {
+
+                // Main components
+                preview: true,
+                opacity: true,
+                hue: true,
+
+                // Input / output Options
+                interaction: {
+                    hex: false,
+                    rgba: false,
+                    hsva: false,
+                    input: true,
+                    clear: true,
+                    save: true
+                }
+            }
+        });
+
+        const pickr2 = Pickr.create({
+            el: '.color-picker2',
+            theme: 'nano', // 'classic', 'monolith', or 'nano'
+
+            swatches: [
+                'rgba(255, 0, 0, 1)',
+                'rgba(255, 127, 0, 1)',
+                'rgba(0, 255, 0, 1)',
+                'rgba(0, 0, 255, 1)',
+                'rgba(75, 0, 130, 1)',
+                'rgba(139, 0, 255, 1)',
+                'rgba(0, 0, 0, 1)'
+            ],
+
+            components: {
+
+                // Main components
+                preview: true,
+                opacity: true,
+                hue: true,
+
+                // Input / output Options
+                interaction: {
+                    hex: false,
+                    rgba: false,
+                    hsva: false,
+                    input: true,
+                    clear: true,
+                    save: true
+                }
+            }
+        });
+
+        //Saves the new position for the nodes
+        NETWORK.on('dragEnd', function (properties) {
+            for (var i = 0; i < properties.nodes.length; i++) {
+                var nodeId = properties.nodes[i];
+                console.log(properties);
+                VIS_NODES.update({ id: nodeId, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
+                updateNodePos(nodeId, properties.pointer.canvas.x, properties.pointer.canvas.y);
+            }
+        });
 
     </script>
 }

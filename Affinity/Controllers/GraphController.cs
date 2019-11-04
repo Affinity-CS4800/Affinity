@@ -17,56 +17,123 @@ using System.Diagnostics;
 
 namespace Affinity.Controllers
 {
+    enum Actions
+    {
+        Add_Vertex,
+        Add_Edge, 
+        Delete_Vertex, 
+        Delete_Vertex_N_Edge, 
+        Delete_Edge
+    };
+
     public class GraphController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AffinityDbcontext _affinityDbContext;
-        private string API_KEY;
 
         public GraphController(IHttpContextAccessor httpContextAccessor, AffinityDbcontext affinityDbcontext)
         {
             _httpContextAccessor = httpContextAccessor;
             _affinityDbContext = affinityDbcontext;
-            API_KEY = "";
-            using (StreamReader reader = new StreamReader("API_KEY.txt"))
-            {
-                API_KEY = reader.ReadLine();
-            }
         }
 
-        public string GetDatabaseUrl()
+        [Route("/api/saveToDB/{graphID:length(8)}")]
+        [HttpPost]
+        public async Task GraphSaver([FromBody] JObject json, string graphID)
         {
-            if (API_KEY == "")
+            foreach (var data in json)
             {
-                return "error";
+                foreach(var key in data.Value)
+                {
+                    Debug.WriteLine(key);
+                    string value = key["action"].ToString();
+                    if (value == "0")
+                    {
+                        Vertex vertex = new Vertex
+                        {
+                            Name = "",
+                            ID = int.Parse(key["id"].ToString()),
+                            GraphID = graphID
+                        };
+                        
+                        _affinityDbContext.Vertices.Add(vertex);
+                    }
+                    else if(value == "1")
+                    {
+                        Edge edge = new Edge
+                        {
+                            First = int.Parse(key["from"].ToString()),
+                            Second = int.Parse(key["to"].ToString()),
+                            Direction = Direction.Undirected,
+                            GraphID = graphID
+                        };
+
+                        _affinityDbContext.Edges.Add(edge);
+                    }
+                    else if(value == "2")
+                    {
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        _affinityDbContext.Vertices.Remove(vertex);
+                    }
+                    else if(value == "3")
+                    {
+                        var edges = _affinityDbContext.Edges.AsNoTracking().Where(v => v.First == int.Parse(key["from"].ToString()) || v.Second == int.Parse(key["from"].ToString()))
+                            .Select(g => g.DBID).Distinct();
+                        foreach(var edge in edges)
+                        {
+                            Edge e = await _affinityDbContext.Edges.Where(v => v.DBID == edge && v.GraphID == graphID).FirstOrDefaultAsync();
+                            _affinityDbContext.Edges.Remove(e);
+                        }
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        _affinityDbContext.Vertices.Remove(vertex);
+                    }
+                    else if(value == "4")
+                    {
+                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                        _affinityDbContext.Edges.Remove(edge);
+                    }
+                    else if(value == "5")
+                    {
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        vertex.Color = int.Parse(key["color"].ToString());
+                        _affinityDbContext.Vertices.Update(vertex);
+                    }
+                    else if (value == "6")
+                    {
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        vertex.Name = key["name"].ToString();
+                        _affinityDbContext.Vertices.Update(vertex);
+                    }
+                    else if (value == "7")
+                    {
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        vertex.XPos = (int)double.Parse(key["x"].ToString());
+                        vertex.YPos = (int)double.Parse(key["y"].ToString());
+                        _affinityDbContext.Vertices.Update(vertex);
+                    }
+                    else if (value == "8")
+                    {
+                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                        edge.Weight = int.Parse(key["name"].ToString());
+                        _affinityDbContext.Edges.Update(edge);
+                    }
+                    else if (value == "9")
+                    {
+                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                        edge.Color = int.Parse(key["color"].ToString());
+                        _affinityDbContext.Edges.Update(edge);
+                    }
+                    else if (value == "10")
+                    {
+                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                        edge.First = int.Parse(key["newFrom"].ToString());
+                        edge.Second = int.Parse(key["newTo"].ToString());
+                        _affinityDbContext.Edges.Update(edge);
+                    }
+                }
             }
 
-            RestClient client = new RestClient("https://api.heroku.com/");
-            RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
-            req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
-            req.AddHeader("Authorization", "Bearer " + API_KEY);
-            string response = client.Execute(req).Content.ToLower();
-            
-            if(response.Contains("error"))
-            {
-                return "error";
-            }
-  
-            JObject config = JObject.Parse(response);
-            JProperty dbUrlProperty = config.Property("database_url");
-
-            if(dbUrlProperty == null)
-            {
-                return "error";
-            }
-            
-            return dbUrlProperty.Value.ToString();
-        }
-
-        [Route("/dbtest")]
-        public IActionResult DbTest()
-        {
-            return Json(new { url = GetDatabaseUrl() });
+            await _affinityDbContext.SaveChangesAsync();
         }
 
         [Route("/graph")]
@@ -125,17 +192,17 @@ namespace Affinity.Controllers
         [Route("/graph/{token:length(8)}")]
         public async Task<IActionResult> GetSpecificGraph(string token)
         {
-            bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
-            if (!authenticated)
-            {
-                return RedirectToAction("Login","Affinity");
-            }
+            //bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
+            //if (!authenticated)
+            //{
+            //    return RedirectToAction("Login","Affinity");
+            //}
 
             var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
             var user = await _affinityDbContext.Users.AsNoTracking().Where(graph => graph.GraphID == token).FirstOrDefaultAsync();
 
             //If the database found no graph id associated with the token or the user's UID does not match the one logged in then boot em to their graphs
-            if (user == null || user.UID != userToken.Uid)
+            if (user != null && userToken != null && user.UID != userToken.Uid)
             {
                 return RedirectToAction("GetGraphs", "Graph");
             }
@@ -152,7 +219,12 @@ namespace Affinity.Controllers
                 return RedirectToAction("Login", "Affinity");
             }
 
-            return Json(new { id = "2", value = "GetGraphs" });
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+            var graph = _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid)
+                .Select(g => g.GraphID)
+                .Distinct();
+
+            return Content(JsonConvert.SerializeObject(graph));
         }
 
         [Route("/api/graphData/{token:length(8)}")]

@@ -91,7 +91,6 @@
             var url = window.location.pathname;
             url = url.split('/');
             var token = url[url.length - 1];
-            console.log(token);
             $.ajax({
                 type: "GET",
                 url: "/api/graphData/" + token,
@@ -129,7 +128,8 @@
 
         const SNAPSHOT = {
             0: []
-        }
+        };
+
         const REDO_STACK = [];
         let CURRENT_SNAPSHOT = 0;
 
@@ -137,32 +137,34 @@
             SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: vertexId });
         }
 
-        function addEdgeAction(from_, to_) {
+        function addEdgeAction(id_, from_, to_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_ADD_EDGE,
+                id: id_,
                 from: from_,
                 to: to_
             });
         }
 
-        function deleteNodeAction(vertexId) {
-            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_DELETE_VERTEX, id: vertexId });
+        function deleteNodeAction(node_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_DELETE_VERTEX,
+                node: node_
+            });
         }
 
-        function deleteNodeEdgeAction(vertexId, connectedEdges) {
+        function deleteNodeEdgeAction(node_, edges_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_DELETE_VERTEX_N_EDGE,
-                id: vertexId,
-                from: vertexId,
-                to: connectedEdges
+                node: node_,
+                edges: edges_
             });
         }
 
-        function deleteEdgeAction(from_, to_) {
+        function deleteEdgeAction(edge_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_DELETE_EDGE,
-                from: from_,
-                to: to_
+                edge: edge_
             });
         }
 
@@ -177,6 +179,21 @@
                         lastAction.x = vertex.x;
                         lastAction.y = vertex.y;
                         VIS_NODES.remove(lastAction.id);
+                        break;
+                    case ACTION_ADD_EDGE:
+                        VIS_EDGES.remove(lastAction.id);
+                        break;
+                    case ACTION_DELETE_EDGE:
+                        VIS_EDGES.add(lastAction.edge);
+                        break;
+                    case ACTION_DELETE_VERTEX:
+                        VIS_NODES.add(lastAction.node);
+                        break;
+                    case ACTION_DELETE_VERTEX_N_EDGE:
+                        VIS_NODES.add(lastAction.node);
+                        for (edge of lastAction.edges) {
+                            VIS_EDGES.add(edge);
+                        }
                         break;
                 }
 
@@ -197,6 +214,23 @@
                         VIS_NODES.add({ id: lastAction.id, label: "", x: lastAction.x, y: lastAction.y });
                         addNodeAction(lastAction.id);
                         break;
+                    case ACTION_ADD_EDGE:
+                        VIS_EDGES.add({ id: lastAction.id, label: "", from: lastAction.from, to: lastAction.to });
+                        addEdgeAction(lastAction.id, lastAction.from, lastAction.to);
+                        break;
+                    case ACTION_DELETE_EDGE:
+                        VIS_EDGES.remove(lastAction.edge.id);
+                        deleteEdgeAction(lastAction.edge);
+                        break;
+                    case ACTION_DELETE_VERTEX:
+                        VIS_NODES.remove(lastAction.node.id);
+                        deleteNodeAction(lastAction.node);
+                        break;
+                    case ACTION_DELETE_VERTEX_N_EDGE:
+                        VIS_NODES.remove(lastAction.node.id);
+                        deleteNodeEdgeAction(lastAction.node, lastAction.edges);
+                        break;
+
                 }
                 if (drawNodes) {
                     NETWORK.addNodeMode();
@@ -215,7 +249,6 @@
             const nodes = [], edges = [];
 
             for (node of NODES) {
-                console.log(node.color);
                 nodes.push({
                     id: node.id, label: node.name, x: node.x, y: node.y,
                     color: node.color, font: { color: '#FFFFFF' }
@@ -232,9 +265,6 @@
 
             VIS_NODES = new vis.DataSet(nodes);
             VIS_EDGES = new vis.DataSet(edges);
-
-            console.log(VIS_NODES);
-            console.log(VIS_EDGES);
 
             return {
                 nodes: VIS_NODES,
@@ -286,20 +316,27 @@
                             else {
                                 callback(data);
                             }
-                            addEdgeAction(data.from, data.to);
+                            addEdgeAction(data.id, data.from, data.to);
                             NETWORK.addEdgeMode();
                         },
                         deleteNode: function (data, callback) {
-                            if (NETWORK.getConnectedEdges(data.id) != null) {
-                                deleteNodeEdgeAction(data.id, NETWORK.getConnectedEdges(data.id));
+                            const nodeId = data.nodes[0];
+                            const node = VIS_NODES.get(nodeId);
+                            if (data.edges.length > 0) {
+                                const connectedEdges = NETWORK.getConnectedEdges(nodeId);
+                                var edges = [];
+                                for (edgeId of connectedEdges) {
+                                    edges.push(VIS_EDGES.get(edgeId));
+                                }
+                                deleteNodeEdgeAction(node, edges);
                             }
                             else {
-                                deleteNodeAction(data.id);
+                                deleteNodeAction(node);
                             }
                             callback(data);
                         },
                         deleteEdge: function (data, callback) {
-                            deleteEdgeAction(data.from, data.to);
+                            deleteEdgeAction(VIS_EDGES.get(data.edges[0]));
                             callback(data);
                         }
 

@@ -459,9 +459,11 @@
                         enabled: true,
                         addNode: function (data, callback) {
                             data.id = nextNodeID;
+                            data.color = pickr.getColor().toHEXA().toString();
                             nextNodeID++;
                             callback(data);
                             addNodeAction(data.id);
+                            //editNode = data; //needs to be tested
                             NETWORK.addNodeMode();
                         },
                         addEdge: function (data, callback) {

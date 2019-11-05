@@ -27,8 +27,8 @@
                         <a class="navigation-menuLink" asp-area="" asp-controller="Affinity" asp-action="Login">Login</a>
                     </li>
                     <li class="navigation-menuItem" v-if="user === null"><a class="navigation-menuLink" href="/login">Sign up</a></li>
-                    <li class="navigation-menuItem sign-out-button" v-if="user" id="sign-out">
-                        <button type="button" class="navigation-menuLink" v-on:click="signOut">Sign Out</button>
+                    <li class="navigation-menuItem " v-if="user" id="sign-out">
+                        <button type="button" class="navigation-menuLink sign-out-button" v-on:click="signOut">Sign Out</button>
                     </li>
                 </ul>
             </nav>
@@ -36,10 +36,15 @@
         <main role="main">
             @RenderBody()
         </main>
-        <footer>
-            <div class="container">
-                Made by Team Affinity - <a asp-area="" asp-controller="Affinity" asp-action="Privacy">Privacy</a>
-            </div>
+        <footer class="directory">
+            <div class="directory-links">
+                <h2>Affinity</h2>
+                <a href="/">Home</a>
+                <a href="/graphs">Graphs</a>
+                <a href="/about">About</a>
+            </div><p class="directory-about">
+                Made by <a href="/about">Team Affinity</a> for CS 4800 at Cal Poly Pomona
+            </p>
         </footer>
     </div>
     <environment include="Development">

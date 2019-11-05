@@ -409,7 +409,7 @@
             for (node of NODES) {
                 nodes.push({
                     id: node.id, label: node.name, x: node.x, y: node.y,
-                    color: node.color, font: { color: '#000000' }
+                    color: node.color, font: { color: '#FFFFFF' }
                 });
             }
 
@@ -480,7 +480,7 @@
                         enabled: true,
                         addNode: function (data, callback) {
                             data.id = nextNodeID;
-                            VIS_NODES.update({ id: data.id, label: "", color: '#97C2FC', font: { color: '#000000' }, x: data.x, y: data.y });
+                            VIS_NODES.update({ id: data.id, label: "", color: '#97C2FC', font: { color: '#FFFFFF' }, x: data.x, y: data.y });
 
                             nextNodeID++;
                             callback(data);

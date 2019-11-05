@@ -148,24 +148,22 @@
                 cache: false,
                 async: false,
                 success: function (data) {
-                    console.log(data);
-                    try {
-                        var result = jQuery.parseJSON(data);
-                        $.each(result, function (key, value) {
-                            $.each(value, function (key2, value) {
-                                var argb = (value.Color >>> 0).toString(16);
-                                var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
-                                if (key === "Vertices") {
-                                    NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
-                                } else {
-                                    EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
-                                }
-                            });
-                        });
-                    } catch (e) {
-                        window.location = "/login";
+                    if (data.redirect !== undefined) {
+                        window.location.href = data.redirect_url;
                     }
-                    
+
+                    var result = jQuery.parseJSON(data);
+                    $.each(result, function (key, value) {
+                        $.each(value, function (key2, value) {
+                            var argb = (value.Color >>> 0).toString(16);
+                            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+                            if (key === "Vertices") {
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
+                            } else {
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+                            }
+                        });
+                    });     
                 }
             });
 

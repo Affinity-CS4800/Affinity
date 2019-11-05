@@ -148,18 +148,24 @@
                 cache: false,
                 async: false,
                 success: function (data) {
-                    var result = jQuery.parseJSON(data);
-                    $.each(result, function (key, value) {
-                        $.each(value, function (key2, value) {
-                            var argb = (value.Color >>> 0).toString(16);
-                            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
-                            if (key === "Vertices") {
-                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
-                            } else {
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
-                            }
+                    console.log(data);
+                    try {
+                        var result = jQuery.parseJSON(data);
+                        $.each(result, function (key, value) {
+                            $.each(value, function (key2, value) {
+                                var argb = (value.Color >>> 0).toString(16);
+                                var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+                                if (key === "Vertices") {
+                                    NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
+                                } else {
+                                    EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+                                }
+                            });
                         });
-                    });
+                    } catch (e) {
+                        window.location = "/login";
+                    }
+                    
                 }
             });
 
@@ -442,8 +448,23 @@
                     layout: {
                         randomSeed: undefined
                     },
-                    "nodes": {
-                        "physics": false
+                    nodes: {
+                        physics: false,
+                        color: {
+                          border: '#2B7CE9',
+                          background: '#97C2FC',
+                          highlight: {
+                            border: '#2B7CE9',
+                            background: '#D2E5FF'
+                          },
+                          hover: {
+                            border: '#2B7CE9',
+                            background: '#D2E5FF'
+                          }
+                        },
+                        font: {
+                            color: '#000000'
+                        }
                     },
                     physics: {
                         barnesHut: {
@@ -460,6 +481,7 @@
                         addNode: function (data, callback) {
                             data.id = nextNodeID;
                             data.color = pickr.getColor().toHEXA().toString();
+                            VIS_NODES.update({ id: data.id, label: "", color: '#97C2FC', font: { color: '#FFFFFF' }, x: data.x, y: data.y });
                             nextNodeID++;
                             callback(data);
                             addNodeAction(data.id);
@@ -477,6 +499,8 @@
                                 callback(data);
                                 addEdgeAction(data.id, data.from, data.to);
                             }
+
+                            VIS_EDGES.update({ id: data.id, label: "", color: '#6590C6', font: { color: '#000000' }, from: data.from, to: data.to });
                             NETWORK.addEdgeMode();
                         },
                         deleteNode: function (data, callback) {
@@ -501,6 +525,7 @@
                         }
                     }
                 };
+
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
                 nextNodeID = VIS_NODES.length;
                 NETWORK.addNodeMode();
@@ -798,7 +823,10 @@
                     clear: true,
                     save: true
                 }
-            }
+            },
+
+            // Default color
+            default: '#000000'
         });
 
         const pickr2 = Pickr.create({
@@ -831,7 +859,10 @@
                     clear: true,
                     save: true
                 }
-            }
+            },
+
+            // Default color
+            default: '#000000'
         });
 
         //Saves the new position for the nodes

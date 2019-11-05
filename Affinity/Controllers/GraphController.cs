@@ -233,7 +233,7 @@ namespace Affinity.Controllers
             bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
             if (!authenticated)
             {
-                return RedirectToAction("Login", "Affinity");
+                return Json(new { redirect = true, redirect_url = "/login" });
             }
 
             //d9147ab4

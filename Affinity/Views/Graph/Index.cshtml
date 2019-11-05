@@ -437,7 +437,8 @@
                 state: "drawNodes",
                 nextNodeID: 0,
                 showNodeCustomization: true,
-                showEdgeCustomization: false
+                showEdgeCustomization: false,
+                editNode: null
             },
             mounted: function () {
                 const options = {
@@ -481,14 +482,16 @@
                         addNode: function (data, callback) {
                             data.id = nextNodeID;
                             data.color = pickr.getColor().toHEXA().toString();
-                            VIS_NODES.update({ id: data.id, label: "", color: '#97C2FC', font: { color: '#FFFFFF' }, x: data.x, y: data.y });
+                            VIS_NODES.update({ id: data.id, label: "", color: data.color, font: { color: '#FFFFFF' }, x: data.x, y: data.y });
                             nextNodeID++;
                             callback(data);
                             addNodeAction(data.id);
-                            //editNode = data; //needs to be tested
                             NETWORK.addNodeMode();
+                            var idArr = [data.id];
+                            NETWORK.selectNodes(idArr, false);
                         },
                         addEdge: function (data, callback) {
+                            data.color = pickr2.getColor().toHEXA().toString();
                             if (data.from == data.to && this.state == "drawEdges") {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
@@ -500,7 +503,7 @@
                                 addEdgeAction(data.id, data.from, data.to);
                             }
 
-                            VIS_EDGES.update({ id: data.id, label: "", color: '#6590C6', font: { color: '#000000' }, from: data.from, to: data.to });
+                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, from: data.from, to: data.to });
                             NETWORK.addEdgeMode();
                         },
                         deleteNode: function (data, callback) {
@@ -555,6 +558,9 @@
                     redoLastAction(this.state);
                 },
                 saveNodeChanges: function () {
+                    editNode = NETWORK.getSelectedNodes()[0];
+                    editNode = VIS_NODES.get(editNode);
+
                     var newLabel = document.getElementById('node-name').value;
 
                     if (editNode.label !== newLabel) {

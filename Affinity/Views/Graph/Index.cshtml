@@ -24,20 +24,20 @@
             margin-bottom: 1rem;
         }
 
-        .button-group button {
-            font-size: .85rem;
-            padding: .5rem 1rem;
-            cursor: pointer;
-            color: #efefef;
-            background: #333;
-            border: 0;
-            margin-right: .25rem;
-        }
+            .button-group button {
+                font-size: .85rem;
+                padding: .5rem 1rem;
+                cursor: pointer;
+                color: #efefef;
+                background: #333;
+                border: 0;
+                margin-right: .25rem;
+            }
 
-        .button-group button:hover {
-            cursor: pointer;
-            background: #111;
-        }
+                .button-group button:hover {
+                    cursor: pointer;
+                    background: #111;
+                }
 
 
         .status {
@@ -47,21 +47,21 @@
             color: #333;
             opacity: .25;
         }
-      
-        
+
+
         .pickr {
             display: inline-block;
         }
     </style>
 }
 
-    <div class="graph">
-      <div>
+<div class="graph">
+    <div>
         <h2> Node Customization Options!</h2>
-        <label> Name: <input type="text" id="node-name"/></label>
+        <label> Name: <input type="text" id="node-name" /></label>
         <label> Color: <span class="color-picker"></span> </label>
         <br />
-        <label> Size: <input type="number" min="1" max="20" id="node-size"/></label>
+        <label> Size: <input type="number" min="1" max="20" id="node-size" /></label>
         <label>
             Font Color:
             <select id="node-font-color">
@@ -101,24 +101,24 @@
         <br />
         <button v-on:click="saveEdgeChanges()"> Save Changes </button>
     </div>
-        <div class="button-group">
-            <button v-on:click="changeMode('drawNodes')">Draw Nodes</button>
-            <button v-on:click="changeMode('drawEdges')">Draw Edges</button>
-            <button v-on:click="changeMode('delete')">Delete</button>
-            <button v-on:click="changeMode('select')">Select</button>
-            <button v-on:click="changeMode('selectMultiple')">Select Multiple</button>
-            <button v-on:click="undo()">Undo</button>
-            <button v-on:click="redo()">Redo</button>
-            <button v-on:click="pdf()">Download as Pdf</button>
-            <button v-on:click="img()">Download as Png</button>
-        </div>
-        <div class="status">
-            <h2 v-if="state=='delete'">You're deleting.</h2>
-            <h2 v-else-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
-            <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
-        </div>
-        <div id="mynetwork"></div>
+    <div class="button-group">
+        <button v-on:click="changeMode('drawNodes')">Draw Nodes</button>
+        <button v-on:click="changeMode('drawEdges')">Draw Edges</button>
+        <button v-on:click="changeMode('delete')">Delete</button>
+        <button v-on:click="changeMode('select')">Select</button>
+        <button v-on:click="changeMode('selectMultiple')">Select Multiple</button>
+        <button v-on:click="undo()">Undo</button>
+        <button v-on:click="redo()">Redo</button>
+        <button v-on:click="pdf()">Download as Pdf</button>
+        <button v-on:click="img()">Download as Png</button>
     </div>
+    <div class="status">
+        <h2 v-if="state=='delete'">You're deleting.</h2>
+        <h2 v-else-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
+        <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
+    </div>
+    <div id="mynetwork"></div>
+</div>
 
 
 @section scripts {
@@ -172,7 +172,7 @@
         const ACTION_DELETE_VERTEX = "2";
         const ACTION_DELETE_VERTEX_N_EDGE = "3";
         const ACTION_DELETE_EDGE = "4";
-      
+
         const ACTION_NODE_RECOLOR = "5";
         const ACTION_NODE_RENAME = "6";
         const ACTION_NODE_CHANGE_POS = "7";
@@ -281,15 +281,15 @@
             //#XXXXXX (No alpha means = 0xFF => 255 full alpha)
             var hexString = "";
             if (color.length === 7) {
-                hexString = "FF" + color.slice(1,color.length);
+                hexString = "FF" + color.slice(1, color.length);
             } else { //#XXXXXXXX (Has an alpha value that is between 0-255)
-                hexString = color[7] + color[8] + color.slice(1,7);
+                hexString = color[7] + color[8] + color.slice(1, 7);
             }
-            //return the number as a signed integer 
+            //return the number as a signed integer
             return parseInt(hexString, 16) >> 0;
-       }
+        }
 
-       function undoLastAction(drawNodes) {
+        function undoLastAction(drawNodes) {
             if (SNAPSHOT[CURRENT_SNAPSHOT].length > 0) {
                 const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
 
@@ -422,13 +422,13 @@
                     manipulation: {
                         enabled: true,
                         addNode: function (data, callback) {
-                            data.id = nextNodeID; 
+                            data.id = nextNodeID;
                             nextNodeID++;
                             callback(data);
                             addNodeAction(data.id);
                             NETWORK.addNodeMode();
                         },
-                        addEdge: function (data, callback) {     
+                        addEdge: function (data, callback) {
                             if (data.from == data.to) {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
@@ -459,76 +459,7 @@
                         deleteEdge: function (data, callback) {
                             deleteEdgeAction(VIS_EDGES.get(data.edges[0]));
                             callback(data);
-                        },
-                        saveNodeChanges: function () {
-                        var newLabel = document.getElementById('node-name').value;
-
-                        if (editNode.label !== newLabel) {
-                            editNode.label = newLabel;
-                            updateNodeName(editNode.id, newLabel);
                         }
-
-                        var newColor = pickr.getColor().toHEXA().toString();
-                        if (editNode.color !== newColor) {
-                            editNode.color = newColor;
-                            updateNodeColor(editNode.id, newColor);
-                        }
-
-                        editNode.font.color = document.getElementById('node-font-color').value;
-
-                        VIS_NODES.update(editNode);
-                    },
-                    saveEdgeChanges: function () {
-                        var newLabel = document.getElementById('edge-value').value;
-
-                        if (editEdge.label !== newLabel) {
-                            editEdge.label = newLabel;
-                            updateEdgeLabel(editEdge.from, editEdge.to, newLabel);
-                        }
-
-                        var newColor = pickr2.getColor().toHEXA().toString();
-
-                        if (editEdge.color !== newColor) {
-                            editEdge.color = newColor;
-                            updateEdgeColor(editEdge.from, editEdge.to, newColor);
-                        }
-
-                        editEdge.font.align = document.getElementById('edge-font-align').value;
-
-
-                        var newTo = document.getElementById('edge-to').value;
-                        var newFrom = document.getElementById('edge-from').value;
-
-                        if (editEdge.from !== newFrom || editEdge.to !== newTo) {
-                            updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
-                            editEdge.from = newFrom;
-                            editEdge.to = newTo;
-                        }
-
-                        VIS_EDGES.update(editEdge);
-                    },
-                    save: function () {
-                        console.log(JSON.stringify(SNAPSHOT));
-                        var url = window.location.pathname;
-                        url = url.split('/');
-                        var token = url[url.length - 1];
-                        $.ajax({
-                            type: 'POST',
-                            url: '/api/saveToDB/' + token,
-                            contentType: "application/json",
-                            data: JSON.stringify(SNAPSHOT),
-                            headers: {
-                                RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                            },
-                            success: function () {
-                                alert('Saved');
-                            },
-                            error: function (xhr, textStatus, errorThrown) {
-                                alert(errorThrown);
-                            }
-                        });
-                    }
-
                     }
                 };
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
@@ -737,7 +668,9 @@
                                     NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                             });
-                        },
+                        }
+                    }
+                },
                 pdf: function (event) {
 
                     html2canvas(document.getElementById("mynetwork"), {
@@ -778,7 +711,7 @@
 
                         window.open(uri);
 
-                    }   
+                    }
                 },
                 signOut: function (event) {
                     if (this.user) {
@@ -790,10 +723,78 @@
                         });
                         window.location.reload(true); // refresh page
                     }
+                },
+                saveNodeChanges: function () {
+                    var newLabel = document.getElementById('node-name').value;
+
+                    if (editNode.label !== newLabel) {
+                        editNode.label = newLabel;
+                        updateNodeName(editNode.id, newLabel);
+                    }
+
+                    var newColor = pickr.getColor().toHEXA().toString();
+                    if (editNode.color !== newColor) {
+                        editNode.color = newColor;
+                        updateNodeColor(editNode.id, newColor);
+                    }
+
+                    editNode.font.color = document.getElementById('node-font-color').value;
+
+                    VIS_NODES.update(editNode);
+                },
+                saveEdgeChanges: function () {
+                    var newLabel = document.getElementById('edge-value').value;
+
+                    if (editEdge.label !== newLabel) {
+                        editEdge.label = newLabel;
+                        updateEdgeLabel(editEdge.from, editEdge.to, newLabel);
+                    }
+
+                    var newColor = pickr2.getColor().toHEXA().toString();
+
+                    if (editEdge.color !== newColor) {
+                        editEdge.color = newColor;
+                        updateEdgeColor(editEdge.from, editEdge.to, newColor);
+                    }
+
+                    editEdge.font.align = document.getElementById('edge-font-align').value;
+
+
+                    var newTo = document.getElementById('edge-to').value;
+                    var newFrom = document.getElementById('edge-from').value;
+
+                    if (editEdge.from !== newFrom || editEdge.to !== newTo) {
+                        updateEdgeDirection(editEdge.from, editEdge.to, newFrom, newTo);
+                        editEdge.from = newFrom;
+                        editEdge.to = newTo;
+                    }
+
+                    VIS_EDGES.update(editEdge);
+                },
+                save: function () {
+                    console.log(JSON.stringify(SNAPSHOT));
+                    var url = window.location.pathname;
+                    url = url.split('/');
+                    var token = url[url.length - 1];
+                    $.ajax({
+                        type: 'POST',
+                        url: '/api/saveToDB/' + token,
+                        contentType: "application/json",
+                        data: JSON.stringify(SNAPSHOT),
+                        headers: {
+                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function () {
+                            alert('Saved');
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            alert(errorThrown);
+                        }
+                    });
                 }
             }
         })
-         
+
         const pickr = Pickr.create({
             el: '.color-picker',
             theme: 'nano', // 'classic', 'monolith', or 'nano'

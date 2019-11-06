@@ -12,7 +12,7 @@
     "service-role"     : "aws-elasticbeanstalk-service-role",
     "health-check-url" : "/",
     "instance-type"    : "t2.micro",
-    "key-pair"         : "Affinity",
+    "key-pair"         : "GraphAffinity",
     "iis-website"      : "Default Web Site",
     "app-path"         : "/",
     "enable-xray"      : false

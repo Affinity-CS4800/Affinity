@@ -2,8 +2,6 @@
     ViewData["Title"] = "New Graph";
 }
 
-@using System.Drawing;
-
 @section styles {
     <style>
         .graph {
@@ -285,7 +283,6 @@
             } else { //#XXXXXXXX (Has an alpha value that is between 0-255)
                 hexString = color[7] + color[8] + color.slice(1, 7);
             }
-            console.log("Hex string " + hexString);
             //return the number as a signed integer
             return parseInt(hexString, 16) >> 0;
         }
@@ -435,7 +432,9 @@
                 state: "drawNodes",
                 nextNodeID: 0,
                 showNodeCustomization: true,
-                showEdgeCustomization: false
+                showEdgeCustomization: false,
+                editNode: null,
+                editEdge: null
             },
             mounted: function () {
                 const options = {
@@ -555,40 +554,40 @@
                 saveNodeChanges: function () {
                     var newLabel = document.getElementById('node-name').value;
 
-                    if (editNode.label !== newLabel) {
-                        renameNodeAction(editNode.id, editNode.label, newLabel);
-                        editNode.label = newLabel;
+                    if (this.editNode.label !== newLabel) {
+                        renameNodeAction(this.editNode.id, this.editNode.label, newLabel);
+                        this.editNode.label = newLabel;
                     }
 
                     var newColor = pickr.getColor().toHEXA().toString();
-                    if (editNode.color !== newColor) {
-                        recolorNodeAction(editNode.id, editNode.color, newColor);
-                        editNode.color = newColor;
+                    if (this.editNode.color !== newColor) {
+                        recolorNodeAction(this.editNode.id, this.editNode.color, newColor);
+                        this.editNode.color = newColor;
                     }
 
-                    editNode.font.color = document.getElementById('node-font-color').value;
+                    this.editNode.font.color = document.getElementById('node-font-color').value;
 
-                    VIS_NODES.update(editNode);
+                    VIS_NODES.update(this.editNode);
                 },
                 saveEdgeChanges: function () {
                     var newLabel = document.getElementById('edge-value').value;
 
-                    if (editEdge.label !== newLabel) {
+                    if (this.editEdge.label !== newLabel) {
                         renameEdgeAction(editEdge.id, editEdge.label, newLabel);
-                        editEdge.label = newLabel;
+                        this.editEdge.label = newLabel;
                     }
 
                     var newColor = pickr2.getColor().toHEXA().toString();
 
-                    if (editEdge.color !== newColor) {
-                        recolorEdgeAction(editEdge.id, editEdge.color, newColor);
-                        editEdge.color = newColor;
+                    if (this.editEdge.color !== newColor) {
+                        recolorEdgeAction(this.editEdge.id, this.editEdge.color, newColor);
+                        this.editEdge.color = newColor;
                     }
 
-                    editEdge.font.align = document.getElementById('edge-font-align').value;
+                    this.editEdge.font.align = document.getElementById('edge-font-align').value;
                     // ADD ACTION FOR FONT ALIGN
 
-                    VIS_EDGES.update(editEdge);
+                    VIS_EDGES.update(this.editEdge);
                 },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
@@ -660,7 +659,7 @@
 
                                     var updateNode = VIS_NODES.get(node)[0];
 
-                                    editNode = updateNode;
+                                    vue.editNode = updateNode;
 
                                     document.getElementById('node-name').value = updateNode.label;
 
@@ -678,7 +677,7 @@
 
                                     var updateEdge = VIS_EDGES.get(edge)[0];
 
-                                    editEdge = updateEdge;
+                                    vue.editEdge = updateEdge;
 
                                     //Init the label editing
                                     document.getElementById('edge-value').value = updateEdge.label;
@@ -695,7 +694,6 @@
                                         document.getElementById('edge-font-align').value = "bottom";
                                     }
                                 }
-
                             });
                         }
                         else if (newMode == "selectMultiple") {

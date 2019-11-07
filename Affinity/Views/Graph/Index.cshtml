@@ -448,16 +448,16 @@
                     nodes: {
                         physics: false,
                         color: {
-                          border: '#2B7CE9',
-                          background: '#97C2FC',
-                          highlight: {
                             border: '#2B7CE9',
-                            background: '#D2E5FF'
-                          },
-                          hover: {
-                            border: '#2B7CE9',
-                            background: '#D2E5FF'
-                          }
+                            background: '#97C2FC',
+                            highlight: {
+                                border: '#2B7CE9',
+                                background: '#D2E5FF'
+                            },
+                            hover: {
+                                border: '#2B7CE9',
+                                background: '#D2E5FF'
+                            }
                         },
                         font: {
                             color: '#000000'
@@ -557,46 +557,52 @@
                     redoLastAction(this.state);
                 },
                 saveNodeChanges: function () {
-                    this.editNode = VIS_NODES.get(NETWORK.getSelectedNodes()[0]);
+                    var editNodeIDS = NETWORK.getSelectedNodes();
+                    editNodeIDS.forEach(id => {
+                        this.editNode = VIS_NODES.get(id);
 
-                    var newLabel = document.getElementById('node-name').value;
+                        var newLabel = document.getElementById('node-name').value;
 
-                    if (this.editNode.label !== newLabel) {
-                        renameNodeAction(this.editNode.id, this.editNode.label, newLabel);
-                        this.editNode.label = newLabel;
-                    }
+                        if (this.editNode.label !== newLabel) {
+                            renameNodeAction(this.editNode.id, this.editNode.label, newLabel);
+                            this.editNode.label = newLabel;
+                        }
 
-                    var newColor = pickr.getColor().toHEXA().toString();
-                    if (this.editNode.color !== newColor) {
-                        recolorNodeAction(this.editNode.id, this.editNode.color, newColor);
-                        this.editNode.color = newColor;
-                    }
+                        var newColor = pickr.getColor().toHEXA().toString();
+                        if (this.editNode.color !== newColor) {
+                            recolorNodeAction(this.editNode.id, this.editNode.color, newColor);
+                            this.editNode.color = newColor;
+                        }
 
-                    this.editNode.font.color = document.getElementById('node-font-color').value;
+                        this.editNode.font.color = document.getElementById('node-font-color').value;
 
-                    VIS_NODES.update(this.editNode);
+                        VIS_NODES.update(this.editNode);
+                    });
                 },
                 saveEdgeChanges: function () {
-                    var newLabel = document.getElementById('edge-value').value;
+                    var editEdgeIDS = NETWORK.getSelectedEdges();
+                    editEdgeIDS.forEach(id => {
+                        this.editEdge = VIS_EDGES.get(id);
+                    
+                        var newLabel = document.getElementById('edge-value').value;
 
-                    this.editEdge = VIS_EDGES.get(NETWORK.getSelectedEdges()[0]);
+                        if (this.editEdge.label !== newLabel) {
+                            renameEdgeAction(this.editEdge.id, this.editEdge.label, newLabel);
+                            this.editEdge.label = newLabel;
+                        }
 
-                    if (this.editEdge.label !== newLabel) {
-                        renameEdgeAction(editEdge.id, editEdge.label, newLabel);
-                        this.editEdge.label = newLabel;
-                    }
+                        var newColor = pickr2.getColor().toHEXA().toString();
 
-                    var newColor = pickr2.getColor().toHEXA().toString();
+                        if (this.editEdge.color !== newColor) {
+                            recolorEdgeAction(this.editEdge.id, this.editEdge.color, newColor);
+                            this.editEdge.color = newColor;
+                        }
 
-                    if (this.editEdge.color !== newColor) {
-                        recolorEdgeAction(this.editEdge.id, this.editEdge.color, newColor);
-                        this.editEdge.color = newColor;
-                    }
+                        this.editEdge.font.align = document.getElementById('edge-font-align').value;
+                        // ADD ACTION FOR FONT ALIGN
 
-                    this.editEdge.font.align = document.getElementById('edge-font-align').value;
-                    // ADD ACTION FOR FONT ALIGN
-
-                    VIS_EDGES.update(this.editEdge);
+                        VIS_EDGES.update(this.editEdge);
+                    });
                 },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
@@ -624,6 +630,7 @@
                         //clicked on same button, exit mode or do nothing?
                     }
                     else {
+                        NETWORK.unselectAll();
                         if (this.state == "delete" || this.state == "select" || this.state == "selectMultiple") {
                             NETWORK.off('click');
                         }
@@ -710,6 +717,8 @@
                             NETWORK.unselectAll();
                             var currentNodes = NETWORK.getSelectedNodes();
                             var currentEdges = NETWORK.getSelectedEdges();
+                            this.showNodeCustomization = true; // temporary 
+                            this.showEdgeCustomization = true; // temporary
                             NETWORK.on('click', function () {
                                 if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
                                     NETWORK.unselectAll();

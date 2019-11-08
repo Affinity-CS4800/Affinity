@@ -32,6 +32,8 @@ namespace Affinity.Models
         public int Color { get; set; }
         [StringLength(8)]
         public string Name { get; set; }
+        [StringLength(7)]
+        public string FontColor { get; set; }
 
         [NotMapped]
         public ICollection<Edge> Edges { get; set; }
@@ -44,12 +46,13 @@ namespace Affinity.Models
 
         public string GraphID { get; set; }
 
-        public int ID { get; set; }
         public int First { get; set; }
         public int Second { get; set; }
         [EnumDataType(typeof(Direction))]
         public Direction Direction { get; set; }
         public int Color { get; set; }
+        public string FontAlignment { get; set; }
+
         [Range(-1,2000)]
         public int Weight { get; set; }
         public string Name { get; set; }
@@ -123,7 +126,7 @@ namespace Affinity.Models
 
                 isDirected |= direction == Direction.DirectedAtFirst || direction == Direction.DirectedAtSecond;
 
-                AdjacencyList[vertexIndex].Edges.Add(new Edge { Name = name, Color = color, Direction = direction, First = fromVertexID, Second = toVertexID, Weight = weight, ID = EdgeCount++ });
+                AdjacencyList[vertexIndex].Edges.Add(new Edge { Name = name, Color = color, Direction = direction, First = fromVertexID, Second = toVertexID, Weight = weight });
             }
         }
 

@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Affinity.Models;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace Affinity.Controllers
 {
     public class AffinityController : Controller
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public AffinityController(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -23,24 +27,26 @@ namespace Affinity.Controllers
         }
 
         [Route("/login")]
-        public IActionResult Login()
+        public async Task<IActionResult> Login()
         {
+            bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
+            if (authenticated)
+            {
+                return RedirectToAction("GetGraphs", "Graph");
+            }
+
             return View();
         }
         [Route("/register")]
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
+            bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
+            if (authenticated)
+            {
+                return RedirectToAction("GetGraphs", "Graph");
+            }
+
             return View();
-        }
-
-        [Route("/api/pdf")]
-        public void TestPDF()
-        {
-            SelectPdf.HtmlToPdf converter = new SelectPdf.HtmlToPdf();
-            SelectPdf.PdfDocument doc = converter.ConvertUrl("http://graphaffinity.com");
-
-            doc.Save("pdf/test.pdf");
-            doc.Close();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

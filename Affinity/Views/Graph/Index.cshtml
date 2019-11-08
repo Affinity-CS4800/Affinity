@@ -10,10 +10,9 @@
 
         #mynetwork {
             border: 1px solid lightgray;
-            width: 90%;
-            height: 80vh;
+            width: 100%;
+            height: 100vh;
             margin: 0 auto;
-            display: block;
         }
 
         .button-group {
@@ -38,15 +37,13 @@
                     background: #111;
                 }
 
-
         .status {
             position: absolute;
-            top: 15rem;
+            top: 3rem;
             z-index: 2;
             color: #333;
             opacity: .25;
         }
-
 
         .pickr {
             display: inline-block;
@@ -131,15 +128,14 @@
     <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
     <script type="text/javascript" src="~/js/pickr.min.js"></script>
-    <script type="text/javascript">
-        const NODES = [];
+    <script type="text/javascript">const NODES = [];
 
         const EDGES = [];
 
         function getGraphData() {
-            var url = window.location.pathname;
+            let url = window.location.pathname;
             url = url.split('/');
-            var token = url[url.length - 1];
+            let token = url[url.length - 1];
             $.ajax({
                 type: "GET",
                 url: "/api/graphData/" + token,
@@ -150,26 +146,27 @@
                         window.location.href = data.redirect_url;
                     }
 
-                    var result = jQuery.parseJSON(data);
-                    $.each(result, function (key, value) {
-                        $.each(value, function (key2, value) {
-                            var argb = (value.Color >>> 0).toString(16);
-                            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
-                            if (key === "Vertices") {
-                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
-                            } else {
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
-                            }
+                    //If the api says that nonAuthUser is defined dont bother getting the data from the db
+                    if (data.nonAuthUser === undefined) {
+                        var result = jQuery.parseJSON(data);
+                        $.each(result, function (key, value) {
+                            $.each(value, function (key2, value) {
+                                var argb = (value.Color >>> 0).toString(16);
+                                var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+                                if (key === "Vertices") {
+                                    NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
+                                } else {
+                                    EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+                                }
+                            });
                         });
-                    });     
+                    }
                 }
             });
 
             return getVisDataSet();
-        }
-    </script>
-    <script>
-        // Snapshot Model
+        }</script>
+    <script>// Snapshot Model
         const ACTION_ADD_VERTEX = "0";
         const ACTION_ADD_EDGE = "1";
 
@@ -391,10 +388,8 @@
                     NETWORK.addEdgeMode();
                 }
             }
-        }
-    </script>
-    <script type="text/javascript">
-        let NETWORK;
+        }</script>
+    <script type="text/javascript">let NETWORK;
         let VIS_NODES, VIS_EDGES;
         function getVisDataSet() {
 
@@ -448,16 +443,16 @@
                     nodes: {
                         physics: false,
                         color: {
-                          border: '#2B7CE9',
-                          background: '#97C2FC',
-                          highlight: {
                             border: '#2B7CE9',
-                            background: '#D2E5FF'
-                          },
-                          hover: {
-                            border: '#2B7CE9',
-                            background: '#D2E5FF'
-                          }
+                            background: '#97C2FC',
+                            highlight: {
+                                border: '#2B7CE9',
+                                background: '#D2E5FF'
+                            },
+                            hover: {
+                                border: '#2B7CE9',
+                                background: '#D2E5FF'
+                            }
                         },
                         font: {
                             color: '#000000'
@@ -541,6 +536,7 @@
                     else {
                         this.user = user;
                         document.cookie = "aff_t=";
+                        console.log("signed out");
                     }
                 });
             },
@@ -735,20 +731,29 @@
                 },
                 pdf: function (event) {
 
+                    let url = window.location.pathname;
+                    url = url.split('/');
+                    let token = url[url.length - 1];
+
                     html2canvas(document.getElementById("mynetwork"), {
                         onrendered: function (canvas) {
                             var imgData = canvas.toDataURL('image/png');
                             var doc = new jsPDF('landscape');
                             doc.addImage(imgData, 'PNG', 0, 0);
-                            doc.save('sample-file.pdf');
+                            doc.save(token + '.pdf');
                         }
                     });
                 },
                 img: function (event) {
+
+                    let url = window.location.pathname;
+                    url = url.split('/');
+                    let token = url[url.length - 1];
+
                     html2canvas(document.getElementById("mynetwork"), {
                         onrendered: function (canvas) {
                             var imgData = canvas.toDataURL('image/png');
-                            app.saveAs(imgData, 'file-name.png');
+                            app.saveAs(imgData, token + '.png');
                         }
                     });
                 },
@@ -778,12 +783,14 @@
                 signOut: function (event) {
                     if (this.user) {
                         firebase.auth().signOut().then(function () {
-                            // Successfully signed out.
-                            document.cookie = "aff_t=";
+                            // Successfully signed out. This cookie will be set at a early time to expire and delete
+                            // ensuring the user is correctly signed out
+                            document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                         }).catch(function (error) {
                             // An error happened.
                         });
-                        window.location.reload(true); // refresh page
+
+                        window.location.href = "/"; // kick thew user to the main page on logout
                     }
                 }
             }
@@ -871,7 +878,5 @@
             }
         });
 
-        NETWORK.redraw();
-
-    </script>
+        NETWORK.redraw();</script>
 }

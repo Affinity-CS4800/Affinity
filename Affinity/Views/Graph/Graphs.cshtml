@@ -1,0 +1,10 @@
+﻿@model IEnumerable<string> 
+
+@{
+    ViewData["Title"] = "My Graphs";
+}
+
+@foreach(var id in Model)
+{
+    <div>@id</div>
+}

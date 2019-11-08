@@ -30,7 +30,7 @@ namespace Affinity.Models
         public int XPos { get; set; }
         public int YPos { get; set; }
         public int Color { get; set; }
-        [StringLength(8)]
+        [StringLength(8)] 
         public string Name { get; set; }
 
         [NotMapped]

@@ -6,26 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Affinity.Models;
 using System.Drawing;
-using FirebaseAdmin.Auth;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using RestSharp;
 using Newtonsoft.Json.Linq;
-using System.IO;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace Affinity.Controllers
 {
-    enum Actions
-    {
-        Add_Vertex,
-        Add_Edge, 
-        Delete_Vertex, 
-        Delete_Vertex_N_Edge, 
-        Delete_Edge
-    };
-
     public class GraphController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -231,9 +218,22 @@ namespace Affinity.Controllers
         public async Task<IActionResult> GetGraphData(string token)
         {
             bool authenticated = await Utils.CheckFirebaseToken(_httpContextAccessor);
+            //This will be triggered if the user is not logged in so this graph
+            //will not be retreived from the backend database.
             if (!authenticated)
             {
-                return Json(new { redirect = true, redirect_url = "/login" });
+                return Json(new { nonAuthUser = true });
+            }
+
+            //Get the current Firebase token and we know that they are logged in so there has to be a token for us to read
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+            //Get the graph owner of the current request. If its bad let the frontend know where to redirect to!
+            var graphOwner = await _affinityDbContext.Users.Where(user => user.UID == userToken.Uid && user.GraphID == token).FirstOrDefaultAsync();
+
+            //graph wasn't owned by current user redirect them to their graphs
+            if(graphOwner == null)
+            {
+                return Json(new { redirect = true, redirect_url = "/graphs" });
             }
 
             //d9147ab4

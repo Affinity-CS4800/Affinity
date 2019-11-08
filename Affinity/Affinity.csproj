@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <Folder Include="Views\Graph\" />
+    <None Update="API_KEY.txt" CopyToPublishDirectory="Always" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Views\Graph\Graphs.cshtml" />

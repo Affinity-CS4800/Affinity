@@ -472,15 +472,17 @@
                         enabled: true,
                         addNode: function (data, callback) {
                             data.id = nextNodeID;
-                            VIS_NODES.update({ id: data.id, label: "", color: '#97C2FC', font: { color: '#FFFFFF' }, x: data.x, y: data.y });
-
+                            data.color = pickr.getColor().toHEXA().toString();
+                            VIS_NODES.update({ id: data.id, label: "", color: data.color, font: { color: '#FFFFFF' }, x: data.x, y: data.y });
                             nextNodeID++;
                             callback(data);
-
                             addNodeAction(data.id);
                             NETWORK.addNodeMode();
+                            var addedNodeID = [data.id];
+                            NETWORK.selectNodes(addedNodeID, false);
                         },
                         addEdge: function (data, callback) {
+                            data.color = pickr2.getColor().toHEXA().toString();
                             if (data.from == data.to && this.state == "drawEdges") {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
@@ -492,8 +494,11 @@
                                 addEdgeAction(data.id, data.from, data.to);
                             }
 
-                            VIS_EDGES.update({ id: data.id, label: "", color: '#6590C6', font: { color: '#000000' }, from: data.from, to: data.to });
+                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, from: data.from, to: data.to });
                             NETWORK.addEdgeMode();
+
+                            var addedEdgeID = [data.id];
+                            NETWORK.selectEdges(addedEdgeID);
                         },
                         deleteNode: function (data, callback) {
                             const nodeId = data.nodes[0];
@@ -548,42 +553,52 @@
                     redoLastAction(this.state);
                 },
                 saveNodeChanges: function () {
-                    var newLabel = document.getElementById('node-name').value;
+                    var editNodeIDS = NETWORK.getSelectedNodes();
+                    editNodeIDS.forEach(id => {
+                        this.editNode = VIS_NODES.get(id);
 
-                    if (this.editNode.label !== newLabel) {
-                        renameNodeAction(this.editNode.id, this.editNode.label, newLabel);
-                        this.editNode.label = newLabel;
-                    }
+                        var newLabel = document.getElementById('node-name').value;
 
-                    var newColor = pickr.getColor().toHEXA().toString();
-                    if (this.editNode.color !== newColor) {
-                        recolorNodeAction(this.editNode.id, this.editNode.color, newColor);
-                        this.editNode.color = newColor;
-                    }
+                        if (this.editNode.label !== newLabel) {
+                            renameNodeAction(this.editNode.id, this.editNode.label, newLabel);
+                            this.editNode.label = newLabel;
+                        }
 
-                    this.editNode.font.color = document.getElementById('node-font-color').value;
+                        var newColor = pickr.getColor().toHEXA().toString();
+                        if (this.editNode.color !== newColor) {
+                            recolorNodeAction(this.editNode.id, this.editNode.color, newColor);
+                            this.editNode.color = newColor;
+                        }
 
-                    VIS_NODES.update(this.editNode);
+                        this.editNode.font.color = document.getElementById('node-font-color').value;
+
+                        VIS_NODES.update(this.editNode);
+                    });
                 },
                 saveEdgeChanges: function () {
-                    var newLabel = document.getElementById('edge-value').value;
+                    var editEdgeIDS = NETWORK.getSelectedEdges();
+                    editEdgeIDS.forEach(id => {
+                        this.editEdge = VIS_EDGES.get(id);
 
-                    if (this.editEdge.label !== newLabel) {
-                        renameEdgeAction(editEdge.id, editEdge.label, newLabel);
-                        this.editEdge.label = newLabel;
-                    }
+                        var newLabel = document.getElementById('edge-value').value;
 
-                    var newColor = pickr2.getColor().toHEXA().toString();
+                        if (this.editEdge.label !== newLabel) {
+                            renameEdgeAction(this.editEdge.id, this.editEdge.label, newLabel);
+                            this.editEdge.label = newLabel;
+                        }
 
-                    if (this.editEdge.color !== newColor) {
-                        recolorEdgeAction(this.editEdge.id, this.editEdge.color, newColor);
-                        this.editEdge.color = newColor;
-                    }
+                        var newColor = pickr2.getColor().toHEXA().toString();
 
-                    this.editEdge.font.align = document.getElementById('edge-font-align').value;
-                    // ADD ACTION FOR FONT ALIGN
+                        if (this.editEdge.color !== newColor) {
+                            recolorEdgeAction(this.editEdge.id, this.editEdge.color, newColor);
+                            this.editEdge.color = newColor;
+                        }
 
-                    VIS_EDGES.update(this.editEdge);
+                        this.editEdge.font.align = document.getElementById('edge-font-align').value;
+                        // ADD ACTION FOR FONT ALIGN
+
+                        VIS_EDGES.update(this.editEdge);
+                    });
                 },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
@@ -611,6 +626,7 @@
                         //clicked on same button, exit mode or do nothing?
                     }
                     else {
+                        NETWORK.unselectAll();
                         if (this.state == "delete" || this.state == "select" || this.state == "selectMultiple") {
                             NETWORK.off('click');
                         }
@@ -697,6 +713,8 @@
                             NETWORK.unselectAll();
                             var currentNodes = NETWORK.getSelectedNodes();
                             var currentEdges = NETWORK.getSelectedEdges();
+                            this.showNodeCustomization = true; // temporary
+                            this.showEdgeCustomization = true; // temporary
                             NETWORK.on('click', function () {
                                 if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
                                     NETWORK.unselectAll();

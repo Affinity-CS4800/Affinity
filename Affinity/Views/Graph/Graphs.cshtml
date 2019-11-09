@@ -7,80 +7,84 @@
 @section  styles{
 
     <style>
-        .column{
-            float: right;
-            width: 10%;
+        .graphs {
+            padding: 10vh 2rem 30vh 2rem;
+            width: 80%;
+            margin: 0 auto;
         }
-        .row:after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-        .button{
-            font: bold 30px Arial;
+
+        .graphLink {
+            display: inline-block;
+            max-width: 20%;
+            min-width: 15%;
+            margin-right: 1rem;
+            margin-left: 1rem;
+            margin-bottom: 2rem;
+            height: 150px;
+            background: orangered;
             text-decoration: none;
-            background-color: #EEEEEE;
-            color: #333333;
-            padding: 2px 6px 2px 6px;
-            margin: 50px 50px 50px 50px;
-            border-top: 1px solid #CCCCCC;
-            border-right: 1px solid #333333;
-            border-bottom: 1px solid #333333;
-            border-left: 1px solid #CCCCCC;
+            text-align: center;
+            padding: 2rem 0 0 0;
+            font-weight: bold;
+            color: #efefef;
+            background: linear-gradient(180deg, #00d2ff 0%, #3a47d5 80%);
+            filter: grayscale(50%);
+            transition-duration: .25s;
+            transition-property: filter, transform;
+            transition-timing-function: ease-in-out;
         }
+
+            .graphLink:hover {
+               filter: grayscale(0%);
+               transform: translateY(-2px);
+            }
         
     </style>
 
 }
 
-<h1>Graphs</h1>
+    <section class="graphs">
+        @foreach (var id in Model){<a class="graphLink" href="graph/@id">@id</a>}
+    </section>
 
 
-@foreach (var id in Model)
-{
-        <a class="button" href="graph/@id">
-            @id
-        </a>
-}
-
-
-@section scripts {
-    <!-- The core Firebase JS SDK is always required and must be listed first -->
-    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
-    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
-    <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
-    <script type="text/javascript" src="~/js/firebase.js"></script>
-    <script type="text/javascript">
-        var app = new Vue({
-            el: '#app',
-            data: {
-                user: false
-            },
-            created: function () {
-                // Store user
-                firebase.auth().onAuthStateChanged(user => {
-                    this.user = user;
-                });
-            },
-            methods: {
-                signOut: function (event) {
-                    if (this.user) {
-                        firebase.auth().signOut().then(function () {
-                            // Successfully signed out.
-                            document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                        }).catch(function (error) {
-                            // An error happened.
+        @section scripts {
+            <!-- The core Firebase JS SDK is always required and must be listed first -->
+            <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+            <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+            <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
+            <script type="text/javascript" src="~/js/firebase.js"></script>
+            <script type="text/javascript">
+                var app = new Vue({
+                    el: '#app',
+                    data: {
+                        user: false
+                    },
+                    created: function () {
+                        // Store user
+                        firebase.auth().onAuthStateChanged(user => {
+                            this.user = user;
                         });
-                        window.location.reload(true); // refresh page
-                    }
-                }
-                //getGraphIds: function () {
-                //    $.ajax({
-                //       type: 'GET',
+                    },
+                    methods: {
+                        signOut: function (event) {
+                            if (this.user) {
+                                firebase.auth().signOut().then(function () {
+                                    // Successfully signed out.
+                                    document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                                }).catch(function (error) {
+                                    // An error happened.
+                                });
+                                window.location.reload(true); // refresh page
+                            }
+                        }
+                        //getGraphIds: function () {
+                        //    $.ajax({
+                        //       type: 'GET',
 
-                //    })
-                // }
-            }
-        })
-    </script>
-}
+                        //    })
+                        // }
+                    }
+                })
+            </script>
+        }

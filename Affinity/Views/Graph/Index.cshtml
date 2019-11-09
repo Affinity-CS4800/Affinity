@@ -108,6 +108,7 @@
         <button v-on:click="redo()">Redo</button>
         <button v-on:click="pdf()">Download as Pdf</button>
         <button v-on:click="img()">Download as Png</button>
+        <button v-on:click="save()">Save</button>
     </div>
     <div class="status">
         <h2 v-if="state=='delete'">You're deleting.</h2>
@@ -128,7 +129,8 @@
     <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
     <script type="text/javascript" src="~/js/pickr.min.js"></script>
-    <script type="text/javascript">const NODES = [];
+    <script type="text/javascript">
+        const NODES = [];
 
         const EDGES = [];
 
@@ -165,8 +167,10 @@
             });
 
             return getVisDataSet();
-        }</script>
-    <script>// Snapshot Model
+        }
+    </script>
+    <script>
+        // Snapshot Model
         const ACTION_ADD_VERTEX = "0";
         const ACTION_ADD_EDGE = "1";
 
@@ -227,8 +231,8 @@
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_NODE_RECOLOR,
                 id: vertexId,
-                prevColor: prevColor_,
-                color: color_
+                prevColor: convertHexToDecimal(prevColor_),
+                color: convertHexToDecimal(color_)
             });
         }
 
@@ -266,8 +270,8 @@
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_EDGE_RECOLOR,
                 id: id_,
-                prevColor: prevColor_,
-                color: color_
+                prevColor: convertHexToDecimal(prevColor_),
+                color: convertHexToDecimal(color_)
             });
         }
 
@@ -282,6 +286,13 @@
             }
             //return the number as a signed integer
             return parseInt(hexString, 16) >> 0;
+        }
+
+        function convertDecimalToHex(value) {
+            var argb = (value >>> 0).toString(16);
+            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+
+            return rgba;
         }
 
         function undoLastAction(state) {
@@ -312,7 +323,7 @@
                         }
                         break;
                     case ACTION_NODE_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, color: lastAction.prevColor });
+                        VIS_NODES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.prevColor) });
                         break;
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.prevLabel });
@@ -324,7 +335,7 @@
                         VIS_EDGES.update({ id: lastAction.id, label: lastAction.prevLabel });
                         break;
                     case ACTION_EDGE_RECOLOR:
-                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.prevColor });
+                        VIS_EDGES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.prevColor) });
                         break;
                 }
 
@@ -362,8 +373,8 @@
                         deleteNodeEdgeAction(lastAction.node, lastAction.edges);
                         break;
                     case ACTION_NODE_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, color: lastAction.color });
-                        recolorNodeAction(lastAction.id, lastAction.prevColor, lastAction.color);
+                        VIS_NODES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.color) });
+                        recolorNodeAction(lastAction.id, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
                         break;
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.label });
@@ -378,8 +389,8 @@
                         renameEdgeAction(lastAction.id, lastAction.prevLabel, lastAction.label);
                         break;
                     case ACTION_EDGE_RECOLOR:
-                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.color });
-                        recolorEdgeAction(lastAction.id, lastAction.prevColor, lastAction.color);
+                        VIS_EDGES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.color) });
+                        recolorEdgeAction(lastAction.id, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
                         break;
                 }
                 if (state == "drawNodes") {
@@ -810,6 +821,27 @@
 
                         window.location.href = "/"; // kick thew user to the main page on logout
                     }
+                },
+                save: function () {
+                    console.log(JSON.stringify(SNAPSHOT));
+                    var url = window.location.pathname;
+                    url = url.split('/');
+                    var token = url[url.length - 1];
+                    $.ajax({
+                        type: 'POST',
+                        url: '/api/saveToDB/' + token,
+                        contentType: "application/json",
+                        data: JSON.stringify(SNAPSHOT),
+                        headers: {
+                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function () {
+                            alert('Saved');
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            alert(errorThrown);
+                        }
+                    });
                 }
             }
         });

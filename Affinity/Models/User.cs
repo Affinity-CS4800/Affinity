@@ -13,5 +13,7 @@ namespace Affinity.Models
         public string UID { get; set; }
         //Unique GraphID used to get vertex/edges
         public string GraphID { get; set; }
+
+        public DateTime Modified { get; set; }
     }
 }

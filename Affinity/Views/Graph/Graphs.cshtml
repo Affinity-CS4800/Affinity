@@ -1,10 +1,90 @@
-﻿@model IEnumerable<string> 
-
+@model IEnumerable<string>
 @{
-    ViewData["Title"] = "My Graphs";
+    ViewData["Title"] = "Your Graphs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@foreach(var id in Model)
+@section  styles{
+
+    <style>
+        .column{
+            float: right;
+            width: 10%;
+        }
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .button{
+            font: bold 30px Arial;
+            text-decoration: none;
+            background-color: #EEEEEE;
+            color: #333333;
+            padding: 2px 6px 2px 6px;
+            margin: 50px 50px 50px 50px;
+            border-top: 1px solid #CCCCCC;
+            border-right: 1px solid #333333;
+            border-bottom: 1px solid #333333;
+            border-left: 1px solid #CCCCCC;
+        }
+        
+    </style>
+
+}
+
+<h1>Graphs</h1>
+
+
+@foreach (var id in Model)
 {
-    <div>@id</div>
+    
+        <a class="button" href="graph/@id">
+
+            @id
+        </a>
+
+
+}
+
+
+@section scripts {
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+    <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
+    <script type="text/javascript" src="~/js/firebase.js"></script>
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+
+            },
+            created: function () {
+                // Store user
+                firebase.auth().onAuthStateChanged(user => {
+                    this.user = user;
+                });
+            },
+            methods: {
+                signOut: function (event) {
+                    if (this.user) {
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed out.
+                            document.cookie = "aff_t=";
+                        }).catch(function (error) {
+                            // An error happened.
+                        });
+                        window.location.reload(true); // refresh page
+                    }
+                }
+                //getGraphIds: function () {
+                //    $.ajax({
+                //       type: 'GET',
+
+                //    })
+                // }
+            }
+        })
+    </script>
 }

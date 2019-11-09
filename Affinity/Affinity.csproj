@@ -16,7 +16,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
     <PackageReference Include="RestSharp" Version="106.6.10" />
@@ -31,8 +31,5 @@
   <ItemGroup>
     <Folder Include="Views\Graph\" />
     <None Update="API_KEY.txt" CopyToPublishDirectory="Always" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Remove="Views\Graph\Graphs.cshtml" />
   </ItemGroup>
 </Project>

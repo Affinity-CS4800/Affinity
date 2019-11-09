@@ -28,6 +28,11 @@ namespace Affinity.Controllers
         [HttpPost]
         public async Task GraphSaver([FromBody] JObject json, string graphID)
         {
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+            var user = await _affinityDbContext.Users.Where(u => u.UID == userToken.Uid && u.GraphID == graphID).FirstOrDefaultAsync();
+            user.Modified = DateTime.Now;
+            _affinityDbContext.Users.Update(user);
+
             foreach (var data in json)
             {
                 foreach(var key in data.Value)
@@ -168,7 +173,7 @@ namespace Affinity.Controllers
                 //User has less than the max amount of graphs saved
                 if (graphsMadeByUser < GraphConstants.MAX_GRAPHS)
                 {
-                    await _affinityDbContext.AddAsync(new User { UID = userToken.Uid, GraphID = tempID });
+                    await _affinityDbContext.AddAsync(new User { UID = userToken.Uid, GraphID = tempID, Modified = DateTime.Now });
                     await _affinityDbContext.SaveChangesAsync();
                 }
             }
@@ -207,11 +212,11 @@ namespace Affinity.Controllers
             }
 
             var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
-            var graph = _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid)
+            var graph = _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).OrderBy(d => d.Modified)
                 .Select(g => g.GraphID)
                 .Distinct();
 
-            return Content(JsonConvert.SerializeObject(graph));
+            return View("Graphs", graph);
         }
 
         [Route("/api/graphData/{token:length(8)}")]

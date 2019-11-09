@@ -21,6 +21,7 @@
                // Store user
                 firebase.auth().onAuthStateChanged(user => {
                     this.user = user;
+                    console.log(user);
                 });
             },
             methods: {
@@ -28,7 +29,7 @@
                     if (this.user) {
                         firebase.auth().signOut().then(function () {
                             // Successfully signed out.
-                            document.cookie = "aff_t=";
+                            document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                         }).catch(function (error) {
                             // An error happened.
                         });

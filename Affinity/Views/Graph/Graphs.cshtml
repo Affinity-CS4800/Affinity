@@ -38,13 +38,9 @@
 
 @foreach (var id in Model)
 {
-    
         <a class="button" href="graph/@id">
-
             @id
         </a>
-
-
 }
 
 
@@ -58,7 +54,7 @@
         var app = new Vue({
             el: '#app',
             data: {
-
+                user: false
             },
             created: function () {
                 // Store user
@@ -71,7 +67,7 @@
                     if (this.user) {
                         firebase.auth().signOut().then(function () {
                             // Successfully signed out.
-                            document.cookie = "aff_t=";
+                            document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                         }).catch(function (error) {
                             // An error happened.
                         });

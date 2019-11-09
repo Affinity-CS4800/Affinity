@@ -79,20 +79,20 @@
         <label> Label/Weight: <input type="text" id="edge-value" /></label>
         <label> Color: <span class="color-picker2"></span> </label>
         <br />
-        <label>
-            Edge Font Align:
-            <select id="edge-font-align">
-                <option value="top">
-                    Top
-                </option>
-                <option value="middle">
-                    Middle
-                </option>
-                <option value="bottom">
-                    Bottom
-                </option>
-            </select>
-        </label>
+        <div class="edge-font-alignments">
+            <input type="radio" v-on:click="changeEdgeFontAlignment('top')" name="edge-font-alignment" value="top" id="align-top" checked/>
+            <label for="top">
+                Top
+            </label>
+            <input type="radio" v-on:click="changeEdgeFontAlignment('middle')" name="edge-font-alignment" value="middle" id="align-middle" />
+            <label for="middle">
+                Middle
+            </label>
+            <input type="radio" v-on:click="changeEdgeFontAlignment('bottom')" name="edge-font-alignment" value="bottom" id="align-bottom" />
+            <label for="bottom">
+                Bottom
+            </label>
+        </div>
         <br />
         <button v-on:click="saveEdgeChanges()"> Save Changes </button>
     </div>
@@ -759,6 +759,20 @@
                         }
                     }
                 },
+                changeEdgeFontAlignment: function (newAlignment) {
+                    this.alignment = newAlignment;
+                    var editEdgeIDS = NETWORK.getSelectedEdges();
+                    editEdgeIDS.forEach(id => {
+                        this.editEdge = VIS_EDGES.get(id);
+
+                        if (this.editEdge.font.align != newAlignment) {
+                            this.editEdge.font.align = newAlignment;
+                            // ADD ACTION FOR FONT ALIGN
+                        }
+                       
+                        VIS_EDGES.update(this.editEdge);
+                    });
+                },
                 pdf: function (event) {
 
                     let url = window.location.pathname;
@@ -919,15 +933,96 @@
             default: '#000000'
         });
 
-        //Saves the new position for the nodes
-        NETWORK.on('dragEnd', function (properties) {
-            for (var i = 0; i < properties.nodes.length; i++) {
-                var nodeId = properties.nodes[i];
-                const node = VIS_NODES.get(nodeId);
-                repositionNodeAction(nodeId, node.x, node.y, properties.pointer.canvas.x, properties.pointer.canvas.y);
-                VIS_NODES.update({ id: nodeId, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
+        pickr.on('save', (color, instance) => {
+            pickr.hide();
+            if (color != null) {
+                color = color.toHEXA().toString();
+                var editNodeIDS = NETWORK.getSelectedNodes();
+                editNodeIDS.forEach(id => {
+                    var editNode = VIS_NODES.get(id);
+
+                    if (editNode.color !== color) {
+                        recolorNodeAction(editNode.id, editNode.color, color);
+                        editNode.color = color;
+                    }
+
+                    VIS_NODES.update(editNode);
+                });
+
+                var editEdgeIDS = NETWORK.getSelectedEdges();
+                editEdgeIDS.forEach(id => {
+                    var editEdge = VIS_EDGES.get(id);
+
+                    if (editEdge.color !== color) {
+                        recolorEdgeAction(editEdge.id, editEdge.color, color);
+                        editEdge.color = color;
+                    }
+                    
+                    VIS_EDGES.update(editEdge);
+                });
+
             }
         });
+
+        document.getElementById('node-name').addEventListener("keyup", function (event) {
+            if (event.key == "Enter") {
+                var newLabel = document.getElementById('node-name').value;
+
+                var editNodeIDS = NETWORK.getSelectedNodes();
+                editNodeIDS.forEach(id => {
+                    var editNode = VIS_NODES.get(id);
+
+                    if (editNode.label !== newLabel) {
+                        renameNodeAction(editNode.id, editNode.label, newLabel);
+                        editNode.label = newLabel;
+                    }
+
+                    VIS_NODES.update(editNode);
+                });
+            }
+        });
+
+        document.getElementById('edge-value').addEventListener("keyup", function (event) {
+            if (event.key == "Enter") {
+                var newLabel = document.getElementById('edge-value').value;
+
+                var editEdgeIDS = NETWORK.getSelectedEdges();
+                editEdgeIDS.forEach(id => {
+                    var editEdge = VIS_EDGES.get(id);
+
+                    var newLabel = document.getElementById('edge-value').value;
+
+                    if (editEdge.label !== newLabel) {
+                        renameEdgeAction(editEdge.id, editEdge.label, newLabel);
+                        editEdge.label = newLabel;
+                        editEdge.font.align = document.querySelector('input[name="edge-font-alignment"]:checked').value;
+                    }
+
+                    VIS_EDGES.update(editEdge);
+                });
+            }
+        });
+
+        var startX, startY;
+        //Saves the new position for the nodes
+        NETWORK.on('dragStart', function (properties) {
+            startX = properties.pointer.canvas.x;
+            startY = properties.pointer.canvas.y;
+        });
+
+        NETWORK.on('dragEnd', function (properties) {
+            var xDifference = properties.pointer.canvas.x - startX;
+            var yDifference = properties.pointer.canvas.y - startY;
+
+            var selectedNodes = NETWORK.getSelectedNodes();
+            for (var i = 0; i < selectedNodes.length; i++) {
+                var nodeId = selectedNodes[i];
+                const node = VIS_NODES.get(nodeId);
+                repositionNodeAction(nodeId, node.x, node.y, (node.x + xDifference), (node.y + yDifference));
+                VIS_NODES.update({ id: nodeId, x: (node.x + xDifference), y: (node.y + yDifference) });
+            }   
+        });
+        
 
         NETWORK.redraw();</script>
 }

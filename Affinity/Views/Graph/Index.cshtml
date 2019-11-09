@@ -60,17 +60,16 @@
         <label> Color: <span class="color-picker"></span> </label>
         <br />
         <label> Size: <input type="number" min="1" max="20" id="node-size" /></label>
-        <label>
-            Font Color:
-            <select id="node-font-color">
-                <option value="#000000">
-                    Black
-                </option>
-                <option value="#FFFFFF">
-                    White
-                </option>
-            </select>
-        </label>
+        <div class="node-font-colors">
+            <input type="radio" v-on:click="changeNodeFontColor('white')" name="node-font-color" value="white" id="white-node-font" checked />
+            <label for="white">
+                White Font
+            </label>
+            <input type="radio" v-on:click="changeNodeFontColor('black')" name="node-font-color" value="black" id="black-node-font" />
+            <label for="black">
+                Black Font
+            </label>
+        </div>
         <br />
         <button v-on:click="saveNodeChanges()"> Save Changes </button>
     </div>
@@ -581,7 +580,7 @@
                             this.editNode.color = newColor;
                         }
 
-                        this.editNode.font.color = document.getElementById('node-font-color').value;
+                     //   this.editNode.font.color = document.getElementById('node-font-color').value;
 
                         VIS_NODES.update(this.editNode);
                     });
@@ -605,7 +604,7 @@
                             this.editEdge.color = newColor;
                         }
 
-                        this.editEdge.font.align = document.getElementById('edge-font-align').value;
+                        //this.editEdge.font.align = document.getElementById('edge-font-align').value;
                         // ADD ACTION FOR FONT ALIGN
 
                         VIS_EDGES.update(this.editEdge);
@@ -686,11 +685,11 @@
 
                                     document.getElementById('node-name').value = updateNode.label;
 
-                                    if (updateNode.font.color === '#FFFFFF') {
+/*                                    if (updateNode.font.color === '#FFFFFF') {
                                         document.getElementById('node-font-color').value = "#FFFFFF";
                                     } else {
                                         document.getElementById('node-font-color').value = "#000000";
-                                    }
+                                    }*/
 
                                     pickr.setColor(updateNode.color);
 
@@ -709,13 +708,13 @@
                                     pickr2.setColor(updateEdge.color);
 
                                     //Init the Alignment
-                                    if (updateEdge.font.align === 'top') {
-                                        document.getElementById('edge-font-align').value = "top";
-                                    } else if (updateEdge.font.align === 'middle') {
-                                        document.getElementById('edge-font-align').value = "middle";
-                                    } else {
-                                        document.getElementById('edge-font-align').value = "bottom";
-                                    }
+                                    //if (updateEdge.font.align === 'top') {
+                                    //    document.getElementById('edge-font-align').value = "top";
+                                    //} else if (updateEdge.font.align === 'middle') {
+                                    //    document.getElementById('edge-font-align').value = "middle";
+                                    //} else {
+                                    //    document.getElementById('edge-font-align').value = "bottom";
+                                    //}
                                 }
                             });
                         }
@@ -758,8 +757,27 @@
                         }
                     }
                 },
+                changeNodeFontColor: function (newFontColor) {
+                    if (newFontColor == "white") {
+                        newFontColor = "#FFFFFF";
+                    }
+                    else if(newFontColor == "black") {
+                        newFontColor = "#000000";
+                    }
+
+                    var editNodeIDS = NETWORK.getSelectedNodes();
+                    editNodeIDS.forEach(id => {
+                        var editNode = VIS_NODES.get(id);
+
+                        if (editNode.font.color !== newFontColor) {
+                            editNode.font.color = newFontColor;
+                            // ADD ACTION FOR FONT COLOR CHANGE
+                        }
+
+                        VIS_NODES.update(editNode);
+                    });
+                },
                 changeEdgeFontAlignment: function (newAlignment) {
-                    this.alignment = newAlignment;
                     var editEdgeIDS = NETWORK.getSelectedEdges();
                     editEdgeIDS.forEach(id => {
                         this.editEdge = VIS_EDGES.get(id);
@@ -974,6 +992,7 @@
                     if (editNode.label !== newLabel) {
                         renameNodeAction(editNode.id, editNode.label, newLabel);
                         editNode.label = newLabel;
+                        editNode.font.color = document.querySelector('input[name="node-font-color"]:checked').value;
                     }
 
                     VIS_NODES.update(editNode);

@@ -64,7 +64,7 @@ namespace Affinity.Controllers
                     }
                     else if(value == "2")
                     {
-                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["node"]["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         _affinityDbContext.Vertices.Remove(vertex);
                     }
                     else if(value == "3")
@@ -76,12 +76,12 @@ namespace Affinity.Controllers
                             Edge e = await _affinityDbContext.Edges.Where(v => v.DBID == edge && v.GraphID == graphID).FirstOrDefaultAsync();
                             _affinityDbContext.Edges.Remove(e);
                         }
-                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["node"]["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         _affinityDbContext.Vertices.Remove(vertex);
                     }
                     else if(value == "4")
                     {
-                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["edge"]["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["edge"]["to"].ToString())).FirstOrDefaultAsync();
                         _affinityDbContext.Edges.Remove(edge);
                     }
                     else if(value == "5")
@@ -93,7 +93,7 @@ namespace Affinity.Controllers
                     else if (value == "6")
                     {
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
-                        vertex.Name = key["name"].ToString();
+                        vertex.Name = key["label"].ToString();
                         _affinityDbContext.Vertices.Update(vertex);
                     }
                     else if (value == "7")
@@ -106,20 +106,13 @@ namespace Affinity.Controllers
                     else if (value == "8")
                     {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
-                        edge.Weight = int.Parse(key["name"].ToString());
+                        edge.Weight = int.Parse(key["label"].ToString());
                         _affinityDbContext.Edges.Update(edge);
                     }
                     else if (value == "9")
                     {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
                         edge.Color = int.Parse(key["color"].ToString());
-                        _affinityDbContext.Edges.Update(edge);
-                    }
-                    else if (value == "10")
-                    {
-                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
-                        edge.First = int.Parse(key["newFrom"].ToString());
-                        edge.Second = int.Parse(key["newTo"].ToString());
                         _affinityDbContext.Edges.Update(edge);
                     }
                 }

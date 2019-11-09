@@ -147,22 +147,19 @@
                     if (data.redirect !== undefined) {
                         window.location.href = data.redirect_url;
                     }
-
-                    //If the api says that nonAuthUser is defined dont bother getting the data from the db
-                    if (data.nonAuthUser === undefined) {
-                        var result = jQuery.parseJSON(data);
-                        $.each(result, function (key, value) {
-                            $.each(value, function (key2, value) {
-                                var argb = (value.Color >>> 0).toString(16);
-                                var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
-                                if (key === "Vertices") {
-                                    NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
-                                } else {
-                                    EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
-                                }
-                            });
+                    
+                    var result = jQuery.parseJSON(data);
+                    $.each(result, function (key, value) {
+                        $.each(value, function (key2, value) {
+                            var argb = (value.Color >>> 0).toString(16);
+                            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
+                            if (key === "Vertices") {
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
+                            } else {
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+                            }
                         });
-                    }
+                    });
                 }
             });
 
@@ -257,19 +254,23 @@
             });
         }
 
-        function renameEdgeAction(id_, prevLabel_, label_) {
+        function renameEdgeAction(id_, from_, to_, prevLabel_, label_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_EDGE_RENAME,
                 id: id_,
+                from: from_,
+                to: to_,
                 prevLabel: prevLabel_,
                 label: label_,
             });
         }
 
-        function recolorEdgeAction(id_, prevColor_, color_) {
+        function recolorEdgeAction(id_, from_, to_, prevColor_, color_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_EDGE_RECOLOR,
                 id: id_,
+                from: from_,
+                to: to_,
                 prevColor: convertHexToDecimal(prevColor_),
                 color: convertHexToDecimal(color_)
             });
@@ -386,11 +387,11 @@
                         break;
                     case ACTION_EDGE_RENAME:
                         VIS_EDGES.update({ id: lastAction.id, label: lastAction.label });
-                        renameEdgeAction(lastAction.id, lastAction.prevLabel, lastAction.label);
+                        renameEdgeAction(lastAction.id, lastAction.from, lastAction.to, lastAction.prevLabel, lastAction.label);
                         break;
                     case ACTION_EDGE_RECOLOR:
                         VIS_EDGES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.color) });
-                        recolorEdgeAction(lastAction.id, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
+                        recolorEdgeAction(lastAction.id, lastAction.from, lastAction.to, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
                         break;
                 }
                 if (state == "drawNodes") {
@@ -594,14 +595,14 @@
                         var newLabel = document.getElementById('edge-value').value;
 
                         if (this.editEdge.label !== newLabel) {
-                            renameEdgeAction(this.editEdge.id, this.editEdge.label, newLabel);
+                            renameEdgeAction(this.editEdge.id, this.editEdge.from, this.editEdge.to, this.editEdge.label, newLabel);
                             this.editEdge.label = newLabel;
                         }
 
                         var newColor = pickr2.getColor().toHEXA().toString();
 
                         if (this.editEdge.color !== newColor) {
-                            recolorEdgeAction(this.editEdge.id, this.editEdge.color, newColor);
+                            recolorEdgeAction(this.editEdge.id, this.editEdge.from, this.editEdge.to, this.editEdge.color, newColor);
                             this.editEdge.color = newColor;
                         }
 

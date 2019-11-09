@@ -79,20 +79,20 @@
         <label> Label/Weight: <input type="text" id="edge-value" /></label>
         <label> Color: <span class="color-picker2"></span> </label>
         <br />
-        <label>
-            Edge Font Align:
-            <select id="edge-font-align">
-                <option value="top">
-                    Top
-                </option>
-                <option value="middle">
-                    Middle
-                </option>
-                <option value="bottom">
-                    Bottom
-                </option>
-            </select>
-        </label>
+        <div class="edge-font-alignments">
+            <input type="radio" v-on:click="changeEdgeFontAlignment('top')" name="edge-font-alignment" value="top" id="align-top" checked/>
+            <label for="top">
+                Top
+            </label>
+            <input type="radio" v-on:click="changeEdgeFontAlignment('middle')" name="edge-font-alignment" value="middle" id="align-middle" />
+            <label for="middle">
+                Middle
+            </label>
+            <input type="radio" v-on:click="changeEdgeFontAlignment('bottom')" name="edge-font-alignment" value="bottom" id="align-bottom" />
+            <label for="bottom">
+                Bottom
+            </label>
+        </div>
         <br />
         <button v-on:click="saveEdgeChanges()"> Save Changes </button>
     </div>
@@ -758,6 +758,20 @@
                         }
                     }
                 },
+                changeEdgeFontAlignment: function (newAlignment) {
+                    this.alignment = newAlignment;
+                    var editEdgeIDS = NETWORK.getSelectedEdges();
+                    editEdgeIDS.forEach(id => {
+                        this.editEdge = VIS_EDGES.get(id);
+
+                        if (this.editEdge.font.align != newAlignment) {
+                            this.editEdge.font.align = newAlignment;
+                            // ADD ACTION FOR FONT ALIGN
+                        }
+                       
+                        VIS_EDGES.update(this.editEdge);
+                    });
+                },
                 pdf: function (event) {
 
                     let url = window.location.pathname;
@@ -918,33 +932,32 @@
             default: '#000000'
         });
 
-        var vue = this;
         pickr.on('save', (color, instance) => {
             pickr.hide();
             if (color != null) {
                 color = color.toHEXA().toString();
                 var editNodeIDS = NETWORK.getSelectedNodes();
                 editNodeIDS.forEach(id => {
-                    vue.editNode = VIS_NODES.get(id);
+                    var editNode = VIS_NODES.get(id);
 
-                    if (vue.editNode.color !== color) {
-                        recolorNodeAction(vue.editNode.id, vue.editNode.color, color);
-                        vue.editNode.color = color;
+                    if (editNode.color !== color) {
+                        recolorNodeAction(editNode.id, editNode.color, color);
+                        editNode.color = color;
                     }
 
-                    VIS_NODES.update(vue.editNode);
+                    VIS_NODES.update(editNode);
                 });
 
                 var editEdgeIDS = NETWORK.getSelectedEdges();
                 editEdgeIDS.forEach(id => {
-                    vue.editEdge = VIS_EDGES.get(id);
+                    var editEdge = VIS_EDGES.get(id);
 
-                    if (vue.editEdge.color !== color) {
-                        recolorEdgeAction(vue.editEdge.id, vue.editEdge.color, color);
-                        vue.editEdge.color = color;
+                    if (editEdge.color !== color) {
+                        recolorEdgeAction(editEdge.id, editEdge.color, color);
+                        editEdge.color = color;
                     }
                     
-                    VIS_EDGES.update(vue.editEdge);
+                    VIS_EDGES.update(editEdge);
                 });
 
             }
@@ -956,14 +969,14 @@
 
                 var editNodeIDS = NETWORK.getSelectedNodes();
                 editNodeIDS.forEach(id => {
-                    vue.editNode = VIS_NODES.get(id);
+                    var editNode = VIS_NODES.get(id);
 
-                    if (vue.editNode.label !== newLabel) {
-                        renameNodeAction(vue.editNode.id, vue.editNode.label, newLabel);
-                        vue.editNode.label = newLabel;
+                    if (editNode.label !== newLabel) {
+                        renameNodeAction(editNode.id, editNode.label, newLabel);
+                        editNode.label = newLabel;
                     }
 
-                    VIS_NODES.update(vue.editNode);
+                    VIS_NODES.update(editNode);
                 });
             }
         });
@@ -974,16 +987,17 @@
 
                 var editEdgeIDS = NETWORK.getSelectedEdges();
                 editEdgeIDS.forEach(id => {
-                    vue.editEdge = VIS_EDGES.get(id);
+                    var editEdge = VIS_EDGES.get(id);
 
                     var newLabel = document.getElementById('edge-value').value;
 
-                    if (vue.editEdge.label !== newLabel) {
-                        renameEdgeAction(vue.editEdge.id, vue.editEdge.label, newLabel);
-                        vue.editEdge.label = newLabel;
+                    if (editEdge.label !== newLabel) {
+                        renameEdgeAction(editEdge.id, editEdge.label, newLabel);
+                        editEdge.label = newLabel;
+                        editEdge.font.align = document.querySelector('input[name="edge-font-alignment"]:checked').value;
                     }
 
-                    VIS_EDGES.update(vue.editEdge);
+                    VIS_EDGES.update(editEdge);
                 });
             }
         });

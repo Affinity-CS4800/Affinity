@@ -968,6 +968,26 @@
             }
         });
 
+        document.getElementById('edge-value').addEventListener("keyup", function (event) {
+            if (event.key == "Enter") {
+                var newLabel = document.getElementById('edge-value').value;
+
+                var editEdgeIDS = NETWORK.getSelectedEdges();
+                editEdgeIDS.forEach(id => {
+                    vue.editEdge = VIS_EDGES.get(id);
+
+                    var newLabel = document.getElementById('edge-value').value;
+
+                    if (vue.editEdge.label !== newLabel) {
+                        renameEdgeAction(vue.editEdge.id, vue.editEdge.label, newLabel);
+                        vue.editEdge.label = newLabel;
+                    }
+
+                    VIS_EDGES.update(vue.editEdge);
+                });
+            }
+        });
+
         var startX, startY;
         //Saves the new position for the nodes
         NETWORK.on('dragStart', function (properties) {

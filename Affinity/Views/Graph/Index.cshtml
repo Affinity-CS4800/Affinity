@@ -918,6 +918,38 @@
             default: '#000000'
         });
 
+        var vue = this;
+        pickr.on('save', (color, instance) => {
+            pickr.hide();
+            if (color != null) {
+                color = color.toHEXA().toString();
+                var editNodeIDS = NETWORK.getSelectedNodes();
+                editNodeIDS.forEach(id => {
+                    vue.editNode = VIS_NODES.get(id);
+
+                    if (vue.editNode.color !== color) {
+                        recolorNodeAction(vue.editNode.id, vue.editNode.color, color);
+                        vue.editNode.color = color;
+                    }
+
+                    VIS_NODES.update(vue.editNode);
+                });
+
+                var editEdgeIDS = NETWORK.getSelectedEdges();
+                editEdgeIDS.forEach(id => {
+                    vue.editEdge = VIS_EDGES.get(id);
+
+                    if (vue.editEdge.color !== color) {
+                        recolorEdgeAction(vue.editEdge.id, vue.editEdge.color, color);
+                        vue.editEdge.color = color;
+                    }
+                    
+                    VIS_EDGES.update(vue.editEdge);
+                });
+
+            }
+        });
+
         var startX, startY;
         //Saves the new position for the nodes
         NETWORK.on('dragStart', function (properties) {

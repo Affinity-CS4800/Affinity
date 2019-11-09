@@ -491,6 +491,8 @@
                             NETWORK.addNodeMode();
                             var addedNodeID = [data.id];
                             NETWORK.selectNodes(addedNodeID, false);
+                            document.getElementById('node-name').value = "";
+                            document.getElementById('node-name').focus();
                         },
                         addEdge: function (data, callback) {
                             data.color = pickr2.getColor().toHEXA().toString();
@@ -510,6 +512,8 @@
 
                             var addedEdgeID = [data.id];
                             NETWORK.selectEdges(addedEdgeID);
+                            document.getElementById('edge-value').value = "";
+                            document.getElementById('edge-value').focus();
                         },
                         deleteNode: function (data, callback) {
                             const nodeId = data.nodes[0];
@@ -686,6 +690,7 @@
 
                                     document.getElementById('node-name').value = updateNode.label;
 
+                                    document.getElementById('node-name').focus();
 /*                                    if (updateNode.font.color === '#FFFFFF') {
                                         document.getElementById('node-font-color').value = "#FFFFFF";
                                     } else {
@@ -704,6 +709,8 @@
 
                                     //Init the label editing
                                     document.getElementById('edge-value').value = updateEdge.label;
+
+                                    document.getElementById('edge-value').focus();
 
                                     //Set the color to what the current node is!
                                     pickr2.setColor(updateEdge.color);

@@ -166,6 +166,8 @@
     </script>
     <script>
         // Snapshot Model
+
+        const ACTION_BATCH = "-1"; // A collection of actions
         const ACTION_ADD_VERTEX = "0";
         const ACTION_ADD_EDGE = "1";
 
@@ -186,6 +188,22 @@
 
         const REDO_STACK = [];
         let CURRENT_SNAPSHOT = 0;
+
+        function startBatchAction() {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_BATCH,
+                actions: []
+            });
+        }
+
+        function moveLastActionToBatch() {
+            
+            console.log(SNAPSHOT[CURRENT_SNAPSHOT]);
+            console.log("Last action -> ");
+            const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
+            console.log(lastAction);
+            SNAPSHOT[CURRENT_SNAPSHOT][SNAPSHOT[CURRENT_SNAPSHOT].length - 1].actions.push(lastAction);
+        }
 
         function addNodeAction(vertexId) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: vertexId });
@@ -299,6 +317,13 @@
                 const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
 
                 switch (lastAction.action) {
+                    case ACTION_BATCH:
+                        for (action of lastAction.actions) {
+                            SNAPSHOT[CURRENT_SNAPSHOT].push(action);
+                            undoLastAction(state);
+                            REDO_STACK.pop(); // Only want the batch action to be stored on REDO_STACK
+                        }
+                        break;
                     case ACTION_ADD_VERTEX:
                         NETWORK.storePositions();
                         vertex = VIS_NODES.get(lastAction.id);
@@ -351,6 +376,14 @@
             if (REDO_STACK.length > 0) {
                 const lastAction = REDO_STACK.pop();
                 switch (lastAction.action) {
+                    case ACTION_BATCH:
+                        for (action of lastAction.actions) {
+                            REDO_STACK.push(action);
+                            redoLastAction(state);
+                            SNAPSHOT[CURRENT_SNAPSHOT].pop(); // Don't store individual actions back
+                        }
+                        SNAPSHOT[CURRENT_SNAPSHOT].push(lastAction);
+                        break;
                     case ACTION_ADD_VERTEX:
                         VIS_NODES.add({ id: lastAction.id, label: "", x: lastAction.x, y: lastAction.y });
                         addNodeAction(lastAction.id);
@@ -570,19 +603,29 @@
                 },
                 saveNodeChanges: function () {
                     var editNodeIDS = NETWORK.getSelectedNodes();
+                    if (editNodeIDS.length > 1) {
+                        startBatchAction();
+                    }
                     editNodeIDS.forEach(id => {
                         this.editNode = VIS_NODES.get(id);
+
 
                         var newLabel = document.getElementById('node-name').value;
 
                         if (this.editNode.label !== newLabel) {
                             renameNodeAction(this.editNode.id, this.editNode.label, newLabel);
+                            if (editNodeIDS.length > 1) {
+                                moveLastActionToBatch();
+                            }
                             this.editNode.label = newLabel;
                         }
 
                         var newColor = pickr.getColor().toHEXA().toString();
                         if (this.editNode.color !== newColor) {
                             recolorNodeAction(this.editNode.id, this.editNode.color, newColor);
+                            if (editNodeIDS.length > 1) {
+                                moveLastActionToBatch();
+                            }
                             this.editNode.color = newColor;
                         }
 
@@ -593,6 +636,11 @@
                 },
                 saveEdgeChanges: function () {
                     var editEdgeIDS = NETWORK.getSelectedEdges();
+
+                    if (editEdgeIDS.length > 1) {
+                        startBatchAction();
+                    }
+
                     editEdgeIDS.forEach(id => {
                         this.editEdge = VIS_EDGES.get(id);
 
@@ -600,6 +648,9 @@
 
                         if (this.editEdge.label !== newLabel) {
                             renameEdgeAction(this.editEdge.id, this.editEdge.from, this.editEdge.to, this.editEdge.label, newLabel);
+                            if (editEdgeIDS.length > 1) {
+                                moveLastActionToBatch();
+                            }
                             this.editEdge.label = newLabel;
                         }
 
@@ -607,6 +658,9 @@
 
                         if (this.editEdge.color !== newColor) {
                             recolorEdgeAction(this.editEdge.id, this.editEdge.from, this.editEdge.to, this.editEdge.color, newColor);
+                            if (editEdgeIDS.length > 1) {
+                                moveLastActionToBatch();
+                            }
                             this.editEdge.color = newColor;
                         }
 

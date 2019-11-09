@@ -161,7 +161,6 @@
                     });
                 }
             });
-
             return getVisDataSet();
         }
     </script>
@@ -447,7 +446,9 @@
                     autoResize: true,
                     height: "100%",
                     width: "100%",
-                    interaction: { hover: true },
+                    interaction: {
+                        hover: true
+                    },
                     layout: {
                         randomSeed: undefined
                     },
@@ -761,6 +762,25 @@
                                     }
                                     NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
+                            });
+
+                            NETWORK.on('dragEnd', function () {
+                                if (NETWORK.getSelectedNodes().length == 1) {
+                                    if (currentNodes.length != 1) {
+                                        currentNodes = [];
+                                        currentEdges = [];
+                                        currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                        NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    }
+                                    else if (currentNodes.length == 1) {
+                                        if (String(NETWORK.getSelectedNodes()[0]) != currentNodes[0]) {
+                                            currentNodes = [];
+                                            currentEdges = [];
+                                            currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                            NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                        }
+                                    }
+                                }            
                             });
                         }
                     }

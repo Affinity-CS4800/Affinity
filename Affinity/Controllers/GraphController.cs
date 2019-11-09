@@ -69,9 +69,9 @@ namespace Affinity.Controllers
                     }
                     else if(value == "3")
                     {
-                        var edges = _affinityDbContext.Edges.AsNoTracking().Where(v => v.First == int.Parse(key["from"].ToString()) || v.Second == int.Parse(key["from"].ToString()))
-                            .Select(g => g.DBID).Distinct();
-                        foreach(var edge in edges)
+                        var edges = _affinityDbContext.Edges.AsNoTracking().Where(v => (v.First == int.Parse(key["node"]["id"].ToString()) || v.Second == int.Parse(key["node"]["id"].ToString())) && v.GraphID == graphID)
+                                .Select(g => g.DBID).Distinct();
+                        foreach (var edge in edges)
                         {
                             Edge e = await _affinityDbContext.Edges.Where(v => v.DBID == edge && v.GraphID == graphID).FirstOrDefaultAsync();
                             _affinityDbContext.Edges.Remove(e);

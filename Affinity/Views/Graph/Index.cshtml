@@ -972,7 +972,7 @@
                     var editEdge = VIS_EDGES.get(id);
 
                     if (editEdge.color !== color) {
-                        recolorEdgeAction(editEdge.id, editEdge.color, color);
+                        recolorEdgeAction(editEdge.id, editEdge.from, editEdge.to, editEdge.color, color);
                         editEdge.color = color;
                     }
                     

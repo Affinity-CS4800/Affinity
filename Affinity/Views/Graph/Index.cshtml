@@ -918,15 +918,38 @@
             default: '#000000'
         });
 
+        var startX, startY;
         //Saves the new position for the nodes
-        NETWORK.on('dragEnd', function (properties) {
-            for (var i = 0; i < properties.nodes.length; i++) {
-                var nodeId = properties.nodes[i];
-                const node = VIS_NODES.get(nodeId);
-                repositionNodeAction(nodeId, node.x, node.y, properties.pointer.canvas.x, properties.pointer.canvas.y);
-                VIS_NODES.update({ id: nodeId, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
-            }
+        NETWORK.on('dragStart', function (properties) {
+            startX = properties.pointer.canvas.x;
+            startY = properties.pointer.canvas.y;
+            console.log("START X: " + startX);
+            console.log("START Y: " + startY);
+            console.log("");
         });
+
+        NETWORK.on('dragEnd', function (properties) {
+            console.log("Correct X: " + properties.pointer.canvas.x);
+            console.log("Correct Y: " + properties.pointer.canvas.y);
+
+            var xDifference = properties.pointer.canvas.x - startX;
+            var yDifference = properties.pointer.canvas.y - startY;
+
+            var selectedNodes = NETWORK.getSelectedNodes();
+            for (var i = 0; i < selectedNodes.length; i++) {
+                var nodeId = selectedNodes[i];
+                const node = VIS_NODES.get(nodeId);
+                repositionNodeAction(nodeId, node.x, node.y, (node.x + xDifference), (node.y + yDifference));
+                VIS_NODES.update({ id: nodeId, x: (node.x + xDifference), y: (node.y + yDifference) });
+                console.log("NODE ID: " + nodeId);
+
+                console.log("Actual X: " + (node.x + xDifference));
+                console.log("Actual Y: " + (node.y + yDifference));
+            }
+            console.log("Drag ended");
+                
+        });
+        
 
         NETWORK.redraw();</script>
 }

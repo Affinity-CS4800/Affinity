@@ -197,11 +197,7 @@
         }
 
         function moveLastActionToBatch() {
-            
-            console.log(SNAPSHOT[CURRENT_SNAPSHOT]);
-            console.log("Last action -> ");
             const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
-            console.log(lastAction);
             SNAPSHOT[CURRENT_SNAPSHOT][SNAPSHOT[CURRENT_SNAPSHOT].length - 1].actions.push(lastAction);
         }
 

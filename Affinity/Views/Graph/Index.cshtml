@@ -105,7 +105,7 @@
                     <button v-on:click="changeMode('select')" v-bind:class='{ selectedButton: (state == "select") }'>Single</button>
                     <button v-on:click="changeMode('selectMultiple')" v-bind:class='{ selectedButton: (state == "selectMultiple") }'>Multiple</button>
                 </div>
-                <button v-on:click="changeMode('delete')">Delete</button>
+                <button v-if="state == 'select' || state == 'selectMultiple'" v-on:click="deleteSelected()">Delete</button>
                 <button v-on:click="undo()">Undo</button>
                 <button v-on:click="redo()">Redo</button>
                 <button v-on:click="pdf()">Download as Pdf</button>
@@ -160,8 +160,7 @@
             </div>
         </div>
         <div class="status">
-            <h2 v-if="state=='delete'">You're deleting.</h2>
-            <h2 v-else-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
+            <h2 v-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
             <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
         </div>
         <div id="mynetwork"></div>
@@ -236,8 +235,12 @@
             0: []
         };
 
-        const REDO_STACK = [];
+        let REDO_STACK = [];
         let CURRENT_SNAPSHOT = 0;
+
+        function clearRedoStack() {
+            REDO_STACK = [];
+        }
 
         function startBatchAction() {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
@@ -251,8 +254,8 @@
             SNAPSHOT[CURRENT_SNAPSHOT][SNAPSHOT[CURRENT_SNAPSHOT].length - 1].actions.push(lastAction);
         }
 
-        function addNodeAction(vertexId) {
-            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: vertexId });
+        function addNodeAction(id_, color_, x_, y_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: id_, color: color_, x: x_, y: y_ });
         }
 
         function addEdgeAction(id_, from_, to_) {
@@ -290,8 +293,8 @@
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_NODE_RECOLOR,
                 id: vertexId,
-                prevColor: convertHexToDecimal(prevColor_),
-                color: convertHexToDecimal(color_)
+                prevColor: prevColor_,
+                color: color_
             });
         }
 
@@ -333,8 +336,8 @@
                 id: id_,
                 from: from_,
                 to: to_,
-                prevColor: convertHexToDecimal(prevColor_),
-                color: convertHexToDecimal(color_)
+                prevColor: prevColor_,
+                color: color_
             });
         }
 
@@ -393,7 +396,7 @@
                         }
                         break;
                     case ACTION_NODE_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.prevColor) });
+                        VIS_NODES.update({ id: lastAction.id, color: lastAction.prevColor });
                         break;
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.prevLabel });
@@ -405,7 +408,7 @@
                         VIS_EDGES.update({ id: lastAction.id, label: lastAction.prevLabel });
                         break;
                     case ACTION_EDGE_RECOLOR:
-                        VIS_EDGES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.prevColor) });
+                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.prevColor });
                         break;
                 }
 
@@ -431,8 +434,8 @@
                         SNAPSHOT[CURRENT_SNAPSHOT].push(lastAction);
                         break;
                     case ACTION_ADD_VERTEX:
-                        VIS_NODES.add({ id: lastAction.id, label: "", x: lastAction.x, y: lastAction.y });
-                        addNodeAction(lastAction.id);
+                        VIS_NODES.add({ id: lastAction.id, label: "", color: lastAction.color, x: lastAction.x, y: lastAction.y });
+                        addNodeAction(lastAction.id, lastAction.color, lastAction.x, lastAction.y);
                         break;
                     case ACTION_ADD_EDGE:
                         VIS_EDGES.add({ id: lastAction.id, label: "", from: lastAction.from, to: lastAction.to });
@@ -448,11 +451,14 @@
                         break;
                     case ACTION_DELETE_VERTEX_N_EDGE:
                         VIS_NODES.remove(lastAction.node.id);
+                        for (edge of lastAction.edges) {
+                            VIS_EDGES.remove(edge.id);
+                        }
                         deleteNodeEdgeAction(lastAction.node, lastAction.edges);
                         break;
                     case ACTION_NODE_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.color) });
-                        recolorNodeAction(lastAction.id, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
+                        VIS_NODES.update({ id: lastAction.id, color: lastAction.color });
+                        recolorNodeAction(lastAction.id, lastAction.prevColor, lastAction.color);
                         break;
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.label });
@@ -467,8 +473,8 @@
                         renameEdgeAction(lastAction.id, lastAction.from, lastAction.to, lastAction.prevLabel, lastAction.label);
                         break;
                     case ACTION_EDGE_RECOLOR:
-                        VIS_EDGES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.color) });
-                        recolorEdgeAction(lastAction.id, lastAction.from, lastAction.to, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
+                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.color });
+                        recolorEdgeAction(lastAction.id, lastAction.from, lastAction.to, lastAction.prevColor, lastAction.color);
                         break;
                 }
                 if (state == "drawNodes") {
@@ -517,8 +523,8 @@
                 nextNodeID: 0,
                 showNodeCustomization: true,
                 showEdgeCustomization: false,
-                editNode: null,
-                editEdge: null
+                currentNodes: [],
+                currentEdges: []
             },
             mounted: function () {
                 const options = {
@@ -567,7 +573,8 @@
                             VIS_NODES.update({ id: data.id, label: "", color: data.color, font: { color: '#FFFFFF' }, x: data.x, y: data.y });
                             nextNodeID++;
                             callback(data);
-                            addNodeAction(data.id);
+                            addNodeAction(data.id, data.color, data.x, data.y);
+                            clearRedoStack();
                             NETWORK.addNodeMode();
                             var addedNodeID = [data.id];
                             NETWORK.selectNodes(addedNodeID, false);
@@ -586,6 +593,7 @@
                                 callback(data);
                                 addEdgeAction(data.id, data.from, data.to);
                             }
+                            clearRedoStack();
 
                             var directed = false;
                             if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
@@ -604,22 +612,31 @@
                         deleteNode: function (data, callback) {
                             const nodeId = data.nodes[0];
                             const node = VIS_NODES.get(nodeId);
-                            if (data.edges.length > 0) {
-                                const connectedEdges = NETWORK.getConnectedEdges(nodeId);
+                            const connectedEdges = NETWORK.getConnectedEdges(nodeId);
+                            if (connectedEdges.length > 0) {
                                 var edges = [];
                                 for (edgeId of connectedEdges) {
                                     edges.push(VIS_EDGES.get(edgeId));
+                                    VIS_EDGES.remove(edgeId);
                                 }
+                                VIS_NODES.remove(nodeId);
                                 deleteNodeEdgeAction(node, edges);
                             }
                             else {
+                                VIS_NODES.remove(nodeId);
                                 deleteNodeAction(node);
                             }
+                            clearRedoStack();
                             callback(data);
                         },
                         deleteEdge: function (data, callback) {
-                            deleteEdgeAction(VIS_EDGES.get(data.edges[0]));
-                            callback(data);
+                            const edge = VIS_EDGES.get(data.edges[0]) || false;
+                            if (edge) {
+                                deleteEdgeAction(edge);
+                                VIS_EDGES.remove(edge.id);
+                                clearRedoStack();
+                                callback(data);
+                            }
                         }
                     }
                 };
@@ -668,6 +685,44 @@
                 redo: function (event) {
                     redoLastAction(this.state);
                 },
+                deleteSelected: function (event) {
+                    const nodes_ = NETWORK.getSelectedNodes();
+                    let edges_ = NETWORK.getSelectedEdges();
+
+                    let isBatchAction = false;
+                    if (nodes_.length > 1 || edges_.length > 1) {
+                        isBatchAction = true;
+                    } else if (nodes_.length > 0 && edges_.length > 0) {
+                        isBatchAction = true;
+                    }
+
+                    if (isBatchAction) {
+                        startBatchAction();
+                    }
+
+                    for (node of nodes_) {
+                        NETWORK.manipulation.options.deleteNode({
+                            nodes: [node]
+                        }, (d) => { });
+                        if (isBatchAction) moveLastActionToBatch();
+                    }
+
+                    // Reselect edges, in case they were deleted by node deletion
+                    edges_ = NETWORK.getSelectedEdges();
+
+                    for (edge of edges_) {
+                        NETWORK.manipulation.options.deleteEdge({
+                            edges: [edge]
+                        }, (d) => { });
+                        if (isBatchAction) moveLastActionToBatch(); 
+                    }
+
+                    clearRedoStack();
+                    NETWORK.disableEditMode();
+
+                    this.currentNodes = [];
+                    this.currentEdges = [];
+                },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
                     var url = window.location.pathname;
@@ -695,7 +750,7 @@
                     }
                     else {
                         NETWORK.unselectAll();
-                        if (this.state == "delete" || this.state == "select" || this.state == "selectMultiple") {
+                        if (this.state == "select" || this.state == "selectMultiple") {
                             NETWORK.off('click');
                         }
                         this.state = newMode;
@@ -708,14 +763,6 @@
                             this.showNodeCustomization = false;
                             this.showEdgeCustomization = true;
                             NETWORK.addEdgeMode();
-                        }
-                        else if (newMode == "delete") {
-                            NETWORK.disableEditMode();
-                            this.showNodeCustomization = false;
-                            this.showEdgeCustomization = false;
-                            NETWORK.on('click', function () {
-                                NETWORK.deleteSelected();
-                            });
                         }
                         else if (newMode == "select") {
                             NETWORK.disableEditMode();
@@ -779,54 +826,56 @@
                         else if (newMode == "selectMultiple") {
                             NETWORK.disableEditMode();
                             NETWORK.unselectAll();
-                            var currentNodes = NETWORK.getSelectedNodes();
-                            var currentEdges = NETWORK.getSelectedEdges();
+                            this.currentNodes = NETWORK.getSelectedNodes();
+                            this.currentEdges = NETWORK.getSelectedEdges();
                             this.showNodeCustomization = true; // temporary
                             this.showEdgeCustomization = true; // temporary
+
+                            var vue = this;
                             NETWORK.on('click', function () {
                                 if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
                                     NETWORK.unselectAll();
-                                    currentNodes = [];
-                                    currentEdges = [];
+                                    vue.currentNodes = [];
+                                    vue.currentEdges = [];
                                 }
                                 else if (NETWORK.getSelectedNodes().length != 0) {
                                     selectedNode = NETWORK.getSelectedNodes()[0];
-                                    var index = currentNodes.indexOf(String(selectedNode));
+                                    var index = vue.currentNodes.indexOf(String(selectedNode));
                                     if (index != -1) {
-                                        currentNodes.splice(index, 1);
+                                        vue.currentNodes.splice(index, 1);
                                     }
                                     else {
-                                        currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                        vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
                                     }
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                                 else {
                                     selectedEdge = NETWORK.getSelectedEdges()[0];
-                                    var index = currentEdges.indexOf(String(selectedEdge));
+                                    var index = vue.currentEdges.indexOf(String(selectedEdge));
                                     if (index != -1) {
-                                        currentEdges.splice(index, 1);
+                                        vue.currentEdges.splice(index, 1);
                                     }
                                     else {
-                                        currentEdges.push(String(NETWORK.getSelectedEdges()));
+                                        vue.currentEdges.push(String(NETWORK.getSelectedEdges()));
                                     }
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                             });
 
                             NETWORK.on('dragEnd', function () {
                                 if (NETWORK.getSelectedNodes().length == 1) {
-                                    if (currentNodes.length != 1) {
-                                        currentNodes = [];
-                                        currentEdges = [];
-                                        currentNodes.push(String(NETWORK.getSelectedNodes()));
-                                        NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    if (vue.currentNodes.length != 1) {
+                                        vue.currentNodes = [];
+                                        vue.currentEdges = [];
+                                        vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                        NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                     }
-                                    else if (currentNodes.length == 1) {
-                                        if (String(NETWORK.getSelectedNodes()[0]) != currentNodes[0]) {
-                                            currentNodes = [];
-                                            currentEdges = [];
-                                            currentNodes.push(String(NETWORK.getSelectedNodes()));
-                                            NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    else if (vue.currentNodes.length == 1) {
+                                        if (String(NETWORK.getSelectedNodes()[0]) != vue.currentNodes[0]) {
+                                            vue.currentNodes = [];
+                                            vue.currentEdges = [];
+                                            vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                            NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                         }
                                     }
                                 }            
@@ -1054,6 +1103,7 @@
 
                     if (editNode.color !== color) {
                         recolorNodeAction(editNode.id, editNode.color, color);
+                        clearRedoStack();
                         editNode.color = color;
                     }
 
@@ -1066,6 +1116,7 @@
 
                     if (editEdge.color !== color) {
                         recolorEdgeAction(editEdge.id, editEdge.from, editEdge.to, editEdge.color, color);
+                        clearRedoStack();
                         editEdge.color = color;
                     }
                     
@@ -1085,6 +1136,7 @@
 
                     if (editNode.label !== newLabel) {
                         renameNodeAction(editNode.id, editNode.label, newLabel);
+                        clearRedoStack();
                         editNode.label = newLabel;
                         editNode.font.color = document.querySelector('input[name="node-font-color"]:checked').value;
                     }
@@ -1106,6 +1158,7 @@
 
                     if (editEdge.label !== newLabel) {
                         renameEdgeAction(editEdge.id, editEdge.label, newLabel);
+                        clearRedoStack();
                         editEdge.label = newLabel;
                         editEdge.font.align = document.querySelector('input[name="edge-font-alignment"]:checked').value;
                     }
@@ -1131,10 +1184,11 @@
                 var nodeId = selectedNodes[i];
                 const node = VIS_NODES.get(nodeId);
                 repositionNodeAction(nodeId, node.x, node.y, (node.x + xDifference), (node.y + yDifference));
+                clearRedoStack();
                 VIS_NODES.update({ id: nodeId, x: (node.x + xDifference), y: (node.y + yDifference) });
             }   
         });
         
-
+        NETWORK.fit();
         NETWORK.redraw();</script>
 }

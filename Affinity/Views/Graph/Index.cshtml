@@ -673,6 +673,8 @@
                 },
                 deleteSelected: function (event) {
                     const nodes_ = NETWORK.getSelectedNodes();
+                    let edges_ = NETWORK.getSelectedEdges();
+
                     let isBatchAction = false;
                     if (nodes_.length > 1 || edges_.length > 1) {
                         isBatchAction = true;
@@ -691,7 +693,8 @@
                         if (isBatchAction) moveLastActionToBatch();
                     }
 
-                    const edges_ = NETWORK.getSelectedEdges();
+                    // Reselect edges, in case they were deleted by node deletion
+                    edges_ = NETWORK.getSelectedEdges();
 
                     for (edge of edges_) {
                         NETWORK.manipulation.options.deleteEdge({

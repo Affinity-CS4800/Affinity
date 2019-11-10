@@ -1,5 +1,67 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<!DOCTYPE html>
 <html>
+
+<script>
+    @{
+        var timeout = Convert.ToDouble(Configuration.GetSection("Timeout")["Duration"]);
+    }
+
+    //Code from jprochazka, i modified it to fit my needs.
+    //https://forums.asp.net/t/1899214.aspx?If+no+activity+for+15+minutes+display+an+alert+on+web+page+and+then+either+continue+or+logout
+
+    var timeoutWarning = (@timeout - 1) * 60 * 1000;
+    var timeoutFinalAction = @timeout * 60 * 1000;
+    var countDown = 59;
+
+    var timeoutTimer;
+    var warningTimer;
+    var countDownTimer;
+
+    // Start timers.
+    function StartTimers() {
+        warningTimer = setTimeout("IdleWarning()", timeoutWarning);
+        timeoutTimer = setTimeout("IdleTimeout()", timeoutFinalAction);
+    }
+
+    // Reset timers.
+    function ResetTimers() {
+        clearTimeout(warningTimer);
+        clearTimeout(timeoutTimer);
+        clearInterval(countDownTimer);
+        countDown = 59;
+        StartTimers();
+        //$('#timeout').modal('hide');
+        //$('#time').text("60");
+    }
+
+    // Show idle timeout warning dialog.
+    function IdleWarning() {
+        //$("#timeout").modal('show');
+        //Sets the text of the time on the modal to reflect the countdown.
+        //countDownTimer = setInterval(function () { $('#time').text(countDown); countDown--; }, 1000);
+
+        console.log("Countdown started...");
+    }
+
+    // Logout the user.
+    function IdleTimeout() {
+        console.log("Signed out since session expired");
+
+        firebase.auth().signOut().then(function () {
+            // Successfully signed out.
+            document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }).catch(function (error) {
+            // An error happened.
+        });
+
+        window.location = "/";
+    }
+
+</script>
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,7 +78,7 @@
     </style>
     @RenderSection("Styles", required: false)
 </head>
-<body>
+<body onload="StartTimers();" onmousemove="ResetTimers();">
     <div id="app">
         <header>
             <div class="logo"><a href="/">Affinity</a></div><nav class="navigation">

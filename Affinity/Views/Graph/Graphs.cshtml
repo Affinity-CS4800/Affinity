@@ -4,7 +4,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@section  styles{
+@section styles{
 
     <style>
         .graphs {
@@ -35,56 +35,50 @@
         }
 
             .graphLink:hover {
-               filter: grayscale(0%);
-               transform: translateY(-2px);
+                filter: grayscale(0%);
+                transform: translateY(-2px);
             }
-        
     </style>
 
 }
 
-    <section class="graphs">
-        @foreach (var id in Model){<a class="graphLink" href="graph/@id">@id</a>}
-    </section>
+<section class="graphs">
+    @foreach (var id in Model)
+    {<a class="graphLink" href="graph/@id">@id</a>}
+</section>
 
 
-        @section scripts {
-            <!-- The core Firebase JS SDK is always required and must be listed first -->
-            <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
-            <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
-            <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
-            <script type="text/javascript" src="~/js/firebase.js"></script>
-            <script type="text/javascript">
-                var app = new Vue({
-                    el: '#app',
-                    data: {
-                        user: false
-                    },
-                    created: function () {
-                        // Store user
-                        firebase.auth().onAuthStateChanged(user => {
-                            this.user = user;
+@section scripts {
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+    <script type="text/javascript" src="~/js/FIREBASE_CONFIG.js"></script>
+    <script type="text/javascript" src="~/js/firebase.js"></script>
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                user: false
+            },
+            created: function () {
+                // Store user
+                firebase.auth().onAuthStateChanged(user => {
+                    this.user = user;
+                });
+            },
+            methods: {
+                signOut: function (event) {
+                    if (this.user) {
+                        firebase.auth().signOut().then(function () {
+                            // Successfully signed out.
+                            document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                        }).catch(function (error) {
+                            // An error happened.
                         });
-                    },
-                    methods: {
-                        signOut: function (event) {
-                            if (this.user) {
-                                firebase.auth().signOut().then(function () {
-                                    // Successfully signed out.
-                                    document.cookie = "aff_t=; Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                                }).catch(function (error) {
-                                    // An error happened.
-                                });
-                                window.location.reload(true); // refresh page
-                            }
-                        }
-                        //getGraphIds: function () {
-                        //    $.ajax({
-                        //       type: 'GET',
-
-                        //    })
-                        // }
+                        window.location.reload(true); // refresh page
                     }
-                })
-            </script>
-        }
+                }
+            }
+        })
+    </script>
+}

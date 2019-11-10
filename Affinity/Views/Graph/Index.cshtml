@@ -117,7 +117,6 @@
                 <label> Label/Weight: <input type="text" id="node-name" /></label>
                 <label> Color: <span class="color-picker"></span> </label>
                 <br />
-                <label> Size: <input type="number" min="1" max="20" id="node-size" /></label>
                 <div class="node-font-colors">
                     <input type="radio" v-on:click="changeNodeFontColor('white')" name="node-font-color" value="white" id="white-node-font" checked />
                     <label for="white">
@@ -128,8 +127,6 @@
                         Black Font
                     </label>
                 </div>
-                <br />
-                <button v-on:click="saveNodeChanges()"> Save Changes </button>
             </div>
             <div class="customization-box" v-show="showEdgeCustomization">
                 <h2>Edges:</h2>
@@ -150,8 +147,16 @@
                         Bottom
                     </label>
                 </div>
-                <br />
-                <button v-on:click="saveEdgeChanges()"> Save Changes </button>
+                <div class="edge-directions">
+                    <input type="radio" v-on:click="changeIfDirected('undirected')" name="edge-direction" value="undirected" id="undirected" checked />
+                    <label for="undirected">
+                        Undirected
+                    </label>
+                    <input type="radio" v-on:click="changeIfDirected('directed')" name="edge-direction" value="directed" id="directed" />
+                    <label for="directed">
+                        Directed
+                    </label>
+                </div>
             </div>
         </div>
         <div class="status">
@@ -582,7 +587,13 @@
                                 addEdgeAction(data.id, data.from, data.to);
                             }
 
-                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, from: data.from, to: data.to });
+                            var directed = false;
+                            if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
+                                directed = true;
+                            }
+
+                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, from: data.from, to: data.to });
+
                             NETWORK.addEdgeMode();
 
                             var addedEdgeID = [data.id];
@@ -641,75 +652,6 @@
                 },
                 redo: function (event) {
                     redoLastAction(this.state);
-                },
-                saveNodeChanges: function () {
-                    var editNodeIDS = NETWORK.getSelectedNodes();
-                    if (editNodeIDS.length > 1) {
-                        startBatchAction();
-                    }
-                    editNodeIDS.forEach(id => {
-                        this.editNode = VIS_NODES.get(id);
-
-
-                        var newLabel = document.getElementById('node-name').value;
-
-                        if (this.editNode.label !== newLabel) {
-                            renameNodeAction(this.editNode.id, this.editNode.label, newLabel);
-                            if (editNodeIDS.length > 1) {
-                                moveLastActionToBatch();
-                            }
-                            this.editNode.label = newLabel;
-                        }
-
-                        var newColor = pickr.getColor().toHEXA().toString();
-                        if (this.editNode.color !== newColor) {
-                            recolorNodeAction(this.editNode.id, this.editNode.color, newColor);
-                            if (editNodeIDS.length > 1) {
-                                moveLastActionToBatch();
-                            }
-                            this.editNode.color = newColor;
-                        }
-
-                     //   this.editNode.font.color = document.getElementById('node-font-color').value;
-
-                        VIS_NODES.update(this.editNode);
-                    });
-                },
-                saveEdgeChanges: function () {
-                    var editEdgeIDS = NETWORK.getSelectedEdges();
-
-                    if (editEdgeIDS.length > 1) {
-                        startBatchAction();
-                    }
-
-                    editEdgeIDS.forEach(id => {
-                        this.editEdge = VIS_EDGES.get(id);
-
-                        var newLabel = document.getElementById('edge-value').value;
-
-                        if (this.editEdge.label !== newLabel) {
-                            renameEdgeAction(this.editEdge.id, this.editEdge.from, this.editEdge.to, this.editEdge.label, newLabel);
-                            if (editEdgeIDS.length > 1) {
-                                moveLastActionToBatch();
-                            }
-                            this.editEdge.label = newLabel;
-                        }
-
-                        var newColor = pickr2.getColor().toHEXA().toString();
-
-                        if (this.editEdge.color !== newColor) {
-                            recolorEdgeAction(this.editEdge.id, this.editEdge.from, this.editEdge.to, this.editEdge.color, newColor);
-                            if (editEdgeIDS.length > 1) {
-                                moveLastActionToBatch();
-                            }
-                            this.editEdge.color = newColor;
-                        }
-
-                        //this.editEdge.font.align = document.getElementById('edge-font-align').value;
-                        // ADD ACTION FOR FONT ALIGN
-
-                        VIS_EDGES.update(this.editEdge);
-                    });
                 },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
@@ -782,16 +724,15 @@
 
                                     var updateNode = VIS_NODES.get(node)[0];
 
-                                    vue.editNode = updateNode;
-
                                     document.getElementById('node-name').value = updateNode.label;
 
                                     document.getElementById('node-name').focus();
-/*                                    if (updateNode.font.color === '#FFFFFF') {
-                                        document.getElementById('node-font-color').value = "#FFFFFF";
-                                    } else {
-                                        document.getElementById('node-font-color').value = "#000000";
-                                    }*/
+
+                                    //if (updateNode.font.color === '#FFFFFF') {
+                                    //    document.getElementById('node-font-color').value = "#FFFFFF";
+                                    //} else {
+                                    //    document.getElementById('node-font-color').value = "#000000";
+                                    //}
 
                                     pickr.setColor(updateNode.color);
 
@@ -800,8 +741,6 @@
                                     vue.showEdgeCustomization = true;
 
                                     var updateEdge = VIS_EDGES.get(edge)[0];
-
-                                    vue.editEdge = updateEdge;
 
                                     //Init the label editing
                                     document.getElementById('edge-value').value = updateEdge.label;
@@ -903,14 +842,31 @@
                 changeEdgeFontAlignment: function (newAlignment) {
                     var editEdgeIDS = NETWORK.getSelectedEdges();
                     editEdgeIDS.forEach(id => {
-                        this.editEdge = VIS_EDGES.get(id);
+                        var editEdge = VIS_EDGES.get(id);
 
-                        if (this.editEdge.font.align != newAlignment) {
-                            this.editEdge.font.align = newAlignment;
+                        if (editEdge.font.align != newAlignment) {
+                           editEdge.font.align = newAlignment;
                             // ADD ACTION FOR FONT ALIGN
                         }
                        
-                        VIS_EDGES.update(this.editEdge);
+                        VIS_EDGES.update(editEdge);
+                    });
+                },
+                changeIfDirected: function (newState) {
+                    var directed = false;
+                    if (newState == 'directed') {
+                        directed = true;
+                    }
+                    var editEdgeIDS = NETWORK.getSelectedEdges();
+                    editEdgeIDS.forEach(id => {
+                        var editEdge = VIS_EDGES.get(id);
+
+                        if (editEdge.arrows.to != directed) {
+                            editEdge.arrows.to = directed;
+                            // ADD ACTION FOR EDGE DIRECTED/UNDIRECTED
+                        }
+
+                        VIS_EDGES.update(editEdge);
                     });
                 },
                 pdf: function (event) {

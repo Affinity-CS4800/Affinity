@@ -105,7 +105,7 @@
                     <button v-on:click="changeMode('select')" v-bind:class='{ selectedButton: (state == "select") }'>Single</button>
                     <button v-on:click="changeMode('selectMultiple')" v-bind:class='{ selectedButton: (state == "selectMultiple") }'>Multiple</button>
                 </div>
-                <button v-on:click="changeMode('delete')">Delete</button>
+                <button v-if="state == 'select' || state == 'selectMultiple'" v-on:click="deleteSelected()">Delete</button>
                 <button v-on:click="undo()">Undo</button>
                 <button v-on:click="redo()">Redo</button>
                 <button v-on:click="pdf()">Download as Pdf</button>
@@ -236,8 +236,12 @@
             0: []
         };
 
-        const REDO_STACK = [];
+        let REDO_STACK = [];
         let CURRENT_SNAPSHOT = 0;
+
+        function clearRedoStack() {
+            REDO_STACK = [];
+        }
 
         function startBatchAction() {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
@@ -448,6 +452,9 @@
                         break;
                     case ACTION_DELETE_VERTEX_N_EDGE:
                         VIS_NODES.remove(lastAction.node.id);
+                        for (edge of lastAction.edges) {
+                            VIS_EDGES.remove(edge.id);
+                        }
                         deleteNodeEdgeAction(lastAction.node, lastAction.edges);
                         break;
                     case ACTION_NODE_RECOLOR:
@@ -568,6 +575,7 @@
                             nextNodeID++;
                             callback(data);
                             addNodeAction(data.id);
+                            clearRedoStack();
                             NETWORK.addNodeMode();
                             var addedNodeID = [data.id];
                             NETWORK.selectNodes(addedNodeID, false);
@@ -586,6 +594,7 @@
                                 callback(data);
                                 addEdgeAction(data.id, data.from, data.to);
                             }
+                            clearRedoStack();
 
                             var directed = false;
                             if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
@@ -604,22 +613,31 @@
                         deleteNode: function (data, callback) {
                             const nodeId = data.nodes[0];
                             const node = VIS_NODES.get(nodeId);
-                            if (data.edges.length > 0) {
-                                const connectedEdges = NETWORK.getConnectedEdges(nodeId);
+                            const connectedEdges = NETWORK.getConnectedEdges(nodeId);
+                            if (connectedEdges.length > 0) {
                                 var edges = [];
                                 for (edgeId of connectedEdges) {
                                     edges.push(VIS_EDGES.get(edgeId));
+                                    VIS_EDGES.remove(edgeId);
                                 }
+                                VIS_NODES.remove(nodeId);
                                 deleteNodeEdgeAction(node, edges);
                             }
                             else {
+                                VIS_NODES.remove(nodeId);
                                 deleteNodeAction(node);
                             }
+                            clearRedoStack();
                             callback(data);
                         },
                         deleteEdge: function (data, callback) {
-                            deleteEdgeAction(VIS_EDGES.get(data.edges[0]));
-                            callback(data);
+                            const edge = VIS_EDGES.get(data.edges[0]) || false;
+                            if (edge) {
+                                deleteEdgeAction(edge);
+                                VIS_EDGES.remove(edge.id);
+                                clearRedoStack();
+                                callback(data);
+                            }
                         }
                     }
                 };
@@ -652,6 +670,35 @@
                 },
                 redo: function (event) {
                     redoLastAction(this.state);
+                },
+                deleteSelected: function (event) {
+                    const nodes_ = NETWORK.getSelectedNodes();
+                    const edges_ = NETWORK.getSelectedEdges();
+                    let isBatchAction = false;
+                    if (nodes_.length > 1 || edges_.length > 1) {
+                        isBatchAction = true;
+                    } else if (nodes_.length > 0 && edges_.length > 0) {
+                        isBatchAction = true;
+                    }
+
+                    if (isBatchAction) {
+                        startBatchAction();
+                    }
+
+                    for (node of nodes_) {
+                        NETWORK.manipulation.options.deleteNode({
+                            nodes: [node]
+                        }, (d) => { });
+                        if (isBatchAction) moveLastActionToBatch();
+                    }
+                    for (edge of edges_) {
+                        NETWORK.manipulation.options.deleteEdge({
+                            edges: [edge]
+                        }, (d) => { if (isBatchAction) moveLastActionToBatch(); });
+                    }
+
+                    clearRedoStack();
+                    NETWORK.disableEditMode();
                 },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
@@ -1039,6 +1086,7 @@
 
                     if (editNode.color !== color) {
                         recolorNodeAction(editNode.id, editNode.color, color);
+                        clearRedoStack();
                         editNode.color = color;
                     }
 
@@ -1051,6 +1099,7 @@
 
                     if (editEdge.color !== color) {
                         recolorEdgeAction(editEdge.id, editEdge.from, editEdge.to, editEdge.color, color);
+                        clearRedoStack();
                         editEdge.color = color;
                     }
                     
@@ -1070,6 +1119,7 @@
 
                     if (editNode.label !== newLabel) {
                         renameNodeAction(editNode.id, editNode.label, newLabel);
+                        clearRedoStack();
                         editNode.label = newLabel;
                         editNode.font.color = document.querySelector('input[name="node-font-color"]:checked').value;
                     }
@@ -1091,6 +1141,7 @@
 
                     if (editEdge.label !== newLabel) {
                         renameEdgeAction(editEdge.id, editEdge.label, newLabel);
+                        clearRedoStack();
                         editEdge.label = newLabel;
                         editEdge.font.align = document.querySelector('input[name="edge-font-alignment"]:checked').value;
                     }
@@ -1116,10 +1167,11 @@
                 var nodeId = selectedNodes[i];
                 const node = VIS_NODES.get(nodeId);
                 repositionNodeAction(nodeId, node.x, node.y, (node.x + xDifference), (node.y + yDifference));
+                clearRedoStack();
                 VIS_NODES.update({ id: nodeId, x: (node.x + xDifference), y: (node.y + yDifference) });
             }   
         });
         
-
+        NETWORK.fit();
         NETWORK.redraw();</script>
 }

@@ -231,7 +231,6 @@
 
         const ACTION_EDGE_RENAME = "9";
         const ACTION_EDGE_RECOLOR = "10";
-        //TEMPORARY NEEDS TESTING
         const ACTION_EDGE_CHANGE_FONT_ALIGNMENT = "11";
         const ACTION_EDGE_CHANGE_IF_DIRECTED = "12";
 
@@ -644,14 +643,11 @@
                             if (data.from == data.to && this.state == "drawEdges") {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
-                                   // addEdgeAction(data.id, data.from, data.to);
                                 }
                             }
                             else {
                                 callback(data);
-                                //addEdgeAction(data.id, data.from, data.to);
                             }
-                            clearRedoStack();
 
                             var directed = false;
                             if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
@@ -659,6 +655,7 @@
                             }
 
                             addEdgeAction(data.id, directed, data.from, data.to);
+                            clearRedoStack();
                             VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, from: data.from, to: data.to });
 
                             NETWORK.addEdgeMode();
@@ -717,7 +714,6 @@
                 });
 
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
-                nextNodeID = VIS_NODES.length;
                 NETWORK.addNodeMode();
             },
             created: function () {
@@ -969,7 +965,7 @@
                         var editEdge = VIS_EDGES.get(id);
 
                         if (editEdge.font.align != newAlignment) {
-                            changeEdgeFontAlignmentAction(editEdge.id, editEdge.from, editEdge.to, editEdge.font.align, newAlignment);//TEST
+                            changeEdgeFontAlignmentAction(editEdge.id, editEdge.from, editEdge.to, editEdge.font.align, newAlignment);
                             clearRedoStack();
                             editEdge.font.align = newAlignment;
                         }

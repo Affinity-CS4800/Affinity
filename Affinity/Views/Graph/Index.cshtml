@@ -673,7 +673,6 @@
                 },
                 deleteSelected: function (event) {
                     const nodes_ = NETWORK.getSelectedNodes();
-                    const edges_ = NETWORK.getSelectedEdges();
                     let isBatchAction = false;
                     if (nodes_.length > 1 || edges_.length > 1) {
                         isBatchAction = true;
@@ -691,10 +690,14 @@
                         }, (d) => { });
                         if (isBatchAction) moveLastActionToBatch();
                     }
+
+                    const edges_ = NETWORK.getSelectedEdges();
+
                     for (edge of edges_) {
                         NETWORK.manipulation.options.deleteEdge({
                             edges: [edge]
-                        }, (d) => { if (isBatchAction) moveLastActionToBatch(); });
+                        }, (d) => { });
+                        if (isBatchAction) moveLastActionToBatch(); 
                     }
 
                     clearRedoStack();

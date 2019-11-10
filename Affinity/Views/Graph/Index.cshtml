@@ -160,8 +160,7 @@
             </div>
         </div>
         <div class="status">
-            <h2 v-if="state=='delete'">You're deleting.</h2>
-            <h2 v-else-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
+            <h2 v-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
             <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
         </div>
         <div id="mynetwork"></div>
@@ -524,8 +523,8 @@
                 nextNodeID: 0,
                 showNodeCustomization: true,
                 showEdgeCustomization: false,
-                editNode: null,
-                editEdge: null
+                currentNodes: [],
+                currentEdges: []
             },
             mounted: function () {
                 const options = {
@@ -705,6 +704,9 @@
 
                     clearRedoStack();
                     NETWORK.disableEditMode();
+
+                    this.currentNodes = [];
+                    this.currentEdges = [];
                 },
                 save: function () {
                     console.log(JSON.stringify(SNAPSHOT));
@@ -733,7 +735,7 @@
                     }
                     else {
                         NETWORK.unselectAll();
-                        if (this.state == "delete" || this.state == "select" || this.state == "selectMultiple") {
+                        if (this.state == "select" || this.state == "selectMultiple") {
                             NETWORK.off('click');
                         }
                         this.state = newMode;
@@ -746,14 +748,6 @@
                             this.showNodeCustomization = false;
                             this.showEdgeCustomization = true;
                             NETWORK.addEdgeMode();
-                        }
-                        else if (newMode == "delete") {
-                            NETWORK.disableEditMode();
-                            this.showNodeCustomization = false;
-                            this.showEdgeCustomization = false;
-                            NETWORK.on('click', function () {
-                                NETWORK.deleteSelected();
-                            });
                         }
                         else if (newMode == "select") {
                             NETWORK.disableEditMode();
@@ -817,54 +811,56 @@
                         else if (newMode == "selectMultiple") {
                             NETWORK.disableEditMode();
                             NETWORK.unselectAll();
-                            var currentNodes = NETWORK.getSelectedNodes();
-                            var currentEdges = NETWORK.getSelectedEdges();
+                            this.currentNodes = NETWORK.getSelectedNodes();
+                            this.currentEdges = NETWORK.getSelectedEdges();
                             this.showNodeCustomization = true; // temporary
                             this.showEdgeCustomization = true; // temporary
+
+                            var vue = this;
                             NETWORK.on('click', function () {
                                 if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
                                     NETWORK.unselectAll();
-                                    currentNodes = [];
-                                    currentEdges = [];
+                                    vue.currentNodes = [];
+                                    vue.currentEdges = [];
                                 }
                                 else if (NETWORK.getSelectedNodes().length != 0) {
                                     selectedNode = NETWORK.getSelectedNodes()[0];
-                                    var index = currentNodes.indexOf(String(selectedNode));
+                                    var index = vue.currentNodes.indexOf(String(selectedNode));
                                     if (index != -1) {
-                                        currentNodes.splice(index, 1);
+                                        vue.currentNodes.splice(index, 1);
                                     }
                                     else {
-                                        currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                        vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
                                     }
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                                 else {
                                     selectedEdge = NETWORK.getSelectedEdges()[0];
-                                    var index = currentEdges.indexOf(String(selectedEdge));
+                                    var index = vue.currentEdges.indexOf(String(selectedEdge));
                                     if (index != -1) {
-                                        currentEdges.splice(index, 1);
+                                        vue.currentEdges.splice(index, 1);
                                     }
                                     else {
-                                        currentEdges.push(String(NETWORK.getSelectedEdges()));
+                                        vue.currentEdges.push(String(NETWORK.getSelectedEdges()));
                                     }
-                                    NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
                             });
 
                             NETWORK.on('dragEnd', function () {
                                 if (NETWORK.getSelectedNodes().length == 1) {
-                                    if (currentNodes.length != 1) {
-                                        currentNodes = [];
-                                        currentEdges = [];
-                                        currentNodes.push(String(NETWORK.getSelectedNodes()));
-                                        NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    if (vue.currentNodes.length != 1) {
+                                        vue.currentNodes = [];
+                                        vue.currentEdges = [];
+                                        vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                        NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                     }
-                                    else if (currentNodes.length == 1) {
-                                        if (String(NETWORK.getSelectedNodes()[0]) != currentNodes[0]) {
-                                            currentNodes = [];
-                                            currentEdges = [];
-                                            currentNodes.push(String(NETWORK.getSelectedNodes()));
-                                            NETWORK.setSelection({ nodes: currentNodes, edges: currentEdges }, { unselectAll: true, highlightEdges: false });
+                                    else if (vue.currentNodes.length == 1) {
+                                        if (String(NETWORK.getSelectedNodes()[0]) != vue.currentNodes[0]) {
+                                            vue.currentNodes = [];
+                                            vue.currentEdges = [];
+                                            vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                            NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                         }
                                     }
                                 }            

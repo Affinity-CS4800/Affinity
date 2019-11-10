@@ -255,8 +255,8 @@
             SNAPSHOT[CURRENT_SNAPSHOT][SNAPSHOT[CURRENT_SNAPSHOT].length - 1].actions.push(lastAction);
         }
 
-        function addNodeAction(vertexId) {
-            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: vertexId });
+        function addNodeAction(id_, color_, x_, y_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: id_, color: color_, x: x_, y: y_ });
         }
 
         function addEdgeAction(id_, from_, to_) {
@@ -294,8 +294,8 @@
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_NODE_RECOLOR,
                 id: vertexId,
-                prevColor: convertHexToDecimal(prevColor_),
-                color: convertHexToDecimal(color_)
+                prevColor: prevColor_,
+                color: color_
             });
         }
 
@@ -337,8 +337,8 @@
                 id: id_,
                 from: from_,
                 to: to_,
-                prevColor: convertHexToDecimal(prevColor_),
-                color: convertHexToDecimal(color_)
+                prevColor: prevColor_,
+                color: color_
             });
         }
 
@@ -397,7 +397,7 @@
                         }
                         break;
                     case ACTION_NODE_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.prevColor) });
+                        VIS_NODES.update({ id: lastAction.id, color: lastAction.prevColor });
                         break;
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.prevLabel });
@@ -409,7 +409,7 @@
                         VIS_EDGES.update({ id: lastAction.id, label: lastAction.prevLabel });
                         break;
                     case ACTION_EDGE_RECOLOR:
-                        VIS_EDGES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.prevColor) });
+                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.prevColor });
                         break;
                 }
 
@@ -435,8 +435,8 @@
                         SNAPSHOT[CURRENT_SNAPSHOT].push(lastAction);
                         break;
                     case ACTION_ADD_VERTEX:
-                        VIS_NODES.add({ id: lastAction.id, label: "", x: lastAction.x, y: lastAction.y });
-                        addNodeAction(lastAction.id);
+                        VIS_NODES.add({ id: lastAction.id, label: "", color: lastAction.color, x: lastAction.x, y: lastAction.y });
+                        addNodeAction(lastAction.id, lastAction.color, lastAction.x, lastAction.y);
                         break;
                     case ACTION_ADD_EDGE:
                         VIS_EDGES.add({ id: lastAction.id, label: "", from: lastAction.from, to: lastAction.to });
@@ -458,8 +458,8 @@
                         deleteNodeEdgeAction(lastAction.node, lastAction.edges);
                         break;
                     case ACTION_NODE_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.color) });
-                        recolorNodeAction(lastAction.id, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
+                        VIS_NODES.update({ id: lastAction.id, color: lastAction.color });
+                        recolorNodeAction(lastAction.id, lastAction.prevColor, lastAction.color);
                         break;
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.label });
@@ -474,8 +474,8 @@
                         renameEdgeAction(lastAction.id, lastAction.from, lastAction.to, lastAction.prevLabel, lastAction.label);
                         break;
                     case ACTION_EDGE_RECOLOR:
-                        VIS_EDGES.update({ id: lastAction.id, color: convertDecimalToHex(lastAction.color) });
-                        recolorEdgeAction(lastAction.id, lastAction.from, lastAction.to, convertDecimalToHex(lastAction.prevColor), convertDecimalToHex(lastAction.color));
+                        VIS_EDGES.update({ id: lastAction.id, color: lastAction.color });
+                        recolorEdgeAction(lastAction.id, lastAction.from, lastAction.to, lastAction.prevColor, lastAction.color);
                         break;
                 }
                 if (state == "drawNodes") {
@@ -574,7 +574,7 @@
                             VIS_NODES.update({ id: data.id, label: "", color: data.color, font: { color: '#FFFFFF' }, x: data.x, y: data.y });
                             nextNodeID++;
                             callback(data);
-                            addNodeAction(data.id);
+                            addNodeAction(data.id, data.color, data.x, data.y);
                             clearRedoStack();
                             NETWORK.addNodeMode();
                             var addedNodeID = [data.id];

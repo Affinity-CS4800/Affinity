@@ -209,6 +209,11 @@ namespace Affinity.Controllers
                 .Select(g => g.GraphID)
                 .Distinct();
 
+            foreach(var id in graph)
+            {
+                Debug.WriteLine(id);
+            }
+
             return View("Graphs", graph);
         }
 
@@ -246,6 +251,19 @@ namespace Affinity.Controllers
             };
 
             return Content(JsonConvert.SerializeObject(graphData));
+        }
+
+        [Route("/api/getStartingNodeID/{token:length(8)}")]
+        public async Task<int> GetHighestNodeID(string token)
+        {
+            int? nodeID = await _affinityDbContext.Vertices.AsNoTracking().Where(id => id.GraphID == token).Select(i => i.ID).OrderByDescending(id => id).FirstOrDefaultAsync();
+
+            if(nodeID > 0)
+            {
+                return nodeID.Value + 1;
+            }
+
+            return 0;
         }
 
 

@@ -220,6 +220,83 @@
             return getVisDataSet();
         }
     </script>
+
+    <script>
+        // Curves edges
+
+        function updateEdgeCurves(fromVertex, toVertex) {
+
+            var edgesConnectingFromAndTo = [];
+
+            numberOfConnectingEdges = 0;
+            var connectedEdges = NETWORK.getConnectedEdges(fromVertex);
+
+            connectedEdges.forEach(id => {
+                var edge = VIS_EDGES.get(id);
+                if (edge.from == fromVertex && edge.to == toVertex) {
+                    numberOfConnectingEdges++;
+                    edgesConnectingFromAndTo.push(edge);
+                }
+                else if (edge.from == toVertex && edge.to == fromVertex) {
+                    numberOfConnectingEdges++;
+                    edgesConnectingFromAndTo.push(edge);
+                }
+            });
+
+            if (numberOfConnectingEdges == 1) {
+                VIS_EDGES.update({ id: edgesConnectingFromAndTo[0].id, smooth: false });
+            }
+            else if (numberOfConnectingEdges > 1) {
+                var nextRoundness = 0;
+                var roundnessStepSize = 0;
+                switch (numberOfConnectingEdges) {
+                    case 2:
+                    case 3:
+                        nextRoundness = .4;
+                        roundnessStepSize = .4;
+                        break;
+                    case 4:
+                    case 5:
+                        nextRoundness = .6;
+                        roundnessStepSize = .3;
+                        break;
+                }
+
+                console.log("TEST");
+
+                connectedEdges.forEach(id => {
+                    var edge = VIS_EDGES.get(id);
+                    if (edge.to == toVertex) {
+                        if (nextRoundness < 0) {
+                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness * -1) } });
+                        }
+                        else {
+                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: nextRoundness } });
+                        }
+                    }
+                    else {
+                        if (nextRoundness < 0) {
+                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: (nextRoundness * -1) } });
+                        }
+                        else {
+                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness * 1) } });
+                        }
+                    }
+
+                    nextRoundness -= roundnessStepSize;
+
+                    if (numberOfConnectingEdges % 2 == 0 && nextRoundness == 0) {
+                        nextRoundness -= roundnessStepSize;
+                    }
+                    
+                });
+            }
+
+
+        }
+
+    </script>
+
     <script>
         // Snapshot Model
 
@@ -622,12 +699,9 @@
                     },
                     physics: {
                         barnesHut: {
-                          gravitationalConstant: -10000,
+                          gravitationalConstant: 0,
                           centralGravity: 0,
-                          springLength: 100,
-                          springConstant: 0.04,
-                          damping: 0.8,
-                          avoidOverlap: 1
+                          springConstant: 0
                         }
                     },
                     edges: {
@@ -665,28 +739,26 @@
                                 directed = true;
                             }
 
-                            var multipleEdges = false;
+                            var numberOfConnectingEdges = 1;
 
                             var fromEdges = NETWORK.getConnectedEdges(data.from);
                             fromEdges.forEach(id => {
                                 var edge = VIS_EDGES.get(id);
                                 if (id != data.id && edge.to == data.to) {
-                                    multipleEdges = true;
+                                    numberOfConnectingEdges++;
                                 }
                                 else if (edge.to == data.from && edge.from == data.to) {
-                                    multipleEdges = true;
+                                    numberOfConnectingEdges++;
                                 }
                             });
 
                             addEdgeAction(data.id, directed, data.from, data.to);
                             clearRedoStack();
 
-                            if (multipleEdges) {
-                                VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: { enabled: true, type: 'curvedCW', roundness: 0.35 }, from: data.from, to: data.to });
+                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: false, from: data.from, to: data.to });
 
-                            }
-                            else {
-                                VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: false, from: data.from, to: data.to });
+                            if (numberOfConnectingEdges > 1) {
+                                updateEdgeCurves(data.from, data.to);
                             }
 
                             NETWORK.addEdgeMode();

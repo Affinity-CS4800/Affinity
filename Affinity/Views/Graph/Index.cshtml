@@ -226,7 +226,7 @@
 
         const ACTION_NODE_RECOLOR = "5";
         const ACTION_NODE_RENAME = "6";
-        const ACTION_NODE_NAME_RECOLOR = "7";
+        const ACTION_NODE_FONT_RECOLOR = "7";
         const ACTION_NODE_CHANGE_POS = "8";
 
         const ACTION_EDGE_RENAME = "9";
@@ -258,7 +258,13 @@
         }
 
         function addNodeAction(id_, color_, x_, y_) {
-            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: id_, color: color_, x: x_, y: y_ });
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_ADD_VERTEX,
+                id: id_,
+                color: color_,
+                x: x_,
+                y: y_
+            });
         }
 
         function addEdgeAction(id_, isDirected_, from_, to_) {
@@ -312,12 +318,12 @@
             });
         }
 
-        function recolorNodeNameAction(vertexId, prevColor_, color_) {
+        function recolorNodeFontAction(vertexId, prevFontColor_, fontColor_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
-                action: ACTION_NODE_NAME_RECOLOR,
+                action: ACTION_NODE_FONT_RECOLOR,
                 id: vertexId,
-                prevColor: prevColor_,
-                color: color_
+                prevFontColor: prevFontColor_,
+                fontColor: fontColor_
             });
         }
 
@@ -437,7 +443,7 @@
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.prevLabel, font: { color: lastAction.fontColor } });
                         break;
-                    case ACTION_NODE_NAME_RECOLOR:
+                    case ACTION_NODE_FONT_RECOLOR:
                         VIS_NODES.update({ id: lastAction.id, font: { color:lastAction.prevColor } });
                         break;
                     case ACTION_NODE_CHANGE_POS:
@@ -509,9 +515,9 @@
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.label, font: { color: lastAction.fontColor } });
                         renameNodeAction(lastAction.id, lastAction.fontColor, lastAction.prevLabel, lastAction.label);
                         break;
-                    case ACTION_NODE_NAME_RECOLOR:
+                    case ACTION_NODE_FONT_RECOLOR:
                         VIS_NODES.update({ id: lastAction.id, font: { color: lastAction.color } });
-                        recolorNodeNameAction(lastAction.id, lastAction.prevColor, lastAction.color);
+                        recolorNodeFontAction(lastAction.id, lastAction.prevColor, lastAction.color);
                         break;
                     case ACTION_NODE_CHANGE_POS:
                         VIS_NODES.update({ id: lastAction.id, x: lastAction.x, y: lastAction.y });
@@ -719,6 +725,7 @@
                 // When user logs in, store it in this Vue app's data.
                 // Add cookie storing user token.
                 firebase.auth().onAuthStateChanged(user => {
+                    console.log(user);
                     if (user) {
                         this.user = user;
                         user.getIdToken().then(function (idToken) {
@@ -950,7 +957,7 @@
                         var editNode = VIS_NODES.get(id);
 
                         if (editNode.font.color !== newFontColor) {
-                            recolorNodeNameAction(editNode.id, editNode.font.color, newFontColor);
+                            recolorNodeFontAction(editNode.id, editNode.font.color, newFontColor);
                             clearRedoStack();
                             editNode.font.color = newFontColor;     
                         }

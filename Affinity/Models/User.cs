@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Affinity.Models
@@ -13,7 +14,9 @@ namespace Affinity.Models
         public string UID { get; set; }
         //Unique GraphID used to get vertex/edges
         public string GraphID { get; set; }
-
         public DateTime Modified { get; set; }
+
+        [StringLength(32)]
+        public string Name { get; set; }
     }
 }

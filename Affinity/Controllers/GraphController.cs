@@ -45,6 +45,9 @@ namespace Affinity.Controllers
                         {
                             Name = "",
                             ID = int.Parse(key["id"].ToString()),
+                            Color = ColorTranslator.FromHtml(key["color"].ToString()).ToArgb(),
+                            XPos = (int)double.Parse(key["x"].ToString()),
+                            YPos = (int)double.Parse(key["y"].ToString()),
                             GraphID = graphID
                         };
                         
@@ -56,7 +59,7 @@ namespace Affinity.Controllers
                         {
                             First = int.Parse(key["from"].ToString()),
                             Second = int.Parse(key["to"].ToString()),
-                            Direction = Direction.Undirected,
+                            Direction = Convert.ToInt32(bool.Parse(key["isDirected"].ToString())),
                             GraphID = graphID
                         };
 
@@ -94,26 +97,49 @@ namespace Affinity.Controllers
                     {
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         vertex.Name = key["label"].ToString();
+                        vertex.FontColor = key["fontColor"].ToString();
                         _affinityDbContext.Vertices.Update(vertex);
                     }
-                    else if (value == "7")
+                    else if(value == "7")
+                    {
+                        Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
+                        vertex.FontColor = key["fontColor"].ToString();
+                    }
+                    else if (value == "8")
                     {
                         Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                         vertex.XPos = (int)double.Parse(key["x"].ToString());
                         vertex.YPos = (int)double.Parse(key["y"].ToString());
                         _affinityDbContext.Vertices.Update(vertex);
                     }
-                    else if (value == "8")
+                    else if (value == "9")
                     {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
                         edge.Weight = int.Parse(key["label"].ToString());
                         _affinityDbContext.Edges.Update(edge);
                     }
-                    else if (value == "9")
+                    else if (value == "10")
                     {
                         Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
                         edge.Color = int.Parse(key["color"].ToString());
                         _affinityDbContext.Edges.Update(edge);
+                    }
+                    else if(value == "11")
+                    {
+                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                        edge.FontAlignment = key["alignment"].ToString();
+                        _affinityDbContext.Edges.Update(edge);
+                    }
+                    else if(value == "12")
+                    {
+                        Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                        edge.Direction = Convert.ToInt32(bool.Parse(key["isDirected"].ToString()));
+                        _affinityDbContext.Edges.Update(edge);
+                    }
+                    else if(value == "13")
+                    {
+                        user.Name = key["graphName"].ToString();
+                        _affinityDbContext.Users.Update(user);
                     }
                 }
             }
@@ -271,7 +297,7 @@ namespace Affinity.Controllers
         public void TestAddToDB()
         {
             //Graph graph = new Graph();
-
+            /*
             Vertex vertex1 = new Vertex
             {
                 Name = "A",
@@ -316,7 +342,7 @@ namespace Affinity.Controllers
             //graph.AddVertex(vertex2);
             //graph.AddVertex(vertex3);
             //graph.AddVertex(vertex4);
-
+            
             var Edges = new List<Edge>
             {
                 new Edge
@@ -324,7 +350,7 @@ namespace Affinity.Controllers
                     Weight = 8,
                     First = 0,
                     Second = 3,
-                    Direction = Direction.Undirected,
+                   // Direction = Direction.Undirected,
                     Color = Color.Black.ToArgb(),
                     GraphID = "d9147ab4"
                 },
@@ -333,7 +359,7 @@ namespace Affinity.Controllers
                     Weight = 3,
                     First = 0,
                     Second = 2,
-                    Direction = Direction.Undirected,
+                   // Direction = Direction.Undirected,
                     Color = Color.Black.ToArgb(),
                     GraphID = "d9147ab4"
                 },
@@ -342,7 +368,7 @@ namespace Affinity.Controllers
                     Weight = 18,
                     First = 1,
                     Second = 2,
-                    Direction = Direction.Undirected,
+                    //Direction = Direction.Undirected,
                     Color = Color.Black.ToArgb(),
                     GraphID = "d9147ab4"
                 },
@@ -406,7 +432,7 @@ namespace Affinity.Controllers
             }
 
             _affinityDbContext.SaveChanges();
-
+            */
             //string output = "";
 
             //output += JsonConvert.SerializeObject(graph.GetNeighbors(vertex1), Formatting.Indented);

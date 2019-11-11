@@ -110,7 +110,7 @@
                 <button v-on:click="redo()">Redo</button>
                 <button v-on:click="pdf()">Download as Pdf</button>
                 <button v-on:click="img()">Download as Png</button>
-                <button v-on:click="save()">Save</button>
+                <button v-on:click="save();">Save</button>
             </div>
             <div class="customization-box" v-show="showNodeCustomization">
                 <h2>Nodes:</h2>
@@ -164,6 +164,13 @@
             <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
         </div>
         <div id="mynetwork"></div>
+    </div>
+
+    <div id="save-graph-name-prompt" class="modal" v-bind:style="{ 'display': displaySavePrompt }">
+        <div class="modal-content">
+            <h2>Enter a name for your graph.</h2>
+            <label>Graph Name: <input type="text" id="graph-name" /></label>
+        </div>
     </div>
 
 
@@ -581,7 +588,8 @@
                 showNodeCustomization: true,
                 showEdgeCustomization: false,
                 currentNodes: [],
-                currentEdges: []
+                currentEdges: [],
+                displaySavePrompt: "none"
             },
             mounted: function () {
                 const options = {
@@ -1055,23 +1063,37 @@
                     }
                 },
                 save: function () {
-                    console.log(JSON.stringify(SNAPSHOT));
-                    var url = window.location.pathname;
-                    url = url.split('/');
-                    var token = url[url.length - 1];
-                    $.ajax({
-                        type: 'POST',
-                        url: '/api/saveToDB/' + token,
-                        contentType: "application/json",
-                        data: JSON.stringify(SNAPSHOT),
-                        headers: {
-                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                        },
-                        success: function () {
-                            alert('Saved');
-                        },
-                        error: function (xhr, textStatus, errorThrown) {
-                            alert(errorThrown);
+                    this.displaySavePrompt = "block";
+                    document.getElementById('graph-name').value = "";
+                    setTimeout("document.getElementById('graph-name').focus();", 100);
+
+                    var vue = this;
+                    document.getElementById('graph-name').addEventListener("keyup", function (event) {
+                        if (event.key == "Enter") {
+                            var graphName = document.getElementById('graph-name').value;
+                            vue.displaySavePrompt = "none";
+                            this.removeEventListener("keyup", arguments.callee, false);
+
+                            console.log(JSON.stringify(SNAPSHOT));
+                            var url = window.location.pathname;
+                            url = url.split('/');
+                            var token = url[url.length - 1];
+                            $.ajax({
+                                type: 'POST',
+                                url: '/api/saveToDB/' + token,
+                                contentType: "application/json",
+                                data: JSON.stringify(SNAPSHOT),
+                                headers: {
+                                    RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                },
+                                success: function () {
+                                    alert('Saved');
+                                },
+                                error: function (xhr, textStatus, errorThrown) {
+                                    alert(errorThrown);
+                                }
+                            });
+                            
                         }
                     });
                 }

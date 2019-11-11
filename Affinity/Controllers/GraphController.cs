@@ -231,16 +231,16 @@ namespace Affinity.Controllers
             }
 
             var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
-            var graph = _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).OrderBy(d => d.Modified)
-                .Select(g => g.GraphID)
-                .Distinct();
+            var graph = _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).OrderByDescending(d => d.Modified);
 
-            foreach(var id in graph)
+            List<GraphIDName> graphs = new List<GraphIDName>();
+
+            foreach(var user in graph)
             {
-                Debug.WriteLine(id);
+                graphs.Add(new GraphIDName { Name = user.Name, GraphID = user.GraphID });
             }
 
-            return View("Graphs", graph);
+            return View("Graphs", graphs);
         }
 
         [Route("/api/graphData/{token:length(8)}")]

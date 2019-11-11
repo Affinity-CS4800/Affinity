@@ -241,6 +241,8 @@
         const ACTION_EDGE_CHANGE_FONT_ALIGNMENT = "11";
         const ACTION_EDGE_CHANGE_IF_DIRECTED = "12";
 
+        const ACTION_GRAPH_SET_NAME = "13";
+
         const SNAPSHOT = {
             0: []
         };
@@ -387,6 +389,13 @@
                 from: from_,
                 prevIfDirected: prevIfDirected_,
                 ifDirected: ifDirected_
+            });
+        }
+
+        function changeGraphNameAction(graphName_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_GRAPH_SET_NAME,
+                graphName: graphName_
             });
         }
 
@@ -1084,7 +1093,10 @@
                             vue.displaySavePrompt = "none";
                             this.removeEventListener("keyup", arguments.callee, false);
 
+                            changeGraphNameAction(graphName);
+
                             console.log(JSON.stringify(SNAPSHOT));
+
                             var url = window.location.pathname;
                             url = url.split('/');
                             var token = url[url.length - 1];

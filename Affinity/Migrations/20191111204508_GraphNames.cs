@@ -11,12 +11,6 @@ namespace Affinity.Migrations
                 table: "Users",
                 maxLength: 32,
                 nullable: true);
-
-            migrationBuilder.AlterColumn<bool>(
-                name: "Direction",
-                table: "Edges",
-                nullable: false,
-                oldClrType: typeof(int));
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -24,12 +18,6 @@ namespace Affinity.Migrations
             migrationBuilder.DropColumn(
                 name: "Name",
                 table: "Users");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Direction",
-                table: "Edges",
-                nullable: false,
-                oldClrType: typeof(bool));
         }
     }
 }

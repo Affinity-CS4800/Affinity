@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Affinity.Migrations
 {
     [DbContext(typeof(AffinityDbcontext))]
-    [Migration("20191111195847_GraphNames")]
+    [Migration("20191111204508_GraphNames")]
     partial class GraphNames
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,7 +28,7 @@ namespace Affinity.Migrations
 
                     b.Property<int>("Color");
 
-                    b.Property<bool>("Direction");
+                    b.Property<int>("Direction");
 
                     b.Property<int>("First");
 

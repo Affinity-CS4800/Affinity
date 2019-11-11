@@ -68,6 +68,12 @@ namespace Affinity.Models
         public const int MAX_GRAPHS = 5;
     }
 
+    public class GraphIDName
+    {
+        public string GraphID { get; set; }
+        public string Name { get; set; }
+    }
+
     public class GraphDataJson
     {
         public List<Vertex> Vertices { get; set; }

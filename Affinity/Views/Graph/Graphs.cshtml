@@ -1,4 +1,4 @@
-@model IEnumerable<string>
+@model IEnumerable<GraphIDName>
 @{
     ViewData["Title"] = "Your Graphs";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -43,8 +43,17 @@
 }
 
 <section class="graphs">
-    @foreach (var id in Model)
-    {<a class="graphLink" href="graph/@id">@id</a>}
+    @foreach (var graph in Model)
+    {<a class="graphLink" href="graph/@graph.GraphID">
+        @if(@graph.Name == null)
+        {
+            @graph.GraphID;
+        }
+        else
+        {
+            @graph.Name;
+        }
+    </a>}
 </section>
 
 

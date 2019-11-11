@@ -26,7 +26,7 @@ namespace Affinity.Migrations
 
                     b.Property<int>("Color");
 
-                    b.Property<bool>("Direction");
+                    b.Property<int>("Direction");
 
                     b.Property<int>("First");
 

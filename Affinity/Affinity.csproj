@@ -6,6 +6,11 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Migrations\20191111202212_GraphNames2.cs" />
+    <Compile Remove="Migrations\20191111202212_GraphNames2.Designer.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="FibonacciHeap" Version="1.1.7" />

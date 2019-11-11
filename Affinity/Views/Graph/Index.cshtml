@@ -262,8 +262,6 @@
                         break;
                 }
 
-                console.log("TEST");
-
                 connectedEdges.forEach(id => {
                     var edge = VIS_EDGES.get(id);
                     if (edge.to == toVertex) {
@@ -501,10 +499,12 @@
                         VIS_NODES.remove(lastAction.id);
                         break;
                     case ACTION_ADD_EDGE:
+                        updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);
                         VIS_EDGES.remove(lastAction.id);
                         break;
                     case ACTION_DELETE_EDGE:
                         VIS_EDGES.add(lastAction.edge);
+                        updateEdgeCurves(VIS_EDGES.get(lastAction.edge.id).from, VIS_EDGES.get(lastAction.edge.id).to);
                         break;
                     case ACTION_DELETE_VERTEX:
                         VIS_NODES.add(lastAction.node);
@@ -569,10 +569,14 @@
                     case ACTION_ADD_EDGE:
                         VIS_EDGES.add({ id: lastAction.id, label: "", arrows: { to: lastAction.isDirected }, from: lastAction.from, to: lastAction.to });
                         addEdgeAction(lastAction.id, lastAction.isDirected, lastAction.from, lastAction.to);
+                        updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);   
                         break;
                     case ACTION_DELETE_EDGE:
+                        var fromVertex = VIS_EDGES.get(lastAction.edge.id).from;
+                        var toVertex = VIS_EDGES.get(lastAction.edge.id).to;
                         VIS_EDGES.remove(lastAction.edge.id);
                         deleteEdgeAction(lastAction.edge);
+                        updateEdgeCurves(fromVertex, toVertex);
                         break;
                     case ACTION_DELETE_VERTEX:
                         VIS_NODES.remove(lastAction.node.id);
@@ -790,12 +794,18 @@
                         },
                         deleteEdge: function (data, callback) {
                             const edge = VIS_EDGES.get(data.edges[0]) || false;
+
+                            var fromVertex = edge.from;
+                            var toVertex = edge.to;
+
                             if (edge) {
                                 deleteEdgeAction(edge);
                                 VIS_EDGES.remove(edge.id);
                                 clearRedoStack();
                                 callback(data);
                             }
+
+                            updateEdgeCurves(fromVertex, toVertex);
                         }
                     }
                 };

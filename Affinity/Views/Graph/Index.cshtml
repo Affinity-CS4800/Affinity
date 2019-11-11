@@ -645,23 +645,21 @@
                 url = url.split('/');
                 let token = url[url.length - 1];
 
-                let vue = this;
-
                 $.ajax({
                     type: 'GET',
                     url: "/api/getStartingNodeID/" + token,
                     cache: false,
                     async: false,
                     success: function (data) {
-                        vue.nextNodeID = data;
+                        nextNodeID = data;
                     }
                 });
 
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
-                nextNodeID = VIS_NODES.length;
                 NETWORK.addNodeMode();
             },
             created: function () {
+                console.log("created");
                 // When user logs in, store it in this Vue app's data.
                 // Add cookie storing user token.
                 firebase.auth().onAuthStateChanged(user => {

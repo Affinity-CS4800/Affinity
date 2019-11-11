@@ -48,8 +48,7 @@ namespace Affinity.Models
 
         public int First { get; set; }
         public int Second { get; set; }
-        [EnumDataType(typeof(Direction))]
-        public Direction Direction { get; set; }
+        public int Direction { get; set; }
         public int Color { get; set; }
         public string FontAlignment { get; set; }
 
@@ -88,7 +87,7 @@ namespace Affinity.Models
         {
             AdjacencyList = new List<Vertex>();
         }
-
+        /*
         /// <summary>
         /// Adds a vertex to the adjacenecy list
         /// </summary>
@@ -397,6 +396,6 @@ namespace Affinity.Models
                 }
             }
             return diameter;
-        }
+        }*/
     }
 }

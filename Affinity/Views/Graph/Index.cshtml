@@ -1023,7 +1023,7 @@
                     url = url.split('/');
                     let token = url[url.length - 1];
 
-                    html2canvas(document.getElementById("mynetwork"), {
+                    html2canvas(document.getElementsByTagName("canvas"), {
                         onrendered: function (canvas) {
                             var imgData = canvas.toDataURL('image/png');
                             var doc = new jsPDF('landscape');
@@ -1038,7 +1038,7 @@
                     url = url.split('/');
                     let token = url[url.length - 1];
 
-                    html2canvas(document.getElementById("mynetwork"), {
+                    html2canvas(document.getElementsByTagName("canvas"), {
                         onrendered: function (canvas) {
                             var imgData = canvas.toDataURL('image/png');
                             app.saveAs(imgData, token + '.png');

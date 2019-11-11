@@ -631,7 +631,7 @@
                         }
                     },
                     edges: {
-                       
+                        smooth: false
                     },
                     manipulation: {
                         enabled: true,
@@ -665,9 +665,29 @@
                                 directed = true;
                             }
 
+                            var multipleEdges = false;
+
+                            var fromEdges = NETWORK.getConnectedEdges(data.from);
+                            fromEdges.forEach(id => {
+                                var edge = VIS_EDGES.get(id);
+                                if (id != data.id && edge.to == data.to) {
+                                    multipleEdges = true;
+                                }
+                                else if (edge.to == data.from && edge.from == data.to) {
+                                    multipleEdges = true;
+                                }
+                            });
+
                             addEdgeAction(data.id, directed, data.from, data.to);
                             clearRedoStack();
-                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, from: data.from, to: data.to });
+
+                            if (multipleEdges) {
+                                VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: { enabled: true, type: 'curvedCW', roundness: 0.35 }, from: data.from, to: data.to });
+
+                            }
+                            else {
+                                VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: false, from: data.from, to: data.to });
+                            }
 
                             NETWORK.addEdgeMode();
 

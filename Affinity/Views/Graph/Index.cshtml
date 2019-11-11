@@ -614,13 +614,16 @@
                     },
                     physics: {
                         barnesHut: {
-                            gravitationalConstant: 0,
-                            centralGravity: 0,
-                            springConstant: 0,
+                          gravitationalConstant: -10000,
+                          centralGravity: 0,
+                          springLength: 100,
+                          springConstant: 0.04,
+                          damping: 0.8,
+                          avoidOverlap: 1
                         }
                     },
                     edges: {
-                        smooth: false
+                       
                     },
                     manipulation: {
                         enabled: true,

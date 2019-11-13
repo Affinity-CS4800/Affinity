@@ -541,6 +541,79 @@
             return rgba;
         }
 
+        function getCollapsedSnapshot() {
+            const EXPANDED_SNAPSHOT = [];
+            const REDUCED_SNAPSHOT = [];
+            const stateTree = {};
+
+            // Expand batch actions
+            for (action of SNAPSHOT[CURRENT_SNAPSHOT]) {
+                if (action.action == ACTION_BATCH) {
+                    for (batchedAction of action.actions) {
+                        EXPANDED_SNAPSHOT.push(batchedAction);
+                    }
+                } else {
+                    switch (action.action) {
+                        case ACTION_NODE_RECOLOR:
+                        case ACTION_EDGE_RECOLOR:
+                            action.color = convertHexToDecimal(action.color);
+                            break;
+                    }
+                    EXPANDED_SNAPSHOT.push(action);
+                }
+            }
+
+            // Build final state tree
+            for (action of EXPANDED_SNAPSHOT) {
+                if ('id' in action) {
+                    if (action.id in stateTree) {
+                        stateTree[action.id][action.action] = action;
+                    } else {
+                        stateTree[action.id] = {};
+                    }
+                } else {
+                    REDUCED_SNAPSHOT.push(action);
+                    switch (action.action) {
+                        case ACTION_DELETE_VERTEX:
+                            const nID = action.node.id;
+                            if (ACTION_ADD_VERTEX in stateTree[nID]) {
+                                // If this was a new node, don't need delete action
+                                // to be sent to DB
+                                REDUCED_SNAPSHOT.pop();
+                            }
+                            delete stateTree[nID];
+                            break;
+                        case ACTION_DELETE_EDGE:
+                            let edgeID = action.edge.id;
+                            if (ACTION_ADD_EDGE in stateTree[edgeID]) {
+                                REDUCED_SNAPSHOT.pop();
+                            }
+                            delete stateTree[edgeID];
+                            break;
+                        case ACTION_DELETE_VERTEX_N_EDGE:
+                            let nodeID = action.node.id;
+                            if (ACTION_ADD_VERTEX in stateTree[nodeID]) {
+                                REDUCED_SNAPSHOT.pop();
+                            }
+                            delete stateTree[nodeID];
+                            for (edge of action.edges) {
+                                delete stateTree[edge.id];
+                            }
+                            break;
+                    }
+                }
+            }
+
+            // Collect collapsed snapshot
+            for (id in stateTree) {
+                for (actionType in stateTree[id]) {
+                    REDUCED_SNAPSHOT.push(stateTree[id][actionType]);
+                }
+            }
+            
+            return REDUCED_SNAPSHOT;
+        }
+
         function undoLastAction(state) {
             if (SNAPSHOT[CURRENT_SNAPSHOT].length > 0) {
                 const lastAction = SNAPSHOT[CURRENT_SNAPSHOT].pop();
@@ -864,11 +937,9 @@
                 NETWORK.addNodeMode();
             },
             created: function () {
-                console.log("created");
                 // When user logs in, store it in this Vue app's data.
                 // Add cookie storing user token.
                 firebase.auth().onAuthStateChanged(user => {
-                    console.log(user);
                     if (user) {
                         this.user = user;
                         user.getIdToken().then(function (idToken) {
@@ -926,27 +997,6 @@
 
                     this.currentNodes = [];
                     this.currentEdges = [];
-                },
-                save: function () {
-                    console.log(JSON.stringify(SNAPSHOT));
-                    var url = window.location.pathname;
-                    url = url.split('/');
-                    var token = url[url.length - 1];
-                    $.ajax({
-                        type: 'POST',
-                        url: '/api/saveToDB/' + token,
-                        contentType: "application/json",
-                        data: JSON.stringify(SNAPSHOT),
-                        headers: {
-                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                        },
-                        success: function () {
-                            alert('Saved');
-                        },
-                        error: function (xhr, textStatus, errorThrown) {
-                            alert(errorThrown);
-                        }
-                    });
                 },
                 changeMode: function (newMode) {
                     if (this.state == newMode) {
@@ -1216,28 +1266,33 @@
                             vue.displaySavePrompt = "none";
                             this.removeEventListener("keyup", arguments.callee, false);
 
-                            changeGraphNameAction(graphName);
+                            //changeGraphNameAction(graphName);
+                            
+                            const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
 
-                            console.log(JSON.stringify(SNAPSHOT));
+                            if (COLLAPSED_SNAPSHOT.length > 0) {
 
-                            var url = window.location.pathname;
-                            url = url.split('/');
-                            var token = url[url.length - 1];
-                            $.ajax({
-                                type: 'POST',
-                                url: '/api/saveToDB/' + token,
-                                contentType: "application/json",
-                                data: JSON.stringify(SNAPSHOT),
-                                headers: {
-                                    RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                                },
-                                success: function () {
-                                    alert('Saved');
-                                },
-                                error: function (xhr, textStatus, errorThrown) {
-                                    alert(errorThrown);
-                                }
-                            });
+                                var url = window.location.pathname;
+                                url = url.split('/');
+                                var token = url[url.length - 1];
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/api/saveToDB/' + token,
+                                    contentType: "application/json",
+                                    data: JSON.stringify(COLLAPSED_SNAPSHOT),
+                                    headers: {
+                                        RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                    },
+                                    success: function () {
+                                        alert('Saved');
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        alert(errorThrown);
+                                    }
+                                });
+                            } else {
+                                alert('Saved.');
+                            }
 
                         }
                     });

@@ -292,6 +292,19 @@ namespace Affinity.Controllers
             return 0;
         }
 
+        [Route("/api/getStartingEdgeID/{token:length(8)}")]
+        public async Task<int> GetHighestEdgeID(string token)
+        {
+            int? edgeID = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).Select(i => i.ID).OrderByDescending(id => id).FirstOrDefaultAsync();
+
+            if (edgeID > 0)
+            {
+                return edgeID.Value + 1;
+            }
+
+            return 0;
+        }
+
 
         [Route("/api/testaddtodb")]
         public void TestAddToDB()

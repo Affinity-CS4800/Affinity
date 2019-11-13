@@ -224,72 +224,83 @@
     <script>
         // Curves edges
 
+        function curveAllEdges() {
+            VIS_NODES.forEach(node => {
+                VIS_NODES.forEach(node2 => {
+                    if (node2.id > node.id) {
+                        updateEdgeCurves(node.id, node2.id);
+                    }
+                });
+            });
+        }
+
         function updateEdgeCurves(fromVertex, toVertex) {
 
-            var edgesConnectingFromAndTo = [];
+            if (fromVertex != toVertex) {
+                var edgesConnectingFromAndTo = [];
 
-            numberOfConnectingEdges = 0;
-            var connectedEdges = NETWORK.getConnectedEdges(fromVertex);
-
-            connectedEdges.forEach(id => {
-                var edge = VIS_EDGES.get(id);
-                if (edge.from == fromVertex && edge.to == toVertex) {
-                    numberOfConnectingEdges++;
-                    edgesConnectingFromAndTo.push(edge);
-                }
-                else if (edge.from == toVertex && edge.to == fromVertex) {
-                    numberOfConnectingEdges++;
-                    edgesConnectingFromAndTo.push(edge);
-                }
-            });
-
-            if (numberOfConnectingEdges == 1) {
-                VIS_EDGES.update({ id: edgesConnectingFromAndTo[0].id, smooth: false });
-            }
-            else if (numberOfConnectingEdges > 1) {
-                var nextRoundness = 0;
-                var roundnessStepSize = 0;
-                switch (numberOfConnectingEdges) {
-                    case 2:
-                    case 3:
-                        nextRoundness = .4;
-                        roundnessStepSize = .4;
-                        break;
-                    case 4:
-                    case 5:
-                        nextRoundness = .6;
-                        roundnessStepSize = .3;
-                        break;
-                }
+                numberOfConnectingEdges = 0;
+                var connectedEdges = NETWORK.getConnectedEdges(fromVertex);
 
                 connectedEdges.forEach(id => {
                     var edge = VIS_EDGES.get(id);
-                    if (edge.to == toVertex) {
-                        if (nextRoundness < 0) {
-                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness * -1) } });
-                        }
-                        else {
-                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: nextRoundness } });
-                        }
+                    if (edge.from == fromVertex && edge.to == toVertex) {
+                        numberOfConnectingEdges++;
+                        edgesConnectingFromAndTo.push(id);
                     }
-                    else {
-                        if (nextRoundness < 0) {
-                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: (nextRoundness * -1) } });
-                        }
-                        else {
-                            VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness * 1) } });
-                        }
+                    else if (edge.from == toVertex && edge.to == fromVertex) {
+                        numberOfConnectingEdges++;
+                        edgesConnectingFromAndTo.push(id);
                     }
-
-                    nextRoundness -= roundnessStepSize;
-
-                    if (numberOfConnectingEdges % 2 == 0 && nextRoundness == 0) {
-                        nextRoundness -= roundnessStepSize;
-                    }
-                    
                 });
-            }
 
+                if (numberOfConnectingEdges == 1) {
+                    VIS_EDGES.update({ id: edgesConnectingFromAndTo[0].id, smooth: false });
+                }
+                else if (numberOfConnectingEdges > 1) {
+                    var nextRoundness = 0;
+                    var roundnessStepSize = 0;
+                    switch (numberOfConnectingEdges) {
+                        case 2:
+                        case 3:
+                            nextRoundness = .3;
+                            roundnessStepSize = .3;
+                            break;
+                        case 4:
+                        case 5:
+                            nextRoundness = .6;
+                            roundnessStepSize = .3;
+                            break;
+                    }
+
+                    edgesConnectingFromAndTo.forEach(id => {
+                        var edge = VIS_EDGES.get(id);
+                        if (edge.to == toVertex) {
+                            if (nextRoundness < 0) {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness * -1) } });
+                            }
+                            else {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: nextRoundness } });
+                            }
+                        }
+                        else {
+                            if (nextRoundness < 0) {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: (nextRoundness * -1) } });
+                            }
+                            else {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness) } });
+                            }
+                        }
+
+                        nextRoundness -= roundnessStepSize;
+
+                        if (numberOfConnectingEdges % 2 == 0 && nextRoundness == 0) {
+                            nextRoundness -= roundnessStepSize;
+                        }
+                    
+                    });
+                }
+            }
 
         }
 
@@ -825,6 +836,9 @@
                 });
 
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
+
+                curveAllEdges();
+
                 NETWORK.addNodeMode();
             },
             created: function () {

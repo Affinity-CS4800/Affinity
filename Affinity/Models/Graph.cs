@@ -46,7 +46,7 @@ namespace Affinity.Models
 
         public string GraphID { get; set; }
 
-        public int ID { get; set; }
+        //public int ID { get; set; }
         public int First { get; set; }
         public int Second { get; set; }
         public int Direction { get; set; }

@@ -15,7 +15,7 @@
 
         #mynetwork {
             border: 1px solid lightgray;
-            width: 75%;
+            width: 70%;
             height: 90vh;
             z-index: 1;
         }
@@ -25,7 +25,7 @@
             right: 0;
             z-index: 2;
             background: rgba(1,1,1, .02);
-            width: 25%;
+            width: 30%;
             height: 100%;
             padding: 1rem 0 1rem 1rem;
             margin-bottom: 1rem;
@@ -80,7 +80,7 @@
             line-height: 1.5;
         }
 
-        .custom-label, .custom-label input {
+        .custom-label, .custom-label input, .state-switch {
             font-family: 'GTEestiDisplay-Medium',-apple-system,system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';
         }
 
@@ -113,6 +113,99 @@
             color: #0026ff;
             font-weight: bold;
         }
+
+        .state-switch {
+            display: flex;
+            width: 70%;
+            position: relative;
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            position: relative;
+            border: 1px solid #0026ff;
+            border-radius: 3px;
+            color: #555;
+        }
+
+        .state-switch > input {
+            display: none;
+        }
+
+            .state-switch > input:checked + label {
+                color: #efefef;
+                font-weight: bold;
+            }
+
+            .state-switch > input:nth-of-type(1):checked ~ label:last-of-type:before {
+                transform: translateX(calc(0% + 0px));
+            }
+
+            .state-switch > input:nth-of-type(2):checked ~ label:last-of-type:before {
+                transform: translateX(calc(100% + 0px));
+            }
+
+            .states-3 > input:nth-of-type(1):checked ~ label:last-of-type:before {
+                transform: translateX(calc(0% + 0px));
+            }
+
+            .states-3 > input:nth-of-type(2):checked ~ label:last-of-type:before {
+                transform: translateX(calc(100% + 0px));
+            }
+            .states-3 > input:nth-of-type(3):checked ~ label:last-of-type:before {
+                transform: translateX(calc(200% + 0px));
+            }
+
+
+        .state-switch label {
+            flex: 1;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+            .state-switch label:last-of-type:before {
+                content: "";
+                display: block;
+                max-width: calc(50% - 0px);
+                height: 100%;
+                margin: 0px;
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: -1;
+                transform: translateX(0);
+            }
+
+            .states-3 label:last-of-type:before {
+                max-width: calc(33.33333% - 0px);
+            }
+
+
+        .state-switch label {
+            padding: .25rem 0;
+            transition: color 250ms cubic-bezier(0, 0.95, 0.38, 0.98);
+        }
+
+            .state-switch label:before {
+                background: #0026ff;
+                transition: all 250ms cubic-bezier(0, 0.95, 0.38, 0.98);
+            }
+
+            .state-switch label:not(:last-child) {
+                border-right: 1px solid #fff;
+            }
+
+            .edit-group button {
+                display: inline-block;
+                max-width: 33.3333%;
+            }
+
+            .edit-group svg {
+               font-size: .85rem;
+            }
     </style>
 }
 
@@ -122,7 +215,7 @@
         <div class="button-group">
             <div class="draw-group">
                 <span class="draw-title"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.078 7.061l2.861 2.862-10.799 10.798-3.584.723.724-3.585 10.798-10.798zm0-2.829l-12.64 12.64-1.438 7.128 7.127-1.438 12.642-12.64-5.691-5.69zm7.105 4.277l2.817-2.82-5.691-5.689-2.816 2.817 5.69 5.692z" /></svg></span>
-                <button v-on:click="changeMode('drawNodes')" v-bind:class='{ selectedButton: (state == "drawNodes") }'>Nodes</button>
+                <button v-on:click="changeMode('drawNodes')" v-bind:class='{ selectedButton: (state == "drawNodes") }'>Vertices</button>
                 <button v-on:click="changeMode('drawEdges')" v-bind:class='{ selectedButton: (state == "drawEdges") }'>Edges</button>
             </div>
             <div class="select-group">
@@ -130,25 +223,29 @@
                 <button v-on:click="changeMode('select')" v-bind:class='{ selectedButton: (state == "select") }'>Single</button>
                 <button v-on:click="changeMode('selectMultiple')" v-bind:class='{ selectedButton: (state == "selectMultiple") }'>Multiple</button>
             </div>
-            <button v-show="state == 'select' || state == 'selectMultiple'" v-on:click="deleteSelected()"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M5.662 23l-5.369-5.365c-.195-.195-.293-.45-.293-.707 0-.256.098-.512.293-.707l14.929-14.928c.195-.194.451-.293.707-.293.255 0 .512.099.707.293l7.071 7.073c.196.195.293.451.293.708 0 .256-.097.511-.293.707l-11.216 11.219h5.514v2h-12.343zm3.657-2l-5.486-5.486-1.419 1.414 4.076 4.072h2.829zm.456-11.429l-4.528 4.528 5.658 5.659 4.527-4.53-5.657-5.657z" /></svg> Delete</button>
-            <button v-on:click="undo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18.885 3.515c-4.617-4.618-12.056-4.676-16.756-.195l-2.129-2.258v7.938h7.484l-2.066-2.191c2.82-2.706 7.297-2.676 10.073.1 4.341 4.341 1.737 12.291-5.491 12.291v4.8c3.708 0 6.614-1.244 8.885-3.515 4.686-4.686 4.686-12.284 0-16.97z" /></svg>Undo</button>
-            <button v-on:click="redo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5.115 3.515c4.617-4.618 12.056-4.676 16.756-.195l2.129-2.258v7.938h-7.484l2.066-2.191c-2.82-2.706-7.297-2.676-10.073.1-4.341 4.341-1.737 12.291 5.491 12.291v4.8c-3.708 0-6.614-1.244-8.885-3.515-4.686-4.686-4.686-12.284 0-16.97z" /></svg>Redo</button>
-            <br />
-            <button v-on:click="pdf()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PDF</button>
-            <button v-on:click="img()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PNG</button>
-            <button v-on:click="save()">Save</button>
+            <div class="edit-group">
+                <button v-on:click="undo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18.885 3.515c-4.617-4.618-12.056-4.676-16.756-.195l-2.129-2.258v7.938h7.484l-2.066-2.191c2.82-2.706 7.297-2.676 10.073.1 4.341 4.341 1.737 12.291-5.491 12.291v4.8c3.708 0 6.614-1.244 8.885-3.515 4.686-4.686 4.686-12.284 0-16.97z" /></svg>Undo</button>
+                <button v-on:click="redo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5.115 3.515c4.617-4.618 12.056-4.676 16.756-.195l2.129-2.258v7.938h-7.484l2.066-2.191c-2.82-2.706-7.297-2.676-10.073.1-4.341 4.341-1.737 12.291 5.491 12.291v4.8c-3.708 0-6.614-1.244-8.885-3.515-4.686-4.686-4.686-12.284 0-16.97z" /></svg>Redo</button>
+                <button v-show="(state =='drawNodes' || state == 'drawEdges') || ((state == 'select' || state == 'selectMultiple') && (showNodeCustomization || showEdgeCustomization))" v-on:click="deleteSelected()"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M5.662 23l-5.369-5.365c-.195-.195-.293-.45-.293-.707 0-.256.098-.512.293-.707l14.929-14.928c.195-.194.451-.293.707-.293.255 0 .512.099.707.293l7.071 7.073c.196.195.293.451.293.708 0 .256-.097.511-.293.707l-11.216 11.219h5.514v2h-12.343zm3.657-2l-5.486-5.486-1.419 1.414 4.076 4.072h2.829zm.456-11.429l-4.528 4.528 5.658 5.659 4.527-4.53-5.657-5.657z" /></svg> Delete</button>
+            </div>
+            <div class="export-group">
+                <button v-on:click="pdf()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PDF</button>
+                <button v-on:click="img()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PNG</button>
+                <button v-on:click="save()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M15.003 3h2.997v5h-2.997v-5zm8.997 1v20h-24v-24h20l4 4zm-19 5h14v-7h-14v7zm16 4h-18v9h18v-9z" /></svg>Save</button>
+            </div>
         </div>
         <div class="customization-box" v-show="showNodeCustomization">
-            <h2 class="custom-title">{{ (state == "selectMultiple" ? "Nodes" : "Node") }}</h2>
+            <h2 class="custom-title">{{ (state == "selectMultiple" ? "Vertices" : "Vertex") }}</h2>
             <label class="custom-label"><input type="text" id="node-name" placeholder="Name" /> <span class="color-picker"></span> </label>
             <label class="custom-label"></label>
-            <div class="node-font-colors">
+            <div class="node-font-colors state-switch">
                 <input type="radio" v-on:click="changeNodeFontColor('white')" name="node-font-color" value="white" id="white-node-font" checked />
-                <label for="white">
+                <label for="white-node-font">
                     White Font
                 </label>
+
                 <input type="radio" v-on:click="changeNodeFontColor('black')" name="node-font-color" value="black" id="black-node-font" />
-                <label for="black">
+                <label for="black-node-font">
                     Black Font
                 </label>
             </div>
@@ -156,21 +253,21 @@
         <div class="customization-box" v-show="showEdgeCustomization">
             <h2 class="custom-title">{{ (state == "selectMultiple" ? "Edges" : "Edge") }}</h2>
             <label class="custom-label"> <input type="text" id="edge-value" placeholder="Weight" /> <span class="color-picker2"></span></label>
-            <div class="edge-font-alignments">
+            <div class="edge-font-alignments state-switch states-3">
                 <input type="radio" v-on:click="changeEdgeFontAlignment('top')" name="edge-font-alignment" value="top" id="align-top" checked />
-                <label for="top">
+                <label for="align-top">
                     Top
                 </label>
                 <input type="radio" v-on:click="changeEdgeFontAlignment('middle')" name="edge-font-alignment" value="middle" id="align-middle" />
-                <label for="middle">
+                <label for="align-middle">
                     Middle
                 </label>
                 <input type="radio" v-on:click="changeEdgeFontAlignment('bottom')" name="edge-font-alignment" value="bottom" id="align-bottom" />
-                <label for="bottom">
+                <label for="align-bottom">
                     Bottom
                 </label>
             </div>
-            <div class="edge-directions">
+            <div class="edge-directions state-switch">
                 <input type="radio" v-on:click="changeIfDirected('undirected')" name="edge-direction" value="undirected" id="undirected" checked />
                 <label for="undirected">
                     Undirected

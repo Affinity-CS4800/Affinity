@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using Google.Apis.Auth.OAuth2;
 using System.Diagnostics;
 using System.IO;
+using System;
 
 namespace Affinity
 {
@@ -66,7 +67,7 @@ namespace Affinity
             };
 
             services.AddEntityFrameworkNpgsql()
-                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(builder.ConnectionString));
+                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(builder.ConnectionString, providerOptions => providerOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);

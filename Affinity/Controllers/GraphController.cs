@@ -131,7 +131,7 @@ namespace Affinity.Controllers
                 else if(value == "12")
                 {
                     Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
-                    edge.Direction = Convert.ToInt32(bool.Parse(key["isDirected"].ToString()));
+                    edge.Direction = Convert.ToInt32(bool.Parse(key["ifDirected"].ToString()));
                     _affinityDbContext.Edges.Update(edge);
                 }
                 else if(value == "13")
@@ -289,18 +289,18 @@ namespace Affinity.Controllers
             return 0;
         }
 
-        //[Route("/api/getStartingEdgeID/{token:length(8)}")]
-        //public async Task<int> GetHighestEdgeID(string token)
-        //{
-        //    int? edgeID = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).Select(i => i.ID).OrderByDescending(id => id).FirstOrDefaultAsync();
+        [Route("/api/getStartingEdgeID/{token:length(8)}")]
+        public async Task<int> GetHighestEdgeID(string token)
+        {
+            int? edgeID = await _affinityDbContext.Edges.AsNoTracking().Where(id => id.GraphID == token).Select(i => i.ID).OrderByDescending(id => id).FirstOrDefaultAsync();
 
-        //    if (edgeID > 0)
-        //    {
-        //        return edgeID.Value + 1;
-        //    }
+            if (edgeID > 0)
+            {
+                return edgeID.Value + 1;
+            }
 
-        //    return 0;
-        //}
+            return 0;
+        }
 
 
         [Route("/api/testaddtodb")]

@@ -3,15 +3,17 @@ using System;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Affinity.Migrations
 {
     [DbContext(typeof(AffinityDbcontext))]
-    partial class AffinityDbcontextModelSnapshot : ModelSnapshot
+    [Migration("20191114041230_EdgeID")]
+    partial class EdgeID
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

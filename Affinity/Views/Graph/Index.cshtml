@@ -330,15 +330,29 @@
                             var argb = (value.Color >>> 0).toString(16);
                             var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
                             if (key === "Vertices") {
+
                                 let nodeFontColor;
                                 if(value.FontColor === "white") {
                                     nodeFontColor = "#FFFFFF";
                                 } else {
                                     nodeFontColor = "#000000";
                                 }
+
                                 NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name, font: { color: nodeFontColor } })
                             } else {
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+
+                                let edgeFontAlignment;
+
+                                if (value.FontAlignment === "middle") {
+                                    edgeFontAlignment = "middle";
+                                } else if (value.FontAlignment === "bottom") {
+                                    edgeFontAlignment = "bottom";
+                                } else {
+                                    edgeFontAlignment = "top";
+                                }
+
+
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight, font: { align: edgeFontAlignment } })
                             }
                         });
                     });
@@ -514,6 +528,7 @@
                 action: ACTION_EDGE_CHANGE_IF_DIRECTED,
                 id: id_,
                 from: from_,
+                to: to_,
                 prevIfDirected: prevIfDirected_,
                 ifDirected: ifDirected_
             });
@@ -778,8 +793,8 @@
             for (edge of EDGES) {
                 edges.push({
                     from: edge.first, to: edge.second, color: edge.color,
-                    arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
-                    label: edge.weight.toString(), font: { align: 'top' }
+                    arrows: { to: edge.direction === 1, enabled: edge.direction !== 0 },
+                    label: edge.weight.toString(), font: { align: edge.font.align }
                 });
             }
 

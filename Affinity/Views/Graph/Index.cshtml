@@ -562,21 +562,22 @@
                     EXPANDED_SNAPSHOT.push(action);
                 }
             }
-
+            
             // Build final state tree
             for (action of EXPANDED_SNAPSHOT) {
-                if ('id' in action) {
-                    if (action.id in stateTree) {
+                if (action.hasOwnProperty('id')) {
+                    if (stateTree.hasOwnProperty(action.id)) {
                         stateTree[action.id][action.action] = action;
                     } else {
                         stateTree[action.id] = {};
+                        stateTree[action.id][action.action] = action;
                     }
                 } else {
                     REDUCED_SNAPSHOT.push(action);
                     switch (action.action) {
                         case ACTION_DELETE_VERTEX:
                             const nID = action.node.id;
-                            if (ACTION_ADD_VERTEX in stateTree[nID]) {
+                            if (stateTree[nID].hasOwnProperty(ACTION_ADD_VERTEX)) {
                                 // If this was a new node, don't need delete action
                                 // to be sent to DB
                                 REDUCED_SNAPSHOT.pop();
@@ -585,14 +586,14 @@
                             break;
                         case ACTION_DELETE_EDGE:
                             let edgeID = action.edge.id;
-                            if (ACTION_ADD_EDGE in stateTree[edgeID]) {
+                            if (stateTree[edgeID].hasOwnProperty(ACTION_ADD_EDGE)) {
                                 REDUCED_SNAPSHOT.pop();
                             }
                             delete stateTree[edgeID];
                             break;
                         case ACTION_DELETE_VERTEX_N_EDGE:
                             let nodeID = action.node.id;
-                            if (ACTION_ADD_VERTEX in stateTree[nodeID]) {
+                            if (stateTree[nodeID].hasOwnProperty(ACTION_ADD_VERTEX)) {
                                 REDUCED_SNAPSHOT.pop();
                             }
                             delete stateTree[nodeID];

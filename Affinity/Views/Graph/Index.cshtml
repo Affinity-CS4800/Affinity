@@ -791,10 +791,16 @@
             }
 
             for (edge of EDGES) {
+                let nodeWeight;
+                if(edge.weight === 0) {
+                    nodeWeight = "";
+                } else {
+                    nodeWeight = edge.weight.toString();
+                }
                 edges.push({
                     from: edge.first, to: edge.second, color: edge.color,
                     arrows: { to: edge.direction === 1, enabled: edge.direction !== 0 },
-                    label: edge.weight.toString(), font: { align: edge.font.align }
+                    label: nodeWeight, font: { align: edge.font.align }
                 });
             }
 

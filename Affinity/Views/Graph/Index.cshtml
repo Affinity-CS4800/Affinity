@@ -361,6 +361,92 @@
             return getVisDataSet();
         }
     </script>
+
+    <script>
+        // Curves edges
+
+        function curveAllEdges() {
+            VIS_NODES.forEach(node => {
+                VIS_NODES.forEach(node2 => {
+                    if (node2.id > node.id) {
+                        updateEdgeCurves(node.id, node2.id);
+                    }
+                });
+            });
+        }
+
+        function updateEdgeCurves(fromVertex, toVertex) {
+
+            if (fromVertex != toVertex) {
+                var edgesConnectingFromAndTo = [];
+
+                numberOfConnectingEdges = 0;
+                var connectedEdges = NETWORK.getConnectedEdges(fromVertex);
+
+                connectedEdges.forEach(id => {
+                    var edge = VIS_EDGES.get(id);
+                    if (edge.from == fromVertex && edge.to == toVertex) {
+                        numberOfConnectingEdges++;
+                        edgesConnectingFromAndTo.push(id);
+                    }
+                    else if (edge.from == toVertex && edge.to == fromVertex) {
+                        numberOfConnectingEdges++;
+                        edgesConnectingFromAndTo.push(id);
+                    }
+                });
+
+                if (numberOfConnectingEdges == 1) {
+                    VIS_EDGES.update({ id: edgesConnectingFromAndTo[0].id, smooth: false });
+                }
+                else if (numberOfConnectingEdges > 1) {
+                    var nextRoundness = 0;
+                    var roundnessStepSize = 0;
+                    switch (numberOfConnectingEdges) {
+                        case 2:
+                        case 3:
+                            nextRoundness = .3;
+                            roundnessStepSize = .3;
+                            break;
+                        case 4:
+                        case 5:
+                            nextRoundness = .6;
+                            roundnessStepSize = .3;
+                            break;
+                    }
+
+                    edgesConnectingFromAndTo.forEach(id => {
+                        var edge = VIS_EDGES.get(id);
+                        if (edge.to == toVertex) {
+                            if (nextRoundness < 0) {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness * -1) } });
+                            }
+                            else {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: nextRoundness } });
+                            }
+                        }
+                        else {
+                            if (nextRoundness < 0) {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCW', roundness: (nextRoundness * -1) } });
+                            }
+                            else {
+                                VIS_EDGES.update({ id: edge.id, smooth: { enabled: true, type: 'curvedCCW', roundness: (nextRoundness) } });
+                            }
+                        }
+
+                        nextRoundness -= roundnessStepSize;
+
+                        if (numberOfConnectingEdges % 2 == 0 && nextRoundness == 0) {
+                            nextRoundness -= roundnessStepSize;
+                        }
+                    
+                    });
+                }
+            }
+
+        }
+
+    </script>
+
     <script>
         // Snapshot Model
 
@@ -655,10 +741,12 @@
                         VIS_NODES.remove(lastAction.id);
                         break;
                     case ACTION_ADD_EDGE:
+                        updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);
                         VIS_EDGES.remove(lastAction.id);
                         break;
                     case ACTION_DELETE_EDGE:
                         VIS_EDGES.add(lastAction.edge);
+                        updateEdgeCurves(VIS_EDGES.get(lastAction.edge.id).from, VIS_EDGES.get(lastAction.edge.id).to);
                         break;
                     case ACTION_DELETE_VERTEX:
                         VIS_NODES.add(lastAction.node);
@@ -721,10 +809,14 @@
                     case ACTION_ADD_EDGE:
                         VIS_EDGES.add({ id: lastAction.id, label: "", arrows: { to: lastAction.isDirected }, from: lastAction.from, to: lastAction.to });
                         addEdgeAction(lastAction.id, lastAction.isDirected, lastAction.from, lastAction.to);
+                        updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);   
                         break;
                     case ACTION_DELETE_EDGE:
+                        var fromVertex = VIS_EDGES.get(lastAction.edge.id).from;
+                        var toVertex = VIS_EDGES.get(lastAction.edge.id).to;
                         VIS_EDGES.remove(lastAction.edge.id);
                         deleteEdgeAction(lastAction.edge);
+                        updateEdgeCurves(fromVertex, toVertex);
                         break;
                     case ACTION_DELETE_VERTEX:
                         VIS_NODES.remove(lastAction.node.id);
@@ -850,16 +942,13 @@
                     },
                     physics: {
                         barnesHut: {
-                            gravitationalConstant: -10000,
-                            centralGravity: 0,
-                            springLength: 100,
-                            springConstant: 0.04,
-                            damping: 0.8,
-                            avoidOverlap: 1
+                          gravitationalConstant: 0,
+                          centralGravity: 0,
+                          springConstant: 0
                         }
                     },
                     edges: {
-
+                        smooth: false
                     },
                     manipulation: {
                         enabled: true,
@@ -895,9 +984,27 @@
                                 directed = true;
                             }
 
+                            var numberOfConnectingEdges = 1;
+
+                            var fromEdges = NETWORK.getConnectedEdges(data.from);
+                            fromEdges.forEach(id => {
+                                var edge = VIS_EDGES.get(id);
+                                if (id != data.id && edge.to == data.to) {
+                                    numberOfConnectingEdges++;
+                                }
+                                else if (edge.to == data.from && edge.from == data.to) {
+                                    numberOfConnectingEdges++;
+                                }
+                            });
+
                             addEdgeAction(data.id, directed, data.from, data.to);
                             clearRedoStack();
-                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, from: data.from, to: data.to });
+
+                            VIS_EDGES.update({ id: data.id, label: "", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: false, from: data.from, to: data.to });
+
+                            if (numberOfConnectingEdges > 1) {
+                                updateEdgeCurves(data.from, data.to);
+                            }
 
                             NETWORK.addEdgeMode();
 
@@ -928,12 +1035,18 @@
                         },
                         deleteEdge: function (data, callback) {
                             const edge = VIS_EDGES.get(data.edges[0]) || false;
+
+                            var fromVertex = edge.from;
+                            var toVertex = edge.to;
+
                             if (edge) {
                                 deleteEdgeAction(edge);
                                 VIS_EDGES.remove(edge.id);
                                 clearRedoStack();
                                 callback(data);
                             }
+
+                            updateEdgeCurves(fromVertex, toVertex);
                         }
                     }
                 };
@@ -966,6 +1079,8 @@
 
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
 
+                curveAllEdges();
+              
                 NETWORK.addEdgeMode();
                 this.changeMode("draw");
             },

@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using Google.Apis.Auth.OAuth2;
 using System.Diagnostics;
 using System.IO;
+using System;
 
 namespace Affinity
 {
@@ -66,7 +67,7 @@ namespace Affinity
             };
 
             services.AddEntityFrameworkNpgsql()
-                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(builder.ConnectionString));
+                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(builder.ConnectionString, providerOptions => providerOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);
@@ -101,8 +102,6 @@ namespace Affinity
                 // This header lets a webs site tell browsers that it should only be accessed using HTTPS, instead of using HTTP.
                 // max-age: The time in seconds that the browser should remmeber that a site is only to be accessed using HTTPS
                 context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000");
-                
-
 
                 await next();
             });

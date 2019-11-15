@@ -46,15 +46,14 @@ namespace Affinity.Models
 
         public string GraphID { get; set; }
 
+        public int ID { get; set; }
         public int First { get; set; }
         public int Second { get; set; }
-        [EnumDataType(typeof(Direction))]
-        public Direction Direction { get; set; }
+        public int Direction { get; set; }
         public int Color { get; set; }
         public string FontAlignment { get; set; }
 
-        [Range(-1,2000)]
-        public int Weight { get; set; }
+        [StringLength(12)]
         public string Name { get; set; }
     }
 
@@ -66,7 +65,13 @@ namespace Affinity.Models
 
         public const int DEFAULT_EDGE_COLOR = -16777216; //ARGB For BLACK
 
-        public const int MAX_GRAPHS = 5;
+        public const int MAX_GRAPHS = 10;
+    }
+
+    public class GraphIDName
+    {
+        public string GraphID { get; set; }
+        public string Name { get; set; }
     }
 
     public class GraphDataJson
@@ -88,7 +93,7 @@ namespace Affinity.Models
         {
             AdjacencyList = new List<Vertex>();
         }
-
+        /*
         /// <summary>
         /// Adds a vertex to the adjacenecy list
         /// </summary>
@@ -397,6 +402,6 @@ namespace Affinity.Models
                 }
             }
             return diameter;
-        }
+        }*/
     }
 }

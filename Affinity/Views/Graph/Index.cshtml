@@ -1,7 +1,6 @@
 @{
     ViewData["Title"] = "New Graph";
 }
-
 @section styles {
     <style>
         .graph {
@@ -16,18 +15,17 @@
 
         #mynetwork {
             border: 1px solid lightgray;
-            width: 100%;
+            width: 70%;
             height: 90vh;
             z-index: 1;
-            margin: 0 auto;
         }
 
         .interface {
             position: absolute;
             right: 0;
             z-index: 2;
-            background: #BBB;
-            width: 25%;
+            background: rgba(1,1,1, .02);
+            width: 30%;
             height: 100%;
             padding: 1rem 0 1rem 1rem;
             margin-bottom: 1rem;
@@ -37,20 +35,21 @@
             position: relative;
         }
 
-        .button-group button {
-            font-size: 1rem;
+            .button-group button {
+                font-size: 1rem;
                 padding: .5rem 1rem;
                 cursor: pointer;
                 border: 0;
                 margin-bottom: .5rem;
                 background: transparent;
                 display: inline-block;
-         }
+            }
 
                 .button-group button:hover {
                     cursor: pointer;
                     color: blue;
                 }
+
         button:focus {
             outline: none;
         }
@@ -61,6 +60,7 @@
 
         .draw-title, .select-title {
             display: inline-block;
+            text-align: center;
             width: 5ch;
             opacity: .25;
             padding-left: 1rem;
@@ -72,6 +72,30 @@
             font-size: 1rem;
         }
 
+        .customization-box {
+            margin-bottom: 1rem;
+        }
+
+        .custom-title {
+            line-height: 1.5;
+        }
+
+        .custom-label, .custom-label input, .state-switch {
+            font-family: 'GTEestiDisplay-Medium',-apple-system,system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';
+        }
+
+        .custom-label {
+            display: block;
+            margin-bottom: .25rem;
+        }
+
+            .custom-label input {
+                font-size: 1rem;
+                width: 15ch;
+                padding: .25rem .25rem;
+                border: 1px solid rgba(1,1,1, .25);
+            }
+
         .status {
             position: absolute;
             bottom: 1rem;
@@ -82,96 +106,193 @@
 
         .pickr {
             display: inline-block;
+            height: 100%;
         }
 
         .selectedButton {
             color: #0026ff;
             font-weight: bold;
         }
+
+        .state-switch {
+            display: flex;
+            width: 70%;
+            position: relative;
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            position: relative;
+            border: 1px solid #0026ff;
+            border-radius: 3px;
+            color: #555;
+        }
+
+        .state-switch > input {
+            display: none;
+        }
+
+            .state-switch > input:checked + label {
+                color: #efefef;
+                font-weight: bold;
+            }
+
+            .state-switch > input:nth-of-type(1):checked ~ label:last-of-type:before {
+                transform: translateX(calc(0% + 0px));
+            }
+
+            .state-switch > input:nth-of-type(2):checked ~ label:last-of-type:before {
+                transform: translateX(calc(100% + 0px));
+            }
+
+            .states-3 > input:nth-of-type(1):checked ~ label:last-of-type:before {
+                transform: translateX(calc(0% + 0px));
+            }
+
+            .states-3 > input:nth-of-type(2):checked ~ label:last-of-type:before {
+                transform: translateX(calc(100% + 0px));
+            }
+            .states-3 > input:nth-of-type(3):checked ~ label:last-of-type:before {
+                transform: translateX(calc(200% + 0px));
+            }
+
+
+        .state-switch label {
+            flex: 1;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+            .state-switch label:last-of-type:before {
+                content: "";
+                display: block;
+                max-width: calc(50% - 0px);
+                height: 100%;
+                margin: 0px;
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: -1;
+                transform: translateX(0);
+            }
+
+            .states-3 label:last-of-type:before {
+                max-width: calc(33.33333% - 0px);
+            }
+
+
+        .state-switch label {
+            padding: .25rem 0;
+            transition: color 250ms cubic-bezier(0, 0.95, 0.38, 0.98);
+        }
+
+            .state-switch label:before {
+                background: #0026ff;
+                transition: all 250ms cubic-bezier(0, 0.95, 0.38, 0.98);
+            }
+
+            .state-switch label:not(:last-child) {
+                border-right: 1px solid #fff;
+            }
+
+            .edit-group button {
+                display: inline-block;
+                max-width: 33.3333%;
+            }
+
+            .edit-group svg {
+               font-size: .85rem;
+            }
     </style>
 }
 
 
-    <div class="graph">
-        <div class="interface">
-            <div class="button-group">
-                <div class="draw-group">
-                    <span class="draw-title">Draw</span>
-                    <button v-on:click="changeMode('drawNodes')" v-bind:class='{ selectedButton: (state == "drawNodes") }'>Nodes</button>
-                    <button v-on:click="changeMode('drawEdges')" v-bind:class='{ selectedButton: (state == "drawEdges") }'>Edges</button>
-                </div>
-                <div class="select-group">
-                    <span class="select-title">Select</span>
-                    <button v-on:click="changeMode('select')" v-bind:class='{ selectedButton: (state == "select") }'>Single</button>
-                    <button v-on:click="changeMode('selectMultiple')" v-bind:class='{ selectedButton: (state == "selectMultiple") }'>Multiple</button>
-                </div>
-                <button v-if="state == 'select' || state == 'selectMultiple'" v-on:click="deleteSelected()">Delete</button>
-                <button v-on:click="undo()">Undo</button>
-                <button v-on:click="redo()">Redo</button>
-                <button v-on:click="pdf()">Download as Pdf</button>
-                <button v-on:click="img()">Download as Png</button>
-                <button v-on:click="save();">Save</button>
+<div class="graph">
+    <div class="interface">
+        <div class="button-group">
+            <div class="draw-group">
+                <span class="draw-title"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.078 7.061l2.861 2.862-10.799 10.798-3.584.723.724-3.585 10.798-10.798zm0-2.829l-12.64 12.64-1.438 7.128 7.127-1.438 12.642-12.64-5.691-5.69zm7.105 4.277l2.817-2.82-5.691-5.689-2.816 2.817 5.69 5.692z" /></svg></span>
+                <button v-on:click="changeMode('draw')" v-bind:class='{ selectedButton: (state == "drawNodes") }'>Draw</button>
             </div>
-            <div class="customization-box" v-show="showNodeCustomization">
-                <h2>Nodes:</h2>
-                <label> Label/Weight: <input type="text" id="node-name" /></label>
-                <label> Color: <span class="color-picker"></span> </label>
-                <br />
-                <div class="node-font-colors">
-                    <input type="radio" v-on:click="changeNodeFontColor('white')" name="node-font-color" value="white" id="white-node-font" checked />
-                    <label for="white">
-                        White Font
-                    </label>
-                    <input type="radio" v-on:click="changeNodeFontColor('black')" name="node-font-color" value="black" id="black-node-font" />
-                    <label for="black">
-                        Black Font
-                    </label>
-                </div>
+            <div class="select-group">
+                <span class="select-title"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13 24v-13.333l10 8.333h-6.156l-3.844 5zm8-20h2v-4h-4v2h2v2zm0 6h2v-4h-2v4zm-4-10h-4v2h4v-2zm4 14.73l2 1.645v-4.375h-2v2.73zm-10-14.73h-4v2h4v-2zm0 20h-4v2h4v-2zm-10-16h2v-2h2v-2h-4v4zm2 2h-2v4h2v-4zm0 6h-2v4h2v-4zm0 6h-2v4h4v-2h-2v-2z" /></svg></span>
+                <button v-on:click="changeMode('select')" v-bind:class='{ selectedButton: (state == "select") }'>Single</button>
+                <button v-on:click="changeMode('selectMultiple')" v-bind:class='{ selectedButton: (state == "selectMultiple") }'>Multiple</button>
             </div>
-            <div class="customization-box" v-show="showEdgeCustomization">
-                <h2>Edges:</h2>
-                <label> Label/Weight: <input type="text" id="edge-value" /></label>
-                <label> Color: <span class="color-picker2"></span> </label>
-                <br />
-                <div class="edge-font-alignments">
-                    <input type="radio" v-on:click="changeEdgeFontAlignment('top')" name="edge-font-alignment" value="top" id="align-top" checked />
-                    <label for="top">
-                        Top
-                    </label>
-                    <input type="radio" v-on:click="changeEdgeFontAlignment('middle')" name="edge-font-alignment" value="middle" id="align-middle" />
-                    <label for="middle">
-                        Middle
-                    </label>
-                    <input type="radio" v-on:click="changeEdgeFontAlignment('bottom')" name="edge-font-alignment" value="bottom" id="align-bottom" />
-                    <label for="bottom">
-                        Bottom
-                    </label>
-                </div>
-                <div class="edge-directions">
-                    <input type="radio" v-on:click="changeIfDirected('undirected')" name="edge-direction" value="undirected" id="undirected" checked />
-                    <label for="undirected">
-                        Undirected
-                    </label>
-                    <input type="radio" v-on:click="changeIfDirected('directed')" name="edge-direction" value="directed" id="directed" />
-                    <label for="directed">
-                        Directed
-                    </label>
-                </div>
+            <div class="edit-group">
+                <button v-on:click="undo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18.885 3.515c-4.617-4.618-12.056-4.676-16.756-.195l-2.129-2.258v7.938h7.484l-2.066-2.191c2.82-2.706 7.297-2.676 10.073.1 4.341 4.341 1.737 12.291-5.491 12.291v4.8c3.708 0 6.614-1.244 8.885-3.515 4.686-4.686 4.686-12.284 0-16.97z" /></svg>Undo</button>
+                <button v-on:click="redo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5.115 3.515c4.617-4.618 12.056-4.676 16.756-.195l2.129-2.258v7.938h-7.484l2.066-2.191c-2.82-2.706-7.297-2.676-10.073.1-4.341 4.341-1.737 12.291 5.491 12.291v4.8c-3.708 0-6.614-1.244-8.885-3.515-4.686-4.686-4.686-12.284 0-16.97z" /></svg>Redo</button>
+                <button v-show="(state =='draw') || ((state == 'select' || state == 'selectMultiple') && (showNodeCustomization || showEdgeCustomization))" v-on:click="deleteSelected()"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M5.662 23l-5.369-5.365c-.195-.195-.293-.45-.293-.707 0-.256.098-.512.293-.707l14.929-14.928c.195-.194.451-.293.707-.293.255 0 .512.099.707.293l7.071 7.073c.196.195.293.451.293.708 0 .256-.097.511-.293.707l-11.216 11.219h5.514v2h-12.343zm3.657-2l-5.486-5.486-1.419 1.414 4.076 4.072h2.829zm.456-11.429l-4.528 4.528 5.658 5.659 4.527-4.53-5.657-5.657z" /></svg> Delete</button>
+            </div>
+            <div class="export-group">
+                <button v-on:click="pdf()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PDF</button>
+                <button v-on:click="img()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>JPG</button>
+                <button v-on:click="save()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M15.003 3h2.997v5h-2.997v-5zm8.997 1v20h-24v-24h20l4 4zm-19 5h14v-7h-14v7zm16 4h-18v9h18v-9z" /></svg>Save</button>
             </div>
         </div>
-        <div class="status">
-            <h2 v-if="state=='drawNodes' || state=='drawEdges'">You're drawing {{state=="drawNodes" ? "nodes" : "edges"}}.</h2>
-            <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
-        </div>
-        <div id="mynetwork"></div>
-    </div>
+        <div class="customization-box" v-show="showNodeCustomization">
+            <h2 class="custom-title">{{ (state == "selectMultiple" ? "Vertices" : "Vertex") }}</h2>
+            <label class="custom-label"><input type="text" id="node-name" placeholder="Name" /> <span class="color-picker"></span> </label>
+            <label class="custom-label"></label>
+            <div class="node-font-colors state-switch">
+                <input type="radio" v-on:click="changeNodeFontColor('white')" name="node-font-color" value="white" id="white-node-font" checked />
+                <label for="white-node-font">
+                    White Font
+                </label>
 
-    <div id="save-graph-name-prompt" class="modal" v-bind:style="{ 'display': displaySavePrompt }">
-        <div class="modal-content">
-            <h2>Enter a name for your graph.</h2>
-            <label>Graph Name: <input type="text" id="graph-name" /></label>
+                <input type="radio" v-on:click="changeNodeFontColor('black')" name="node-font-color" value="black" id="black-node-font" />
+                <label for="black-node-font">
+                    Black Font
+                </label>
+            </div>
+        </div>
+        <div class="customization-box" v-show="showEdgeCustomization">
+            <h2 class="custom-title">{{ (state == "selectMultiple" ? "Edges" : "Edge") }}</h2>
+            <label class="custom-label"> <input type="text" id="edge-value" placeholder="Weight" /> <span class="color-picker2"></span></label>
+            <div class="edge-font-alignments state-switch states-3">
+                <input type="radio" v-on:click="changeEdgeFontAlignment('top')" name="edge-font-alignment" value="top" id="align-top" checked />
+                <label for="align-top">
+                    Top
+                </label>
+                <input type="radio" v-on:click="changeEdgeFontAlignment('middle')" name="edge-font-alignment" value="middle" id="align-middle" />
+                <label for="align-middle">
+                    Middle
+                </label>
+                <input type="radio" v-on:click="changeEdgeFontAlignment('bottom')" name="edge-font-alignment" value="bottom" id="align-bottom" />
+                <label for="align-bottom">
+                    Bottom
+                </label>
+            </div>
+            <div class="edge-directions state-switch">
+                <input type="radio" v-on:click="changeIfDirected('undirected')" name="edge-direction" value="undirected" id="undirected" checked />
+                <label for="undirected">
+                    Undirected
+                </label>
+                <input type="radio" v-on:click="changeIfDirected('directed')" name="edge-direction" value="directed" id="directed" />
+                <label for="directed">
+                    Directed
+                </label>
+            </div>
         </div>
     </div>
+    <div class="status">
+        <h2 v-if="state=='draw'">
+            You're drawing.
+        </h2>
+        <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
+    </div>
+    <div id="mynetwork"></div>
+</div>
+
+<div id="save-graph-name-prompt" class="modal" v-bind:style="{ 'display': displaySavePrompt }">
+    <div class="modal-content">
+        <h2>Enter a name for your graph.</h2>
+        <label>Graph Name: <input type="text" id="graph-name" /></label>
+    </div>
+</div>
 
 
 @section scripts {
@@ -202,16 +323,36 @@
                     if (data.redirect !== undefined) {
                         window.location.href = data.redirect_url;
                     }
-                    
+
                     var result = jQuery.parseJSON(data);
                     $.each(result, function (key, value) {
                         $.each(value, function (key2, value) {
                             var argb = (value.Color >>> 0).toString(16);
                             var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
                             if (key === "Vertices") {
-                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name })
+
+                                let nodeFontColor;
+                                if(value.FontColor === "white") {
+                                    nodeFontColor = "#FFFFFF";
+                                } else {
+                                    nodeFontColor = "#000000";
+                                }
+
+                                NODES.push({ id: value.ID, x: value.XPos, y: value.YPos, color: rgba, name: value.Name, font: { color: nodeFontColor } })
                             } else {
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight })
+
+                                let edgeFontAlignment;
+
+                                if (value.FontAlignment === "middle") {
+                                    edgeFontAlignment = "middle";
+                                } else if (value.FontAlignment === "bottom") {
+                                    edgeFontAlignment = "bottom";
+                                } else {
+                                    edgeFontAlignment = "top";
+                                }
+
+
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, label: value.Name, font: { align: edgeFontAlignment } })
                             }
                         });
                     });
@@ -319,13 +460,15 @@
 
         const ACTION_NODE_RECOLOR = "5";
         const ACTION_NODE_RENAME = "6";
-        const ACTION_NODE_NAME_RECOLOR = "7";
+        const ACTION_NODE_FONT_RECOLOR = "7";
         const ACTION_NODE_CHANGE_POS = "8";
 
         const ACTION_EDGE_RENAME = "9";
         const ACTION_EDGE_RECOLOR = "10";
         const ACTION_EDGE_CHANGE_FONT_ALIGNMENT = "11";
         const ACTION_EDGE_CHANGE_IF_DIRECTED = "12";
+
+        const ACTION_GRAPH_SET_NAME = "13";
 
         const SNAPSHOT = {
             0: []
@@ -351,7 +494,13 @@
         }
 
         function addNodeAction(id_, color_, x_, y_) {
-            SNAPSHOT[CURRENT_SNAPSHOT].push({ action: ACTION_ADD_VERTEX, id: id_, color: color_, x: x_, y: y_ });
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_ADD_VERTEX,
+                id: id_,
+                color: color_,
+                x: x_,
+                y: y_
+            });
         }
 
         function addEdgeAction(id_, isDirected_, from_, to_) {
@@ -405,12 +554,12 @@
             });
         }
 
-        function recolorNodeNameAction(vertexId, prevColor_, color_) {
+        function recolorNodeFontAction(vertexId, prevFontColor_, fontColor_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
-                action: ACTION_NODE_NAME_RECOLOR,
+                action: ACTION_NODE_FONT_RECOLOR,
                 id: vertexId,
-                prevColor: prevColor_,
-                color: color_
+                prevFontColor: prevFontColor_,
+                fontColor: fontColor_
             });
         }
 
@@ -465,8 +614,16 @@
                 action: ACTION_EDGE_CHANGE_IF_DIRECTED,
                 id: id_,
                 from: from_,
+                to: to_,
                 prevIfDirected: prevIfDirected_,
                 ifDirected: ifDirected_
+            });
+        }
+
+        function changeGraphNameAction(graphName_) {
+            SNAPSHOT[CURRENT_SNAPSHOT].push({
+                action: ACTION_GRAPH_SET_NAME,
+                graphName: graphName_
             });
         }
 
@@ -488,6 +645,80 @@
             var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
 
             return rgba;
+        }
+
+        function getCollapsedSnapshot() {
+            const EXPANDED_SNAPSHOT = [];
+            const REDUCED_SNAPSHOT = [];
+            const stateTree = {};
+
+            // Expand batch actions
+            for (action of SNAPSHOT[CURRENT_SNAPSHOT]) {
+                if (action.action == ACTION_BATCH) {
+                    for (batchedAction of action.actions) {
+                        EXPANDED_SNAPSHOT.push(batchedAction);
+                    }
+                } else {
+                    switch (action.action) {
+                        case ACTION_NODE_RECOLOR:
+                        case ACTION_EDGE_RECOLOR:
+                            action.color = convertHexToDecimal(action.color);
+                            break;
+                    }
+                    EXPANDED_SNAPSHOT.push(action);
+                }
+            }
+            
+            // Build final state tree
+            for (action of EXPANDED_SNAPSHOT) {
+                if (action.hasOwnProperty('id')) {
+                    if (stateTree.hasOwnProperty(action.id)) {
+                        stateTree[action.id][action.action] = action;
+                    } else {
+                        stateTree[action.id] = {};
+                        stateTree[action.id][action.action] = action;
+                    }
+                } else {
+                    REDUCED_SNAPSHOT.push(action);
+                    switch (action.action) {
+                        case ACTION_DELETE_VERTEX:
+                            const nID = action.node.id;
+                            if (stateTree[nID].hasOwnProperty(ACTION_ADD_VERTEX)) {
+                                // If this was a new node, don't need delete action
+                                // to be sent to DB
+                                REDUCED_SNAPSHOT.pop();
+                            }
+                            delete stateTree[nID];
+                            break;
+                        case ACTION_DELETE_EDGE:
+                            let edgeID = action.edge.id;
+                            if (stateTree[edgeID].hasOwnProperty(ACTION_ADD_EDGE)) {
+                                REDUCED_SNAPSHOT.pop();
+                            }
+                            delete stateTree[edgeID];
+                            break;
+                        case ACTION_DELETE_VERTEX_N_EDGE:
+                            let nodeID = action.node.id;
+                            if (stateTree[nodeID].hasOwnProperty(ACTION_ADD_VERTEX)) {
+                                REDUCED_SNAPSHOT.pop();
+                            }
+                            delete stateTree[nodeID];
+                            for (edge of action.edges) {
+                                delete stateTree[edge.id];
+                            }
+                            break;
+                    }
+                }
+            }
+
+            // Collect collapsed snapshot
+            for (id in stateTree) {
+                for (actionType in stateTree[id]) {
+                    REDUCED_SNAPSHOT.push(stateTree[id][actionType]);
+                }
+            }
+            
+            return REDUCED_SNAPSHOT;
         }
 
         function undoLastAction(state) {
@@ -532,8 +763,8 @@
                     case ACTION_NODE_RENAME:
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.prevLabel, font: { color: lastAction.fontColor } });
                         break;
-                    case ACTION_NODE_NAME_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, font: { color:lastAction.prevColor } });
+                    case ACTION_NODE_FONT_RECOLOR:
+                        VIS_NODES.update({ id: lastAction.id, font: { color: lastAction.prevColor } });
                         break;
                     case ACTION_NODE_CHANGE_POS:
                         VIS_NODES.update({ id: lastAction.id, x: lastAction.prevX, y: lastAction.prevY });
@@ -553,9 +784,7 @@
                 }
 
                 REDO_STACK.push(lastAction);
-                if (state == "drawNodes") {
-                    NETWORK.addNodeMode();
-                } else if (state == "drawEdges") {
+                if (state == "draw") {
                     NETWORK.addEdgeMode();
                 }
             }
@@ -608,9 +837,9 @@
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.label, font: { color: lastAction.fontColor } });
                         renameNodeAction(lastAction.id, lastAction.fontColor, lastAction.prevLabel, lastAction.label);
                         break;
-                    case ACTION_NODE_NAME_RECOLOR:
+                    case ACTION_NODE_FONT_RECOLOR:
                         VIS_NODES.update({ id: lastAction.id, font: { color: lastAction.color } });
-                        recolorNodeNameAction(lastAction.id, lastAction.prevColor, lastAction.color);
+                        recolorNodeFontAction(lastAction.id, lastAction.prevColor, lastAction.color);
                         break;
                     case ACTION_NODE_CHANGE_POS:
                         VIS_NODES.update({ id: lastAction.id, x: lastAction.x, y: lastAction.y });
@@ -633,9 +862,7 @@
                         changeIfEdgeDirectedAction(lastAction.id, lastAction.from, lastAction.to, lastAction.prevIfDirected, lastAction.ifDirected);
                         break;
                 }
-                if (state == "drawNodes") {
-                    NETWORK.addNodeMode();
-                } else if (state == "drawEdges") {
+                if (state == "draw") {
                     NETWORK.addEdgeMode();
                 }
             }
@@ -650,15 +877,15 @@
             for (node of NODES) {
                 nodes.push({
                     id: node.id, label: node.name, x: node.x, y: node.y,
-                    color: node.color, font: { color: '#FFFFFF' }
+                    color: node.color, font: { color: node.font.color }
                 });
             }
 
             for (edge of EDGES) {
                 edges.push({
                     from: edge.first, to: edge.second, color: edge.color,
-                    arrows: { to: edge.direction === 2, from: edge.direction === 1, enabled: edge.direction !== 0 },
-                    label: edge.weight.toString(), font: { align: 'top' }
+                    arrows: { to: edge.direction === 1, enabled: edge.direction !== 0 },
+                    label: edge.label, font: { align: edge.font.align }
                 });
             }
 
@@ -675,8 +902,9 @@
             el: '#app',
             data: {
                 user: false,
-                state: "drawNodes",
+                state: "draw",
                 nextNodeID: 0,
+                nextEdgeID: 0,
                 showNodeCustomization: true,
                 showEdgeCustomization: false,
                 currentNodes: [],
@@ -739,8 +967,10 @@
                             document.getElementById('node-name').focus();
                         },
                         addEdge: function (data, callback) {
+                            data.id = nextEdgeID;
+                            nextEdgeID++;
                             data.color = pickr2.getColor().toHEXA().toString();
-                            if (data.from == data.to && this.state == "drawEdges") {
+                            if (data.from == data.to && this.state == "draw") {
                                 if (confirm("Do you want to connect the node to itself?")) {
                                     callback(data);
                                 }
@@ -835,14 +1065,26 @@
                     }
                 });
 
+                $.ajax({
+                    type: 'GET',
+                    url: "/api/getStartingEdgeID/" + token,
+                    cache: false,
+                    async: false,
+                    success: function (data) {
+                        nextEdgeID = data;
+                    }
+                });
+
+                console.log(nextEdgeID);
+
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
 
                 curveAllEdges();
-
-                NETWORK.addNodeMode();
+              
+                NETWORK.addEdgeMode();
+                this.changeMode("draw");
             },
             created: function () {
-                console.log("created");
                 // When user logs in, store it in this Vue app's data.
                 // Add cookie storing user token.
                 firebase.auth().onAuthStateChanged(user => {
@@ -895,7 +1137,7 @@
                         NETWORK.manipulation.options.deleteEdge({
                             edges: [edge]
                         }, (d) => { });
-                        if (isBatchAction) moveLastActionToBatch(); 
+                        if (isBatchAction) moveLastActionToBatch();
                     }
 
                     clearRedoStack();
@@ -904,171 +1146,154 @@
                     this.currentNodes = [];
                     this.currentEdges = [];
                 },
-                save: function () {
-                    console.log(JSON.stringify(SNAPSHOT));
-                    var url = window.location.pathname;
-                    url = url.split('/');
-                    var token = url[url.length - 1];
-                    $.ajax({
-                        type: 'POST',
-                        url: '/api/saveToDB/' + token,
-                        contentType: "application/json",
-                        data: JSON.stringify(SNAPSHOT),
-                        headers: {
-                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                        },
-                        success: function () {
-                            alert('Saved');
-                        },
-                        error: function (xhr, textStatus, errorThrown) {
-                            alert(errorThrown);
-                        }
-                    });
-                },
                 changeMode: function (newMode) {
-                    if (this.state == newMode) {
-                        //clicked on same button, exit mode or do nothing?
+
+                    NETWORK.unselectAll();
+                    this.state = newMode;
+                    if (this.state == "select" || this.state == "selectMultiple") {
+                        NETWORK.off('click');
                     }
-                    else {
+
+                    if (newMode == "draw") {
+                        this.showNodeCustomization = true;
+                        this.showEdgeCustomization = true;
+                        NETWORK.addEdgeMode();
+                        NETWORK.on('click', function (properties) {
+                            if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
+                                VIS_NODES.update({ id: nextNodeID, label: "", color: pickr.getColor().toHEXA().toString(), font: { color: '#FFFFFF' }, x: properties.pointer.canvas.x, y: properties.pointer.canvas.y });
+                                addNodeAction(nextNodeID, pickr.getColor().toHEXA().toString(), properties.pointer.canvas.x, properties.pointer.canvas.y);
+                                clearRedoStack();
+                                NETWORK.selectNodes([nextNodeID], false);
+                                document.getElementById('node-name').value = "";
+                                document.getElementById('node-name').focus();
+                                nextNodeID++;
+                                NETWORK.addEdgeMode();
+                            }
+                        });
+                    }
+                    else if (newMode == "select") {
+                        NETWORK.disableEditMode();
+                        this.showNodeCustomization = false;
+                        this.showEdgeCustomization = false;
+                        var vue = this;
+                        NETWORK.on('click', function (properties) {
+                            if (NETWORK.getSelectedNodes().length != 0) {
+                                NETWORK.selectNodes(NETWORK.getSelectedNodes(), false);
+                            }
+
+                            //Get the node that we have clicked on
+                            var node = properties.nodes;
+                            //Get the edge that we have clicked on
+                            var edge = properties.edges;
+
+                            //If we hit a node else we hit an edge or nothing
+                            if (node.length != 0) {
+                                vue.showNodeCustomization = true;
+                                vue.showEdgeCustomization = false;
+
+                                var updateNode = VIS_NODES.get(node)[0];
+
+                                document.getElementById('node-name').value = updateNode.label;
+
+                                document.getElementById('node-name').focus();
+
+                                //if (updateNode.font.color === '#FFFFFF') {
+                                //    document.getElementById('node-font-color').value = "#FFFFFF";
+                                //} else {
+                                //    document.getElementById('node-font-color').value = "#000000";
+                                //}
+
+                                pickr.setColor(updateNode.color);
+
+                            } else if (edge.length != 0) {
+                                vue.showNodeCustomization = false;
+                                vue.showEdgeCustomization = true;
+
+                                var updateEdge = VIS_EDGES.get(edge)[0];
+
+                                //Init the label editing
+                                document.getElementById('edge-value').value = updateEdge.label;
+
+                                document.getElementById('edge-value').focus();
+
+                                //Set the color to what the current node is!
+                                pickr2.setColor(updateEdge.color);
+
+                                //Init the Alignment
+                                //if (updateEdge.font.align === 'top') {
+                                //    document.getElementById('edge-font-align').value = "top";
+                                //} else if (updateEdge.font.align === 'middle') {
+                                //    document.getElementById('edge-font-align').value = "middle";
+                                //} else {
+                                //    document.getElementById('edge-font-align').value = "bottom";
+                                //}
+                            }
+                        });
+                    }
+                    else if (newMode == "selectMultiple") {
+                        NETWORK.disableEditMode();
                         NETWORK.unselectAll();
-                        if (this.state == "select" || this.state == "selectMultiple") {
-                            NETWORK.off('click');
-                        }
-                        this.state = newMode;
-                        if (newMode == "drawNodes") {
-                            this.showNodeCustomization = true;
-                            this.showEdgeCustomization = false;
-                            NETWORK.addNodeMode();
-                        }
-                        else if (newMode == "drawEdges") {
-                            this.showNodeCustomization = false;
-                            this.showEdgeCustomization = true;
-                            NETWORK.addEdgeMode();
-                        }
-                        else if (newMode == "select") {
-                            NETWORK.disableEditMode();
-                            this.showNodeCustomization = false;
-                            this.showEdgeCustomization = false;
-                            var vue = this;
-                            NETWORK.on('click', function (properties) {
-                                if (NETWORK.getSelectedNodes().length != 0) {
-                                    NETWORK.selectNodes(NETWORK.getSelectedNodes(), false);
-                                }
+                        this.currentNodes = NETWORK.getSelectedNodes();
+                        this.currentEdges = NETWORK.getSelectedEdges();
+                        this.showNodeCustomization = true; // temporary
+                        this.showEdgeCustomization = true; // temporary
 
-                                //Get the node that we have clicked on
-                                var node = properties.nodes;
-                                //Get the edge that we have clicked on
-                                var edge = properties.edges;
-
-                                //If we hit a node else we hit an edge or nothing
-                                if (node.length != 0) {
-                                    vue.showNodeCustomization = true;
-                                    vue.showEdgeCustomization = false;
-
-                                    var updateNode = VIS_NODES.get(node)[0];
-
-                                    document.getElementById('node-name').value = updateNode.label;
-
-                                    document.getElementById('node-name').focus();
-
-                                    //if (updateNode.font.color === '#FFFFFF') {
-                                    //    document.getElementById('node-font-color').value = "#FFFFFF";
-                                    //} else {
-                                    //    document.getElementById('node-font-color').value = "#000000";
-                                    //}
-
-                                    pickr.setColor(updateNode.color);
-
-                                } else if (edge.length != 0) {
-                                    vue.showNodeCustomization = false;
-                                    vue.showEdgeCustomization = true;
-
-                                    var updateEdge = VIS_EDGES.get(edge)[0];
-
-                                    //Init the label editing
-                                    document.getElementById('edge-value').value = updateEdge.label;
-
-                                    document.getElementById('edge-value').focus();
-
-                                    //Set the color to what the current node is!
-                                    pickr2.setColor(updateEdge.color);
-
-                                    //Init the Alignment
-                                    //if (updateEdge.font.align === 'top') {
-                                    //    document.getElementById('edge-font-align').value = "top";
-                                    //} else if (updateEdge.font.align === 'middle') {
-                                    //    document.getElementById('edge-font-align').value = "middle";
-                                    //} else {
-                                    //    document.getElementById('edge-font-align').value = "bottom";
-                                    //}
-                                }
-                            });
-                        }
-                        else if (newMode == "selectMultiple") {
-                            NETWORK.disableEditMode();
-                            NETWORK.unselectAll();
-                            this.currentNodes = NETWORK.getSelectedNodes();
-                            this.currentEdges = NETWORK.getSelectedEdges();
-                            this.showNodeCustomization = true; // temporary
-                            this.showEdgeCustomization = true; // temporary
-
-                            var vue = this;
-                            NETWORK.on('click', function () {
-                                if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
-                                    NETWORK.unselectAll();
-                                    vue.currentNodes = [];
-                                    vue.currentEdges = [];
-                                }
-                                else if (NETWORK.getSelectedNodes().length != 0) {
-                                    selectedNode = NETWORK.getSelectedNodes()[0];
-                                    var index = vue.currentNodes.indexOf(String(selectedNode));
-                                    if (index != -1) {
-                                        vue.currentNodes.splice(index, 1);
-                                    }
-                                    else {
-                                        vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
-                                    }
-                                    NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
+                        var vue = this;
+                        NETWORK.on('click', function () {
+                            if (NETWORK.getSelectedNodes().length == 0 && NETWORK.getSelectedEdges().length == 0) {
+                                NETWORK.unselectAll();
+                                vue.currentNodes = [];
+                                vue.currentEdges = [];
+                            }
+                            else if (NETWORK.getSelectedNodes().length != 0) {
+                                selectedNode = NETWORK.getSelectedNodes()[0];
+                                var index = vue.currentNodes.indexOf(String(selectedNode));
+                                if (index != -1) {
+                                    vue.currentNodes.splice(index, 1);
                                 }
                                 else {
-                                    selectedEdge = NETWORK.getSelectedEdges()[0];
-                                    var index = vue.currentEdges.indexOf(String(selectedEdge));
-                                    if (index != -1) {
-                                        vue.currentEdges.splice(index, 1);
-                                    }
-                                    else {
-                                        vue.currentEdges.push(String(NETWORK.getSelectedEdges()));
-                                    }
+                                    vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                }
+                                NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
+                            }
+                            else {
+                                selectedEdge = NETWORK.getSelectedEdges()[0];
+                                var index = vue.currentEdges.indexOf(String(selectedEdge));
+                                if (index != -1) {
+                                    vue.currentEdges.splice(index, 1);
+                                }
+                                else {
+                                    vue.currentEdges.push(String(NETWORK.getSelectedEdges()));
+                                }
+                                NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
+                            }
+                        });
+
+                        NETWORK.on('dragEnd', function () {
+                            if (NETWORK.getSelectedNodes().length == 1) {
+                                if (vue.currentNodes.length != 1) {
+                                    vue.currentNodes = [];
+                                    vue.currentEdges = [];
+                                    vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
                                     NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                 }
-                            });
-
-                            NETWORK.on('dragEnd', function () {
-                                if (NETWORK.getSelectedNodes().length == 1) {
-                                    if (vue.currentNodes.length != 1) {
+                                else if (vue.currentNodes.length == 1) {
+                                    if (String(NETWORK.getSelectedNodes()[0]) != vue.currentNodes[0]) {
                                         vue.currentNodes = [];
                                         vue.currentEdges = [];
                                         vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
                                         NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                                     }
-                                    else if (vue.currentNodes.length == 1) {
-                                        if (String(NETWORK.getSelectedNodes()[0]) != vue.currentNodes[0]) {
-                                            vue.currentNodes = [];
-                                            vue.currentEdges = [];
-                                            vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
-                                            NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
-                                        }
-                                    }
-                                }            
-                            });
-                        }
+                                }
+                            }
+                        });
                     }
                 },
                 changeNodeFontColor: function (newFontColor) {
                     if (newFontColor == "white") {
                         newFontColor = "#FFFFFF";
                     }
-                    else if(newFontColor == "black") {
+                    else if (newFontColor == "black") {
                         newFontColor = "#000000";
                     }
 
@@ -1077,9 +1302,9 @@
                         var editNode = VIS_NODES.get(id);
 
                         if (editNode.font.color !== newFontColor) {
-                            recolorNodeNameAction(editNode.id, editNode.font.color, newFontColor);
+                            recolorNodeFontAction(editNode.id, editNode.font.color, newFontColor);
                             clearRedoStack();
-                            editNode.font.color = newFontColor;     
+                            editNode.font.color = newFontColor;
                         }
 
                         VIS_NODES.update(editNode);
@@ -1095,7 +1320,7 @@
                             clearRedoStack();
                             editEdge.font.align = newAlignment;
                         }
-                       
+
                         VIS_EDGES.update(editEdge);
                     });
                 },
@@ -1123,7 +1348,7 @@
                     url = url.split('/');
                     let token = url[url.length - 1];
 
-                    html2canvas(document.getElementById("mynetwork"), {
+                    html2canvas(document.getElementsByTagName("canvas"), {
                         onrendered: function (canvas) {
                             var imgData = canvas.toDataURL('image/png');
                             var doc = new jsPDF('landscape');
@@ -1138,10 +1363,11 @@
                     url = url.split('/');
                     let token = url[url.length - 1];
 
-                    html2canvas(document.getElementById("mynetwork"), {
+                    html2canvas(document.getElementsByTagName("canvas"), {
+                        background: '#FFFFFF',
                         onrendered: function (canvas) {
-                            var imgData = canvas.toDataURL('image/png');
-                            app.saveAs(imgData, token + '.png');
+                            var imgData = canvas.toDataURL('image/jpeg', 1.0);
+                            app.saveAs(imgData, token + '.jpg');
                         }
                     });
                 },
@@ -1193,26 +1419,34 @@
                             vue.displaySavePrompt = "none";
                             this.removeEventListener("keyup", arguments.callee, false);
 
-                            console.log(JSON.stringify(SNAPSHOT));
-                            var url = window.location.pathname;
-                            url = url.split('/');
-                            var token = url[url.length - 1];
-                            $.ajax({
-                                type: 'POST',
-                                url: '/api/saveToDB/' + token,
-                                contentType: "application/json",
-                                data: JSON.stringify(SNAPSHOT),
-                                headers: {
-                                    RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                                },
-                                success: function () {
-                                    alert('Saved');
-                                },
-                                error: function (xhr, textStatus, errorThrown) {
-                                    alert(errorThrown);
-                                }
-                            });
-                            
+                            //changeGraphNameAction(graphName);
+
+                            const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
+
+                            if (COLLAPSED_SNAPSHOT.length > 0) {
+
+                                var url = window.location.pathname;
+                                url = url.split('/');
+                                var token = url[url.length - 1];
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/api/saveToDB/' + token,
+                                    contentType: "application/json",
+                                    data: JSON.stringify(COLLAPSED_SNAPSHOT),
+                                    headers: {
+                                        RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                    },
+                                    success: function () {
+                                        alert('Saved');
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        alert(errorThrown);
+                                    }
+                                });
+                            } else {
+                                alert('Saved.');
+                            }
+
                         }
                     });
                 }
@@ -1317,7 +1551,7 @@
                         clearRedoStack();
                         editEdge.color = color;
                     }
-                    
+
                     VIS_EDGES.update(editEdge);
                 });
 
@@ -1385,9 +1619,9 @@
                 repositionNodeAction(nodeId, node.x, node.y, (node.x + xDifference), (node.y + yDifference));
                 clearRedoStack();
                 VIS_NODES.update({ id: nodeId, x: (node.x + xDifference), y: (node.y + yDifference) });
-            }   
+            }
         });
-        
+
         NETWORK.fit();
         NETWORK.redraw();</script>
 }

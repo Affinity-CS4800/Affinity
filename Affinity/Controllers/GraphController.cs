@@ -90,7 +90,7 @@ namespace Affinity.Controllers
                 else if(value == "5")
                 {
                     Vertex vertex = await _affinityDbContext.Vertices.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
-                    vertex.Color = int.Parse(key["color"].ToString());
+                    vertex.Color = ColorTranslator.FromHtml(key["color"].ToString()).ToArgb();
                     _affinityDbContext.Vertices.Update(vertex);
                 }
                 else if (value == "6")
@@ -121,7 +121,7 @@ namespace Affinity.Controllers
                 else if (value == "10")
                 {
                     Edge edge = await _affinityDbContext.Edges.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
-                    edge.Color = int.Parse(key["color"].ToString());
+                    edge.Color = ColorTranslator.FromHtml(key["color"].ToString()).ToArgb();
                     _affinityDbContext.Edges.Update(edge);
                 }
                 else if(value == "11")

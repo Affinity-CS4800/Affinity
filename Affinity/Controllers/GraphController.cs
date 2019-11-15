@@ -55,6 +55,7 @@ namespace Affinity.Controllers
                 {
                     Edge edge = new Edge
                     {
+                        ID = int.Parse(key["id"].ToString()),
                         First = int.Parse(key["from"].ToString()),
                         Second = int.Parse(key["to"].ToString()),
                         Direction = Convert.ToInt32(bool.Parse(key["isDirected"].ToString())),
@@ -82,7 +83,7 @@ namespace Affinity.Controllers
                 }
                 else if(value == "4")
                 {
-                    Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["edge"]["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["edge"]["to"].ToString())).FirstOrDefaultAsync();
+                    Edge edge = await _affinityDbContext.Edges.Where(v => v.ID == int.Parse(key["edge"]["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                     _affinityDbContext.Edges.Remove(edge);
                 }
                 else if(value == "5")
@@ -112,25 +113,25 @@ namespace Affinity.Controllers
                 }
                 else if (value == "9")
                 {
-                    Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                    Edge edge = await _affinityDbContext.Edges.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                     edge.Name = key["label"].ToString();
                     _affinityDbContext.Edges.Update(edge);
                 }
                 else if (value == "10")
                 {
-                    Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                    Edge edge = await _affinityDbContext.Edges.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                     edge.Color = int.Parse(key["color"].ToString());
                     _affinityDbContext.Edges.Update(edge);
                 }
                 else if(value == "11")
                 {
-                    Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                    Edge edge = await _affinityDbContext.Edges.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                     edge.FontAlignment = key["alignment"].ToString();
                     _affinityDbContext.Edges.Update(edge);
                 }
                 else if(value == "12")
                 {
-                    Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
+                    Edge edge = await _affinityDbContext.Edges.Where(v => v.ID == int.Parse(key["id"].ToString()) && v.GraphID == graphID).FirstOrDefaultAsync();
                     edge.Direction = Convert.ToInt32(bool.Parse(key["ifDirected"].ToString()));
                     _affinityDbContext.Edges.Update(edge);
                 }

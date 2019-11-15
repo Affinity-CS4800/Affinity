@@ -506,10 +506,11 @@
             });
         }
 
-        function addEdgeAction(id_, isDirected_, from_, to_) {
+        function addEdgeAction(id_, color_, isDirected_, from_, to_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_ADD_EDGE,
                 id: id_,
+                color: color_,
                 isDirected: isDirected_,
                 from: from_,
                 to: to_
@@ -810,8 +811,8 @@
                         addNodeAction(lastAction.id, lastAction.color, lastAction.x, lastAction.y);
                         break;
                     case ACTION_ADD_EDGE:
-                        VIS_EDGES.add({ id: lastAction.id, label: "", arrows: { to: lastAction.isDirected }, from: lastAction.from, to: lastAction.to });
-                        addEdgeAction(lastAction.id, lastAction.isDirected, lastAction.from, lastAction.to);
+                        VIS_EDGES.add({ id: lastAction.id, label: " ", color: lastAction.color, arrows: { to: lastAction.isDirected }, from: lastAction.from, to: lastAction.to });
+                        addEdgeAction(lastAction.id, lastAction.color, lastAction.isDirected, lastAction.from, lastAction.to);
                         updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);   
                         break;
                     case ACTION_DELETE_EDGE:
@@ -1000,7 +1001,7 @@
                                 }
                             });
 
-                            addEdgeAction(data.id, directed, data.from, data.to);
+                            addEdgeAction(data.id, data.color, directed, data.from, data.to);
                             clearRedoStack();
 
                             VIS_EDGES.update({ id: data.id, label: " ", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: false, from: data.from, to: data.to });
@@ -1227,6 +1228,8 @@
 
                                 //Set the color to what the current node is!
                                 pickr2.setColor(updateEdge.color);
+
+                                console.log(updateEdge.color);
 
                                 //Init the Alignment
                                 //if (updateEdge.font.align === 'top') {
@@ -1550,6 +1553,14 @@
 
                     VIS_NODES.update(editNode);
                 });
+
+            }
+        });
+
+        pickr2.on('save', (color, instance) => {
+            pickr2.hide();
+            if (color != null) {
+                color = color.toHEXA().toString();
 
                 var editEdgeIDS = NETWORK.getSelectedEdges();
                 editEdgeIDS.forEach(id => {

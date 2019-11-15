@@ -229,7 +229,7 @@
             </div>
             <div class="export-group">
                 <button v-on:click="pdf()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PDF</button>
-                <button v-on:click="img()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PNG</button>
+                <button v-on:click="img()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>JPG</button>
                 <button v-on:click="save()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M15.003 3h2.997v5h-2.997v-5zm8.997 1v20h-24v-24h20l4 4zm-19 5h14v-7h-14v7zm16 4h-18v9h18v-9z" /></svg>Save</button>
             </div>
         </div>
@@ -1254,9 +1254,10 @@
                     let token = url[url.length - 1];
 
                     html2canvas(document.getElementsByTagName("canvas"), {
+                        background: '#FFFFFF',
                         onrendered: function (canvas) {
-                            var imgData = canvas.toDataURL('image/png');
-                            app.saveAs(imgData, token + '.png');
+                            var imgData = canvas.toDataURL('image/jpeg', 1.0);
+                            app.saveAs(imgData, token + '.jpg');
                         }
                     });
                 },

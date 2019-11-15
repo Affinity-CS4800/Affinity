@@ -356,7 +356,7 @@
                                     value.Name = " ";
                                 }
                                 
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, label: value.Name, font: { align: edgeFontAlignment } })
+                                EDGES.push({ id: value.ID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, label: value.Name, font: { align: edgeFontAlignment } })
                             }
                         });
                     });
@@ -871,8 +871,10 @@
                     NETWORK.addEdgeMode();
                 }
             }
-        }</script>
-    <script type="text/javascript">let NETWORK;
+        }
+    </script>
+    <script type="text/javascript">
+        let NETWORK;
         let VIS_NODES, VIS_EDGES;
         function getVisDataSet() {
 
@@ -888,7 +890,7 @@
 
             for (edge of EDGES) {
                 edges.push({
-                    from: edge.first, to: edge.second, color: edge.color,
+                    id: edge.id, from: edge.first, to: edge.second, color: edge.color,
                     arrows: { to: edge.direction === 1, enabled: edge.direction !== 0 },
                     label: edge.label, font: { align: edge.font.align }
                 });

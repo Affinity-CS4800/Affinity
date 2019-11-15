@@ -59,6 +59,7 @@ namespace Affinity.Controllers
                         First = int.Parse(key["from"].ToString()),
                         Second = int.Parse(key["to"].ToString()),
                         Direction = Convert.ToInt32(bool.Parse(key["isDirected"].ToString())),
+                        Color = ColorTranslator.FromHtml(key["color"].ToString()).ToArgb(),
                         GraphID = graphID
                     };
 

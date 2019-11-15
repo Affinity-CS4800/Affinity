@@ -769,7 +769,7 @@
                         VIS_NODES.update({ id: lastAction.id, label: lastAction.prevLabel, font: { color: lastAction.fontColor } });
                         break;
                     case ACTION_NODE_FONT_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, font: { color: lastAction.prevColor } });
+                        VIS_NODES.update({ id: lastAction.id, font: { color: lastAction.prevFontColor } });
                         break;
                     case ACTION_NODE_CHANGE_POS:
                         VIS_NODES.update({ id: lastAction.id, x: lastAction.prevX, y: lastAction.prevY });
@@ -843,8 +843,8 @@
                         renameNodeAction(lastAction.id, lastAction.fontColor, lastAction.prevLabel, lastAction.label);
                         break;
                     case ACTION_NODE_FONT_RECOLOR:
-                        VIS_NODES.update({ id: lastAction.id, font: { color: lastAction.color } });
-                        recolorNodeFontAction(lastAction.id, lastAction.prevColor, lastAction.color);
+                        VIS_NODES.update({ id: lastAction.id, font: { color: lastAction.fontColor } });
+                        recolorNodeFontAction(lastAction.id, lastAction.prevFontColor, lastAction.fontColor);
                         break;
                     case ACTION_NODE_CHANGE_POS:
                         VIS_NODES.update({ id: lastAction.id, x: lastAction.x, y: lastAction.y });
@@ -1321,31 +1321,55 @@
                     }
 
                     var editNodeIDS = NETWORK.getSelectedNodes();
+
+                    let isBatchAction = false;
+                    if (editNodeIDS.length > 1) {
+                        isBatchAction = true;
+                    }
+
+                    if (isBatchAction) {
+                        startBatchAction();
+                    }
+
                     editNodeIDS.forEach(id => {
                         var editNode = VIS_NODES.get(id);
 
                         if (editNode.font.color !== newFontColor) {
                             recolorNodeFontAction(editNode.id, editNode.font.color, newFontColor);
-                            clearRedoStack();
+                            if (isBatchAction) moveLastActionToBatch();
                             editNode.font.color = newFontColor;
                         }
 
                         VIS_NODES.update(editNode);
                     });
+
+                    clearRedoStack();
                 },
                 changeEdgeFontAlignment: function (newAlignment) {
                     var editEdgeIDS = NETWORK.getSelectedEdges();
+
+                    let isBatchAction = false;
+                    if (editEdgeIDS.length > 1) {
+                        isBatchAction = true;
+                    }
+
+                    if (isBatchAction) {
+                        startBatchAction();
+                    }
+
                     editEdgeIDS.forEach(id => {
                         var editEdge = VIS_EDGES.get(id);
 
                         if (editEdge.font.align != newAlignment) {
                             changeEdgeFontAlignmentAction(editEdge.id, editEdge.from, editEdge.to, editEdge.font.align, newAlignment);
-                            clearRedoStack();
+                            if (isBatchAction) moveLastActionToBatch();
                             editEdge.font.align = newAlignment;
                         }
 
                         VIS_EDGES.update(editEdge);
                     });
+
+                    clearRedoStack();
                 },
                 changeIfDirected: function (newState) {
                     var directed = false;
@@ -1353,17 +1377,29 @@
                         directed = true;
                     }
                     var editEdgeIDS = NETWORK.getSelectedEdges();
+
+                    let isBatchAction = false;
+                    if (editEdgeIDS.length > 1) {
+                        isBatchAction = true;
+                    }
+
+                    if (isBatchAction) {
+                        startBatchAction();
+                    }
+
                     editEdgeIDS.forEach(id => {
                         var editEdge = VIS_EDGES.get(id);
 
                         if (editEdge.arrows.to != directed) {
                             changeIfEdgeDirectedAction(editEdge.id, editEdge.from, editEdge.to, editEdge.arrows.to, directed);
-                            clearRedoStack();
+                            if (isBatchAction) moveLastActionToBatch();
                             editEdge.arrows.to = directed;
                         }
 
                         VIS_EDGES.update(editEdge);
                     });
+
+                    clearRedoStack();
                 },
                 pdf: function (event) {
 
@@ -1553,18 +1589,28 @@
             if (color != null) {
                 color = color.toHEXA().toString();
                 var editNodeIDS = NETWORK.getSelectedNodes();
+
+                let isBatchAction = false;
+                if (editNodeIDS.length > 1) {
+                    isBatchAction = true;
+                }
+
+                if (isBatchAction) {
+                    startBatchAction();
+                }
+
                 editNodeIDS.forEach(id => {
                     var editNode = VIS_NODES.get(id);
 
                     if (editNode.color !== color) {
                         recolorNodeAction(editNode.id, editNode.color, color);
-                        clearRedoStack();
+                        if (isBatchAction) moveLastActionToBatch();
                         editNode.color = color;
                     }
-
                     VIS_NODES.update(editNode);
                 });
 
+                clearRedoStack();
             }
         });
 
@@ -1572,48 +1618,77 @@
             pickr2.hide();
             if (color != null) {
                 color = color.toHEXA().toString();
-
                 var editEdgeIDS = NETWORK.getSelectedEdges();
+
+                let isBatchAction = false;
+                if (editEdgeIDS.length > 1) {
+                    isBatchAction = true;
+                }
+
+                if (isBatchAction) {
+                    startBatchAction();
+                }
+
                 editEdgeIDS.forEach(id => {
                     var editEdge = VIS_EDGES.get(id);
 
                     if (editEdge.color !== color) {
                         recolorEdgeAction(editEdge.id, editEdge.from, editEdge.to, editEdge.color, color);
-                        clearRedoStack();
+                        if (isBatchAction) moveLastActionToBatch();
                         editEdge.color = color;
                     }
-
                     VIS_EDGES.update(editEdge);
                 });
 
+                clearRedoStack();
             }
         });
 
         document.getElementById('node-name').addEventListener("keyup", function (event) {
             if (event.key == "Enter") {
                 var newLabel = document.getElementById('node-name').value;
-
                 var editNodeIDS = NETWORK.getSelectedNodes();
+
+                let isBatchAction = false;
+                if (editNodeIDS.length > 1) {
+                    isBatchAction = true;
+                }
+
+                if (isBatchAction) {
+                    startBatchAction();
+                }
+
                 editNodeIDS.forEach(id => {
                     var editNode = VIS_NODES.get(id);
 
                     if (editNode.label !== newLabel) {
                         editNode.font.color = document.querySelector('input[name="node-font-color"]:checked').value;
                         renameNodeAction(editNode.id, editNode.font.color, editNode.label, newLabel);
-                        clearRedoStack();
+                        if (isBatchAction) moveLastActionToBatch();
                         editNode.label = newLabel;
                     }
 
                     VIS_NODES.update(editNode);
                 });
+
+                clearRedoStack();
             }
         });
 
         document.getElementById('edge-value').addEventListener("keyup", function (event) {
             if (event.key == "Enter") {
                 var newLabel = document.getElementById('edge-value').value;
-
                 var editEdgeIDS = NETWORK.getSelectedEdges();
+
+                let isBatchAction = false;
+                if (editEdgeIDS.length > 1) {
+                    isBatchAction = true;
+                }
+
+                if (isBatchAction) {
+                    startBatchAction();
+                }
+
                 editEdgeIDS.forEach(id => {
                     var editEdge = VIS_EDGES.get(id);
 
@@ -1622,13 +1697,15 @@
                     if (editEdge.label !== newLabel) {
                         editEdge.font.align = document.querySelector('input[name="edge-font-alignment"]:checked').value;
                         renameEdgeAction(editEdge.id, editEdge.from, editEdge.to, editEdge.font.align, editEdge.label, newLabel);
-                        clearRedoStack();
+                        if (isBatchAction) moveLastActionToBatch();
                         editEdge.label = newLabel;
 
                     }
 
                     VIS_EDGES.update(editEdge);
                 });
+
+                clearRedoStack();
             }
         });
 
@@ -1644,13 +1721,25 @@
             var yDifference = properties.pointer.canvas.y - startY;
 
             var selectedNodes = NETWORK.getSelectedNodes();
+
+            let isBatchAction = false;
+            if (selectedNodes.length > 1) {
+                isBatchAction = true;
+            }
+
+            if (isBatchAction) {
+                startBatchAction();
+            }
+
             for (var i = 0; i < selectedNodes.length; i++) {
                 var nodeId = selectedNodes[i];
                 const node = VIS_NODES.get(nodeId);
                 repositionNodeAction(nodeId, node.x, node.y, (node.x + xDifference), (node.y + yDifference));
-                clearRedoStack();
+                if (isBatchAction) moveLastActionToBatch();
                 VIS_NODES.update({ id: nodeId, x: (node.x + xDifference), y: (node.y + yDifference) });
             }
+
+            clearRedoStack();
         });
 
         NETWORK.fit();

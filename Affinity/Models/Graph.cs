@@ -66,7 +66,7 @@ namespace Affinity.Models
 
         public const int DEFAULT_EDGE_COLOR = -16777216; //ARGB For BLACK
 
-        public const int MAX_GRAPHS = 5;
+        public const int MAX_GRAPHS = 10;
     }
 
     public class GraphIDName

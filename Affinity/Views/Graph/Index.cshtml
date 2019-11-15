@@ -775,8 +775,7 @@
                 }
             }
         }</script>
-    <script type="text/javascript">
-    let NETWORK;
+    <script type="text/javascript">let NETWORK;
         let VIS_NODES, VIS_EDGES;
         function getVisDataSet() {
 
@@ -792,7 +791,7 @@
 
             for (edge of EDGES) {
                 let nodeWeight;
-                if(edge.weight === 0) {
+                if (edge.weight === undefined || edge.weight === null) {
                     nodeWeight = "";
                 } else {
                     nodeWeight = edge.weight.toString();
@@ -819,6 +818,7 @@
                 user: false,
                 state: "draw",
                 nextNodeID: 0,
+                nextEdgeID: 0,
                 showNodeCustomization: true,
                 showEdgeCustomization: false,
                 currentNodes: [],
@@ -884,6 +884,8 @@
                             document.getElementById('node-name').focus();
                         },
                         addEdge: function (data, callback) {
+                            data.id = nextEdgeID;
+                            nextEdgeID++;
                             data.color = pickr2.getColor().toHEXA().toString();
                             if (data.from == data.to && this.state == "draw") {
                                 if (confirm("Do you want to connect the node to itself?")) {
@@ -956,6 +958,18 @@
                     }
                 });
 
+                $.ajax({
+                    type: 'GET',
+                    url: "/api/getStartingEdgeID/" + token,
+                    cache: false,
+                    async: false,
+                    success: function (data) {
+                        nextEdgeID = data;
+                    }
+                });
+
+                console.log(nextEdgeID);
+
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
                 NETWORK.addEdgeMode();
                 this.changeMode("draw");
@@ -1025,12 +1039,12 @@
                 changeMode: function (newMode) {
 
                     NETWORK.unselectAll();
-                    this.state = newMode; 
+                    this.state = newMode;
                     if (this.state == "select" || this.state == "selectMultiple") {
                         NETWORK.off('click');
                     }
 
-                    if (newMode == "draw") {                      
+                    if (newMode == "draw") {
                         this.showNodeCustomization = true;
                         this.showEdgeCustomization = true;
                         NETWORK.addEdgeMode();
@@ -1295,7 +1309,7 @@
                             this.removeEventListener("keyup", arguments.callee, false);
 
                             //changeGraphNameAction(graphName);
-                            
+
                             const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
 
                             if (COLLAPSED_SNAPSHOT.length > 0) {

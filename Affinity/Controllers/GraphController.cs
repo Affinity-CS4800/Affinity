@@ -113,7 +113,7 @@ namespace Affinity.Controllers
                 else if (value == "9")
                 {
                     Edge edge = await _affinityDbContext.Edges.Where(v => v.First == int.Parse(key["from"].ToString()) && v.GraphID == graphID && v.Second == int.Parse(key["to"].ToString())).FirstOrDefaultAsync();
-                    edge.Weight = int.Parse(key["label"].ToString());
+                    edge.Name = key["label"].ToString();
                     _affinityDbContext.Edges.Update(edge);
                 }
                 else if (value == "10")

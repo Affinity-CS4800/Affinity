@@ -53,8 +53,7 @@ namespace Affinity.Models
         public int Color { get; set; }
         public string FontAlignment { get; set; }
 
-        [Range(-1,2000)]
-        public int Weight { get; set; }
+        [StringLength(12)]
         public string Name { get; set; }
     }
 

@@ -352,7 +352,7 @@
                                 }
 
 
-                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, weight: value.Weight, font: { align: edgeFontAlignment } })
+                                EDGES.push({ id: value.DBID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, label: value.Name, font: { align: edgeFontAlignment } })
                             }
                         });
                     });
@@ -790,16 +790,10 @@
             }
 
             for (edge of EDGES) {
-                let nodeWeight;
-                if (edge.weight === undefined || edge.weight === null) {
-                    nodeWeight = "";
-                } else {
-                    nodeWeight = edge.weight.toString();
-                }
                 edges.push({
                     from: edge.first, to: edge.second, color: edge.color,
                     arrows: { to: edge.direction === 1, enabled: edge.direction !== 0 },
-                    label: nodeWeight, font: { align: edge.font.align }
+                    label: edge.label, font: { align: edge.font.align }
                 });
             }
 
@@ -971,6 +965,7 @@
                 console.log(nextEdgeID);
 
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
+
                 NETWORK.addEdgeMode();
                 this.changeMode("draw");
             },
@@ -1254,9 +1249,10 @@
                     let token = url[url.length - 1];
 
                     html2canvas(document.getElementsByTagName("canvas"), {
+                        background :'#FFFFFF',
                         onrendered: function (canvas) {
-                            var imgData = canvas.toDataURL('image/png');
-                            app.saveAs(imgData, token + '.png');
+                            var imgData = canvas.toDataURL('image/jpeg', 1.0);
+                            app.saveAs(imgData, token + '.jpg');
                         }
                     });
                 },

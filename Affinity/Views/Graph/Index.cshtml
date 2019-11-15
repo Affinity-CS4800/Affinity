@@ -225,7 +225,6 @@
             <div class="edit-group">
                 <button v-on:click="undo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18.885 3.515c-4.617-4.618-12.056-4.676-16.756-.195l-2.129-2.258v7.938h7.484l-2.066-2.191c2.82-2.706 7.297-2.676 10.073.1 4.341 4.341 1.737 12.291-5.491 12.291v4.8c3.708 0 6.614-1.244 8.885-3.515 4.686-4.686 4.686-12.284 0-16.97z" /></svg>Undo</button>
                 <button v-on:click="redo()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5.115 3.515c4.617-4.618 12.056-4.676 16.756-.195l2.129-2.258v7.938h-7.484l2.066-2.191c-2.82-2.706-7.297-2.676-10.073.1-4.341 4.341-1.737 12.291 5.491 12.291v4.8c-3.708 0-6.614-1.244-8.885-3.515-4.686-4.686-4.686-12.284 0-16.97z" /></svg>Redo</button>
-                <button v-show="(state =='draw') || ((state == 'select' || state == 'selectMultiple') && (showNodeCustomization || showEdgeCustomization))" v-on:click="deleteSelected()"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M5.662 23l-5.369-5.365c-.195-.195-.293-.45-.293-.707 0-.256.098-.512.293-.707l14.929-14.928c.195-.194.451-.293.707-.293.255 0 .512.099.707.293l7.071 7.073c.196.195.293.451.293.708 0 .256-.097.511-.293.707l-11.216 11.219h5.514v2h-12.343zm3.657-2l-5.486-5.486-1.419 1.414 4.076 4.072h2.829zm.456-11.429l-4.528 4.528 5.658 5.659 4.527-4.53-5.657-5.657z" /></svg> Delete</button>
             </div>
             <div class="export-group">
                 <button v-on:click="pdf()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z" /></svg>PDF</button>
@@ -248,6 +247,7 @@
                     Black Font
                 </label>
             </div>
+            <button v-show="(state =='draw') || ((state == 'select' || state == 'selectMultiple') && (showNodeCustomization || showEdgeCustomization))" v-on:click="deleteSelectedVertices()"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M5.662 23l-5.369-5.365c-.195-.195-.293-.45-.293-.707 0-.256.098-.512.293-.707l14.929-14.928c.195-.194.451-.293.707-.293.255 0 .512.099.707.293l7.071 7.073c.196.195.293.451.293.708 0 .256-.097.511-.293.707l-11.216 11.219h5.514v2h-12.343zm3.657-2l-5.486-5.486-1.419 1.414 4.076 4.072h2.829zm.456-11.429l-4.528 4.528 5.658 5.659 4.527-4.53-5.657-5.657z" /></svg> Delete</button>
         </div>
         <div class="customization-box" v-show="showEdgeCustomization">
             <h2 class="custom-title">{{ (state == "selectMultiple" ? "Edges" : "Edge") }}</h2>
@@ -276,6 +276,7 @@
                     Directed
                 </label>
             </div>
+            <button v-show="(state =='draw') || ((state == 'select' || state == 'selectMultiple') && (showNodeCustomization || showEdgeCustomization))" v-on:click="deleteSelectedEdges()"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M5.662 23l-5.369-5.365c-.195-.195-.293-.45-.293-.707 0-.256.098-.512.293-.707l14.929-14.928c.195-.194.451-.293.707-.293.255 0 .512.099.707.293l7.071 7.073c.196.195.293.451.293.708 0 .256-.097.511-.293.707l-11.216 11.219h5.514v2h-12.343zm3.657-2l-5.486-5.486-1.419 1.414 4.076 4.072h2.829zm.456-11.429l-4.528 4.528 5.658 5.659 4.527-4.53-5.657-5.657z" /></svg> Delete</button>
         </div>
     </div>
     <div class="status">
@@ -1112,14 +1113,11 @@
                 redo: function (event) {
                     redoLastAction(this.state);
                 },
-                deleteSelected: function (event) {
+                deleteSelectedVertices: function (event) {
                     const nodes_ = NETWORK.getSelectedNodes();
-                    let edges_ = NETWORK.getSelectedEdges();
 
                     let isBatchAction = false;
-                    if (nodes_.length > 1 || edges_.length > 1) {
-                        isBatchAction = true;
-                    } else if (nodes_.length > 0 && edges_.length > 0) {
+                    if (nodes_.length > 1) {
                         isBatchAction = true;
                     }
 
@@ -1134,8 +1132,24 @@
                         if (isBatchAction) moveLastActionToBatch();
                     }
 
-                    // Reselect edges, in case they were deleted by node deletion
-                    edges_ = NETWORK.getSelectedEdges();
+                    clearRedoStack();
+                    NETWORK.disableEditMode();
+
+                    this.currentNodes = [];
+                    this.currentEdges = [];
+                },
+                deleteSelectedEdges: function (event) {
+
+                    let edges_ = NETWORK.getSelectedEdges();
+
+                    let isBatchAction = false;
+                    if (edges_.length > 1) {
+                        isBatchAction = true;
+                    }
+
+                    if (isBatchAction) {
+                        startBatchAction();
+                    }
 
                     for (edge of edges_) {
                         NETWORK.manipulation.options.deleteEdge({
@@ -1147,7 +1161,6 @@
                     clearRedoStack();
                     NETWORK.disableEditMode();
 
-                    this.currentNodes = [];
                     this.currentEdges = [];
                 },
                 changeMode: function (newMode) {
@@ -1228,8 +1241,6 @@
 
                                 //Set the color to what the current node is!
                                 pickr2.setColor(updateEdge.color);
-
-                                console.log(updateEdge.color);
 
                                 //Init the Alignment
                                 //if (updateEdge.font.align === 'top') {

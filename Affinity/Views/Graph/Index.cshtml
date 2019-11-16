@@ -234,7 +234,7 @@
         </div>
         <div class="customization-box" v-show="showNodeCustomization">
             <h2 class="custom-title">{{ (state == "selectMultiple" ? "Vertices" : "Vertex") }}</h2>
-            <label class="custom-label"><input type="text" id="node-name" placeholder="Name" /> <span class="color-picker"></span> </label>
+            <label class="custom-label"><input type="text" id="node-name" placeholder="Name" maxlength="8" /> <span class="color-picker"></span> </label>
             <label class="custom-label"></label>
             <div class="node-font-colors state-switch">
                 <input type="radio" v-on:click="changeNodeFontColor('white')" name="node-font-color" value="white" id="white-node-font" checked />
@@ -251,7 +251,7 @@
         </div>
         <div class="customization-box" v-show="showEdgeCustomization">
             <h2 class="custom-title">{{ (state == "selectMultiple" ? "Edges" : "Edge") }}</h2>
-            <label class="custom-label"> <input type="text" id="edge-value" placeholder="Weight" /> <span class="color-picker2"></span></label>
+            <label class="custom-label"> <input type="text" id="edge-value" placeholder="Weight" maxlength="12"/> <span class="color-picker2"></span></label>
             <div class="edge-font-alignments state-switch states-3">
                 <input type="radio" v-on:click="changeEdgeFontAlignment('top')" name="edge-font-alignment" value="top" id="align-top" checked />
                 <label for="align-top">
@@ -1215,7 +1215,7 @@
 
                                 document.getElementById('node-name').value = updateNode.label;
 
-                                document.getElementById('node-name').focus();
+                                setTimeout("document.getElementById('node-name').focus();", 100);
 
                                 //if (updateNode.font.color === '#FFFFFF') {
                                 //    document.getElementById('node-font-color').value = "#FFFFFF";
@@ -1239,7 +1239,7 @@
                                     document.getElementById('edge-value').value = "";
                                 }
 
-                                document.getElementById('edge-value').focus();
+                                setTimeout("document.getElementById('edge-value').focus();", 100);
 
                                 //Set the color to what the current node is!
                                 pickr2.setColor(updateEdge.color);
@@ -1696,6 +1696,10 @@
                     var editEdge = VIS_EDGES.get(id);
 
                     var newLabel = document.getElementById('edge-value').value;
+
+                    if (newLabel == "") {
+                        newLabel = " ";
+                    }
 
                     if (editEdge.label !== newLabel) {
                         editEdge.font.align = document.querySelector('input[name="edge-font-alignment"]:checked').value;

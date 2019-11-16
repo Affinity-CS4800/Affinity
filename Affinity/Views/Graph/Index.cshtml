@@ -690,26 +690,6 @@
             });
         }
 
-        function convertHexToDecimal(color) {
-            //#XXXXXX (No alpha means = 0xFF => 255 full alpha)
-            console.log("Color : " + color);
-            var hexString = "";
-            if (color.length === 7) {
-                hexString = "FF" + color.slice(1, color.length);
-            } else { //#XXXXXXXX (Has an alpha value that is between 0-255)
-                hexString = color[7] + color[8] + color.slice(1, 7);
-            }
-            //return the number as a signed integer
-            return parseInt(hexString, 16) >> 0;
-        }
-
-        function convertDecimalToHex(value) {
-            var argb = (value >>> 0).toString(16);
-            var rgba = '#' + argb.slice(2, 9) + argb[0] + argb[1];
-
-            return rgba;
-        }
-
         function getCollapsedSnapshot() {
             const EXPANDED_SNAPSHOT = [];
             const REDUCED_SNAPSHOT = [];
@@ -722,12 +702,6 @@
                         EXPANDED_SNAPSHOT.push(batchedAction);
                     }
                 } else {
-                    switch (action.action) {
-                        case ACTION_NODE_RECOLOR:
-                        case ACTION_EDGE_RECOLOR:
-                            action.color = convertHexToDecimal(action.color);
-                            break;
-                    }
                     EXPANDED_SNAPSHOT.push(action);
                 }
             }

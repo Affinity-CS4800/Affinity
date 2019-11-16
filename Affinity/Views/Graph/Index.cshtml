@@ -362,6 +362,7 @@
                     });
                 }
             });
+
             return getVisDataSet();
         }
     </script>
@@ -400,7 +401,7 @@
                 });
 
                 if (numberOfConnectingEdges == 1) {
-                    VIS_EDGES.update({ id: edgesConnectingFromAndTo[0].id, smooth: false });
+                    VIS_EDGES.update({ id: edgesConnectingFromAndTo[0], smooth: false });
                 }
                 else if (numberOfConnectingEdges > 1) {
                     var nextRoundness = 0;
@@ -1212,13 +1213,7 @@
 
                                 var updateNode = VIS_NODES.get(node)[0];
 
-                                if (updateNode.label != " ") {
-                                    document.getElementById('node-name').value = updateNode.label;
-                                }
-                                else {
-                                    document.getElementById('node-name').value = "";
-                                }
-                                
+                                document.getElementById('node-name').value = updateNode.label;
 
                                 document.getElementById('node-name').focus();
 
@@ -1237,7 +1232,12 @@
                                 var updateEdge = VIS_EDGES.get(edge)[0];
 
                                 //Init the label editing
-                                document.getElementById('edge-value').value = updateEdge.label;
+                                if (updateEdge.label != " ") {
+                                    document.getElementById('edge-value').value = updateEdge.label;
+                                }
+                                else {
+                                    document.getElementById('edge-value').value = "";
+                                }
 
                                 document.getElementById('edge-value').focus();
 
@@ -1644,6 +1644,7 @@
 
                 clearRedoStack();
             }
+
         });
 
         document.getElementById('node-name').addEventListener("keyup", function (event) {

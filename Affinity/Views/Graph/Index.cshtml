@@ -126,33 +126,34 @@
             color: #555;
         }
 
-        .state-switch > input {
-            display: none;
+            .state-switch > input {
+                display: none;
+            }
+
+                .state-switch > input:checked + label {
+                    color: #efefef;
+                    font-weight: bold;
+                }
+
+                .state-switch > input:nth-of-type(1):checked ~ label:last-of-type:before {
+                    transform: translateX(calc(0% + 0px));
+                }
+
+                .state-switch > input:nth-of-type(2):checked ~ label:last-of-type:before {
+                    transform: translateX(calc(100% + 0px));
+                }
+
+        .states-3 > input:nth-of-type(1):checked ~ label:last-of-type:before {
+            transform: translateX(calc(0% + 0px));
         }
 
-            .state-switch > input:checked + label {
-                color: #efefef;
-                font-weight: bold;
-            }
+        .states-3 > input:nth-of-type(2):checked ~ label:last-of-type:before {
+            transform: translateX(calc(100% + 0px));
+        }
 
-            .state-switch > input:nth-of-type(1):checked ~ label:last-of-type:before {
-                transform: translateX(calc(0% + 0px));
-            }
-
-            .state-switch > input:nth-of-type(2):checked ~ label:last-of-type:before {
-                transform: translateX(calc(100% + 0px));
-            }
-
-            .states-3 > input:nth-of-type(1):checked ~ label:last-of-type:before {
-                transform: translateX(calc(0% + 0px));
-            }
-
-            .states-3 > input:nth-of-type(2):checked ~ label:last-of-type:before {
-                transform: translateX(calc(100% + 0px));
-            }
-            .states-3 > input:nth-of-type(3):checked ~ label:last-of-type:before {
-                transform: translateX(calc(200% + 0px));
-            }
+        .states-3 > input:nth-of-type(3):checked ~ label:last-of-type:before {
+            transform: translateX(calc(200% + 0px));
+        }
 
 
         .state-switch label {
@@ -179,9 +180,9 @@
                 transform: translateX(0);
             }
 
-            .states-3 label:last-of-type:before {
-                max-width: calc(33.33333% - 0px);
-            }
+        .states-3 label:last-of-type:before {
+            max-width: calc(33.33333% - 0px);
+        }
 
 
         .state-switch label {
@@ -198,14 +199,14 @@
                 border-right: 1px solid #fff;
             }
 
-            .edit-group button {
-                display: inline-block;
-                max-width: 33.3333%;
-            }
+        .edit-group button {
+            display: inline-block;
+            max-width: 33.3333%;
+        }
 
-            .edit-group svg {
-               font-size: .85rem;
-            }
+        .edit-group svg {
+            font-size: .85rem;
+        }
     </style>
 }
 
@@ -251,7 +252,7 @@
         </div>
         <div class="customization-box" v-show="showEdgeCustomization">
             <h2 class="custom-title">{{ (state == "selectMultiple" ? "Edges" : "Edge") }}</h2>
-            <label class="custom-label"> <input type="text" id="edge-value" placeholder="Weight" maxlength="12"/> <span class="color-picker2"></span></label>
+            <label class="custom-label"> <input type="text" id="edge-value" placeholder="Weight" maxlength="12" /> <span class="color-picker2"></span></label>
             <div class="edge-font-alignments state-switch states-3">
                 <input type="radio" v-on:click="changeEdgeFontAlignment('top')" name="edge-font-alignment" value="top" id="align-top" checked />
                 <label for="align-top">
@@ -285,7 +286,14 @@
         </h2>
         <h2 v-else>You're in select {{state=="select" ? "" : "multiple"}} mode.</h2>
     </div>
+
+    <figure id="edge-error-message" v-show="showErrorMessage">
+        <figcaption>Error</figcaption>
+        <p>Can't connect more than 5 edges between two nodes.</p>
+    </figure>
+
     <div id="mynetwork"></div>
+
 </div>
 
 <div id="save-graph-name-prompt" class="modal" v-bind:style="{ 'display': displaySavePrompt }">
@@ -355,7 +363,7 @@
                                 if (value.Name == null || value.Name == "") {
                                     value.Name = " ";
                                 }
-                                
+
                                 EDGES.push({ id: value.ID, first: value.First, second: value.Second, direction: value.Direction, color: rgba, label: value.Name, font: { align: edgeFontAlignment } })
                             }
                         });
@@ -443,7 +451,7 @@
                         if (numberOfConnectingEdges % 2 == 0 && nextRoundness == 0) {
                             nextRoundness -= roundnessStepSize;
                         }
-                    
+
                     });
                 }
             }
@@ -674,7 +682,7 @@
                     EXPANDED_SNAPSHOT.push(action);
                 }
             }
-            
+
             // Build final state tree
             for (action of EXPANDED_SNAPSHOT) {
                 if (action.hasOwnProperty('id')) {
@@ -723,7 +731,7 @@
                     REDUCED_SNAPSHOT.push(stateTree[id][actionType]);
                 }
             }
-            
+
             return REDUCED_SNAPSHOT;
         }
 
@@ -815,7 +823,7 @@
                     case ACTION_ADD_EDGE:
                         VIS_EDGES.add({ id: lastAction.id, label: " ", color: lastAction.color, arrows: { to: lastAction.isDirected }, from: lastAction.from, to: lastAction.to });
                         addEdgeAction(lastAction.id, lastAction.color, lastAction.isDirected, lastAction.from, lastAction.to);
-                        updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);   
+                        updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);
                         break;
                     case ACTION_DELETE_EDGE:
                         var fromVertex = VIS_EDGES.get(lastAction.edge.id).from;
@@ -914,12 +922,14 @@
                 nextNodeID: 0,
                 nextEdgeID: 0,
                 showNodeCustomization: true,
-                showEdgeCustomization: false,
+                showEdgeCustomization: true,
+                showErrorMessage: false,
                 currentNodes: [],
                 currentEdges: [],
                 displaySavePrompt: "none"
             },
             mounted: function () {
+                var vue = this;
                 const options = {
                     autoResize: true,
                     height: "100%",
@@ -950,9 +960,9 @@
                     },
                     physics: {
                         barnesHut: {
-                          gravitationalConstant: 0,
-                          centralGravity: 0,
-                          springConstant: 0
+                            gravitationalConstant: 0,
+                            centralGravity: 0,
+                            springConstant: 0
                         }
                     },
                     edges: {
@@ -1005,21 +1015,29 @@
                                 }
                             });
 
-                            addEdgeAction(data.id, data.color, directed, data.from, data.to);
-                            clearRedoStack();
+                            if (numberOfConnectingEdges <= 5) {
 
-                            VIS_EDGES.update({ id: data.id, label: " ", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: false, from: data.from, to: data.to });
+                                addEdgeAction(data.id, data.color, directed, data.from, data.to);
+                                clearRedoStack();
 
-                            if (numberOfConnectingEdges > 1) {
-                                updateEdgeCurves(data.from, data.to);
+                                VIS_EDGES.update({ id: data.id, label: " ", color: data.color, font: { color: '#000000' }, arrows: { to: directed }, smooth: false, from: data.from, to: data.to });
+
+                                if (numberOfConnectingEdges > 1) {
+                                    updateEdgeCurves(data.from, data.to);
+                                }
+
+                                var addedEdgeID = [data.id];
+                                NETWORK.selectEdges(addedEdgeID);
+                                document.getElementById('edge-value').value = "";
+                                document.getElementById('edge-value').focus();
+
+                            }
+                            else {
+                                vue.showErrorMessage = true;
+                                setTimeout(function (vue) { vue.showErrorMessage = false; }, 2500, vue);
                             }
 
                             NETWORK.addEdgeMode();
-
-                            var addedEdgeID = [data.id];
-                            NETWORK.selectEdges(addedEdgeID);
-                            document.getElementById('edge-value').value = "";
-                            document.getElementById('edge-value').focus();
                         },
                         deleteNode: function (data, callback) {
                             const nodeId = data.nodes[0];
@@ -1088,7 +1106,7 @@
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
 
                 curveAllEdges();
-              
+
                 NETWORK.addEdgeMode();
                 this.changeMode("draw");
             },

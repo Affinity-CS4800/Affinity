@@ -967,7 +967,7 @@
                         addNodeAction(lastAction.id, lastAction.color, lastAction.x, lastAction.y);
                         break;
                     case ACTION_ADD_EDGE:
-                        VIS_EDGES.add({ id: lastAction.id, label: " ", color: lastAction.color, arrows: { to: lastAction.isDirected }, from: lastAction.from, to: lastAction.to });
+                        VIS_EDGES.add({ id: lastAction.id, label: " ", color: lastAction.color, font: {}, arrows: { to: lastAction.isDirected }, from: lastAction.from, to: lastAction.to });
                         addEdgeAction(lastAction.id, lastAction.color, lastAction.isDirected, lastAction.from, lastAction.to);
                         updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);
                         break;

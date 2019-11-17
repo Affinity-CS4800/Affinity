@@ -132,10 +132,20 @@ header {
 
     .cta {
         clear: both;
+        position: relative;
         background: transparent;
-        background-size: cover;
-        background-position: right;
         padding: 8rem 0 0 4rem;
+    }
+    .cta-bg {
+        position: absolute;
+        top: 5rem;
+        overflow:hidden;
+        left: 45vw;
+        background: url("../img/bg.JPG");
+        background-size: cover;
+        width: 600px;
+        height: 400px;
+        background-position: left;
     }
 
     .cta-callout {
@@ -181,19 +191,21 @@ header {
 
     .feature-visual {
         display: inline-block;
-        width: 60%;
+        width: 50%;
+        padding-left: 5rem;
         vertical-align: top;
     }
 
     .feature-text {
         display: inline-block;
-        width: 40%;
+        width: 50%;
         padding-top: 2rem;
         vertical-align: middle;
     }
 
     .feature:nth-child(odd) .feature-visual {
         float: right;
+        padding-left: 0;
     }
 
     .feature:nth-child(odd) .feature-image {
@@ -205,9 +217,13 @@ header {
         max-width: 40ch;
     }
 
+    .feature:nth-child(odd) .feature-text {
+        padding-left: 5rem;
+    }
+
     .feature:nth-child(odd) .feature-description {
         padding-left: 5vw;
-        max-width: 40ch;
+        max-width: 50ch;
     }
 
     .clearfix:after {
@@ -219,7 +235,7 @@ header {
     }
 
     .feature-image {
-        width: 70%;
+        width: 60%;
         margin: 0 0 0 5vw;
         height: auto;
     }
@@ -230,7 +246,7 @@ header {
     }
 
     .feature-description {
-        max-width: 35ch;
+        max-width: 50ch;
         font-size: 1.15rem;
     }
 

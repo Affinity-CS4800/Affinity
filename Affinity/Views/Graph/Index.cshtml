@@ -899,8 +899,10 @@
                         VIS_NODES.remove(lastAction.id);
                         break;
                     case ACTION_ADD_EDGE:
-                        updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);
+                        var from = VIS_EDGES.get(lastAction.id).from;
+                        var to = VIS_EDGES.get(lastAction.id).to;
                         VIS_EDGES.remove(lastAction.id);
+                        updateEdgeCurves(from, to);
                         break;
                     case ACTION_DELETE_EDGE:
                         VIS_EDGES.add(lastAction.edge);
@@ -970,11 +972,11 @@
                         updateEdgeCurves(VIS_EDGES.get(lastAction.id).from, VIS_EDGES.get(lastAction.id).to);
                         break;
                     case ACTION_DELETE_EDGE:
-                        var fromVertex = VIS_EDGES.get(lastAction.edge.id).from;
-                        var toVertex = VIS_EDGES.get(lastAction.edge.id).to;
+                        var from = VIS_EDGES.get(lastAction.edge.id).from;
+                        var to = VIS_EDGES.get(lastAction.edge.id).to;
                         VIS_EDGES.remove(lastAction.edge.id);
                         deleteEdgeAction(lastAction.edge);
-                        updateEdgeCurves(fromVertex, toVertex);
+                        updateEdgeCurves(from, to);
                         break;
                     case ACTION_DELETE_VERTEX:
                         VIS_NODES.remove(lastAction.node.id);
@@ -1130,22 +1132,6 @@
                             document.getElementById('node-name').focus();
                         },
                         addEdge: function (data, callback) {
-                            data.id = nextEdgeID;
-                            nextEdgeID++;
-                            data.color = pickr2.getColor().toHEXA().toString();
-                            if (data.from == data.to && this.state == "draw") {
-                                if (confirm("Do you want to connect the node to itself?")) {
-                                    callback(data);
-                                }
-                            }
-                            else {
-                                callback(data);
-                            }
-
-                            var directed = false;
-                            if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
-                                directed = true;
-                            }
 
                             var numberOfConnectingEdges = 1;
 
@@ -1161,6 +1147,23 @@
                             });
 
                             if (numberOfConnectingEdges <= 5) {
+
+                                data.id = nextEdgeID;
+                                nextEdgeID++;
+                                data.color = pickr2.getColor().toHEXA().toString();
+                                if (data.from == data.to && vue.state == "draw") {
+                                    if (confirm("Do you want to connect the node to itself?")) {
+                                        callback(data);
+                                    }
+                                }
+                                else {
+                                    callback(data);
+                                }
+
+                                var directed = false;
+                                if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
+                                    directed = true;
+                                }
 
                                 addEdgeAction(data.id, data.color, directed, data.from, data.to);
                                 clearRedoStack();

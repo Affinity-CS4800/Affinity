@@ -304,6 +304,17 @@ namespace Affinity.Controllers
             return 0;
         }
 
+        [Route("/api/getGraphName/{token:length(8)}")]
+        public async Task<string> GetGraphName(string token)
+        {
+            //Get the current Firebase token and we know that they are logged in so there has to be a token for us to read
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+
+            string graphName = await _affinityDbContext.Users.AsNoTracking().Where(user => user.GraphID == token && user.UID == userToken.Uid).Select(name => name.Name).FirstOrDefaultAsync();
+
+            return graphName;
+        }
+
 
         [Route("/api/testaddtodb")]
         public void TestAddToDB()

@@ -38,23 +38,30 @@
                 filter: grayscale(0%);
                 transform: translateY(-2px);
             }
+
+            .cta-action {
+                display: block;
+                max-width: 30ch;
+                margin: 0 auto 2rem auto;
+            }
     </style>
 
 }
 
-<section class="graphs">
-    @foreach (var graph in Model)
-    {<a class="graphLink" href="graph/@graph.GraphID">
-        @if(@graph.Name == null)
-        {
-            @graph.GraphID;
-        }
-        else
-        {
-            @graph.Name;
-        }
-    </a>}
-</section>
+    <section class="graphs">
+        <a class="cta-action" href="/graph">Create new graph</a>
+        @foreach (var graph in Model)
+        {<a class="graphLink" href="graph/@graph.GraphID">
+                @if (@graph.Name == null)
+                {
+                    @graph.GraphID;
+                }
+                else
+                {
+                    @graph.Name;
+                }
+            </a>}
+    </section>
 
 
 @section scripts {

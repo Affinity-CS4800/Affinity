@@ -1314,9 +1314,15 @@
             },
             methods: {
                 undo: function (event) {
+                    NETWORK.unselectAll();
+                    this.currentNodes = [];
+                    this.currentEdges = [];
                     undoLastAction(this.state);
                 },
                 redo: function (event) {
+                    NETWORK.unselectAll();
+                    this.currentNodes = [];
+                    this.currentEdges = [];
                     redoLastAction(this.state);
                 },
                 deleteSelectedVertices: function (event) {

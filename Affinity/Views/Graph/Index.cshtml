@@ -1165,31 +1165,31 @@
                         addEdge: function (data, callback) {
 
                             var numberOfConnectingEdges = 1;
+                            var multipleLoops = false;
 
                             var fromEdges = NETWORK.getConnectedEdges(data.from);
                             fromEdges.forEach(id => {
                                 var edge = VIS_EDGES.get(id);
+
                                 if (id != data.id && edge.to == data.to) {
                                     numberOfConnectingEdges++;
                                 }
                                 else if (edge.to == data.from && edge.from == data.to) {
                                     numberOfConnectingEdges++;
                                 }
+
+                                if (id != data.id && data.to == data.from && edge.to == edge.from) {
+                                    multipleLoops = true;
+                                }
                             });
 
-                            if (numberOfConnectingEdges <= 5) {
+                            if (numberOfConnectingEdges <= 5 && !multipleLoops) {
 
                                 data.id = nextEdgeID;
                                 nextEdgeID++;
                                 data.color = pickr2.getColor().toHEXA().toString();
-                                if (data.from == data.to && vue.state == "draw") {
-                                    if (confirm("Do you want to connect the node to itself?")) {
-                                        callback(data);
-                                    }
-                                }
-                                else {
-                                    callback(data);
-                                }
+
+                                callback(data);
 
                                 var directed = false;
                                 if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
@@ -1211,7 +1211,7 @@
                                 document.getElementById('edge-value').focus();
 
                             }
-                            else {
+                            else if (numberOfConnectingEdges > 5){
                                 vue.showErrorMessage = true;
                                 setTimeout(function (vue) { vue.showErrorMessage = false; }, 2500, vue);
                             }

@@ -223,7 +223,7 @@
 
         .edit-group {
             position: absolute;
-            top: -.5rem;
+            top: -2rem;
             left: -12rem;
         }
 
@@ -1129,7 +1129,7 @@
                 displayLogin: "none",
                 firebaseUI: null,
                 userAttemptedLogin: false,
-                graphName: "Graph Name Here"
+                graphName: "New Graph"
             },
             mounted: function () {
                 var vue = this;
@@ -1319,6 +1319,7 @@
             },
             created: function () {
                 var vue = this;
+                changeGraphNameAction("New Graph");
                 // When user logs in, store it in this Vue app's data.
                 // Add cookie storing user token.
                 firebase.auth().onAuthStateChanged(user => {
@@ -1327,6 +1328,20 @@
                         user.getIdToken().then(function (idToken) {
                             document.cookie = "aff_t=" + idToken + "; path=/;";
                         });
+                        let url = window.location.pathname;
+                        url = url.split('/');
+                        let token = url[url.length - 1];
+                        $.ajax({
+                            type: "GET",
+                            url: "/api/getGraphName/" + token,
+                            cache: false,
+                            async: false,
+                            success: function (data) {
+                                vue.graphName = data;
+                                SNAPSHOT[CURRENT_SNAPSHOT] = [];
+                            }
+                        });
+
                         vue.displayLogin = "none";
                         if (vue.userAttemptedLogin) {
                             setTimeout(function (vue) { vue.save(); }, 1000, vue);
@@ -1338,6 +1353,7 @@
                         document.cookie = "aff_t=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                         vue.renderUI();
                     }
+
                 });
             },
             methods: {

@@ -988,7 +988,7 @@
                         SNAPSHOT[CURRENT_SNAPSHOT].push(lastAction);
                         break;
                     case ACTION_ADD_VERTEX:
-                        VIS_NODES.add({ id: lastAction.id, label: "", color: lastAction.color, x: lastAction.x, y: lastAction.y });
+                        VIS_NODES.add({ id: lastAction.id, label: "", color: lastAction.color, font: {}, x: lastAction.x, y: lastAction.y });
                         addNodeAction(lastAction.id, lastAction.color, lastAction.x, lastAction.y);
                         break;
                     case ACTION_ADD_EDGE:
@@ -1141,7 +1141,10 @@
                         }
                     },
                     edges: {
-                        smooth: false
+                        smooth: false,
+                        color: {
+                            inherit: false
+                        }
                     },
                     manipulation: {
                         enabled: true,
@@ -1416,12 +1419,14 @@
                                 document.getElementById('node-name').value = updateNode.label;
 
                                 setTimeout("document.getElementById('node-name').focus();", 100);
+                                setTimeout("document.getElementById('node-name').setSelectionRange(8, 8);", 100);
 
-                                //if (updateNode.font.color === '#FFFFFF') {
-                                //    document.getElementById('node-font-color').value = "#FFFFFF";
-                                //} else {
-                                //    document.getElementById('node-font-color').value = "#000000";
-                                //}
+                                if (updateNode.font.color == "#000000") {
+                                    document.getElementById('black-node-font').checked = true;
+                                }
+                                else {
+                                    document.getElementById('white-node-font').checked = true;
+                                }
 
                                 pickr.setColor(updateNode.color);
 
@@ -1440,18 +1445,27 @@
                                 }
 
                                 setTimeout("document.getElementById('edge-value').focus();", 100);
+                                setTimeout("document.getElementById('edge-value').setSelectionRange(12, 12);", 100);
 
                                 //Set the color to what the current node is!
                                 pickr2.setColor(updateEdge.color);
 
                                 //Init the Alignment
-                                //if (updateEdge.font.align === 'top') {
-                                //    document.getElementById('edge-font-align').value = "top";
-                                //} else if (updateEdge.font.align === 'middle') {
-                                //    document.getElementById('edge-font-align').value = "middle";
-                                //} else {
-                                //    document.getElementById('edge-font-align').value = "bottom";
-                                //}
+                                if (updateEdge.font.align === 'top') {
+                                    document.getElementById('align-top').checked = true;
+                                } else if (updateEdge.font.align === 'middle') {
+                                    document.getElementById('align-middle').checked = true;
+                                } else {
+                                    document.getElementById('align-bottom').checked = true;
+                                }
+
+                                if (updateEdge.arrows.to == true) {
+                                    document.getElementById('directed').checked = true;
+
+                                }
+                                else {
+                                    document.getElementById('undirected').checked = true;
+                                }
                             }
                         });
                     }
@@ -1460,8 +1474,16 @@
                         NETWORK.unselectAll();
                         this.currentNodes = NETWORK.getSelectedNodes();
                         this.currentEdges = NETWORK.getSelectedEdges();
-                        this.showNodeCustomization = true; // temporary
-                        this.showEdgeCustomization = true; // temporary
+                        this.showNodeCustomization = true; 
+                        this.showEdgeCustomization = true; 
+
+                        document.getElementById('node-name').value = "";
+                        pickr.setColor(null);
+                        document.getElementById('white-node-font').checked = true;
+                        document.getElementById('edge-value').value = "";
+                        pickr2.setColor(null);
+                        document.getElementById('align-top').checked = true;
+                        document.getElementById('undirected').checked = true;
 
                         var vue = this;
                         NETWORK.on('click', function () {
@@ -1469,6 +1491,14 @@
                                 NETWORK.unselectAll();
                                 vue.currentNodes = [];
                                 vue.currentEdges = [];
+
+                                document.getElementById('node-name').value = "";
+                                pickr.setColor(null);
+                                document.getElementById('white-node-font').checked = true;
+                                document.getElementById('edge-value').value = "";
+                                pickr2.setColor(null);
+                                document.getElementById('align-top').checked = true;
+                                document.getElementById('undirected').checked = true;
                             }
                             else if (NETWORK.getSelectedNodes().length != 0) {
                                 selectedNode = NETWORK.getSelectedNodes()[0];
@@ -1478,6 +1508,10 @@
                                 }
                                 else {
                                     vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                    document.getElementById('node-name').value = "";
+                                    setTimeout("document.getElementById('node-name').focus();", 100);
+                                    pickr.setColor(null);
+                                    document.getElementById('white-node-font').checked = true;
                                 }
                                 NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                             }
@@ -1489,6 +1523,11 @@
                                 }
                                 else {
                                     vue.currentEdges.push(String(NETWORK.getSelectedEdges()));
+                                    document.getElementById('edge-value').value = "";
+                                    setTimeout("document.getElementById('edge-value').focus();", 100);
+                                    pickr2.setColor(null);
+                                    document.getElementById('align-top').checked = true;
+                                    document.getElementById('undirected').checked = true;
                                 }
                                 NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                             }
@@ -1536,7 +1575,7 @@
                     editNodeIDS.forEach(id => {
                         var editNode = VIS_NODES.get(id);
 
-                        if (editNode.font.color !== newFontColor) {
+                        if (editNode.font.color !== newFontColor && editNode.label != "") {
                             recolorNodeFontAction(editNode.id, editNode.font.color, newFontColor);
                             if (isBatchAction) moveLastActionToBatch();
                             editNode.font.color = newFontColor;
@@ -1562,7 +1601,7 @@
                     editEdgeIDS.forEach(id => {
                         var editEdge = VIS_EDGES.get(id);
 
-                        if (editEdge.font.align != newAlignment) {
+                        if (editEdge.font.align != newAlignment && editEdge.label != " ") {
                             changeEdgeFontAlignmentAction(editEdge.id, editEdge.from, editEdge.to, editEdge.font.align, newAlignment);
                             if (isBatchAction) moveLastActionToBatch();
                             editEdge.font.align = newAlignment;
@@ -1927,6 +1966,15 @@
             }
 
         });
+
+        pickr.on('change', (color, instance) => {
+            pickr.applyColor(true);
+        });
+
+        pickr2.on('change', (color, instance) => {
+            pickr2.applyColor(true);
+        });
+
 
         document.getElementById('node-name').addEventListener("keyup", function (event) {
             if (event.key == "Enter") {

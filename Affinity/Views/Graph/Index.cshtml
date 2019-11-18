@@ -1099,7 +1099,9 @@
                 currentNodes: [],
                 currentEdges: [],
                 displaySavePrompt: "none",
-                displayLogin: "none"
+                displayLogin: "none",
+                firebaseUI: null,
+                userAttemptedLogin: false
             },
             mounted: function () {
                 var vue = this;
@@ -1294,12 +1296,16 @@
                         user.getIdToken().then(function (idToken) {
                             document.cookie = "aff_t=" + idToken + "; path=/;";
                         });
+                        vue.displayLogin = "none";
+                        if (vue.userAttemptedLogin) {
+                            setTimeout(function (vue) { vue.save(); }, 1000, vue);
+                        }
                     }
                     // Reset user
                     else {
                         vue.user = user;
-                        // document.cookie = "aff_t=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                         document.cookie = "aff_t=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                        vue.renderUI();
                     }
                 });
             },
@@ -1656,7 +1662,7 @@
                             vue.user = false;
                             // Successfully signed out. This cookie will be set at a early time to expire and delete
                             // ensuring the user is correctly signed out
-                           // deleteAllCookies();
+                            // deleteAllCookies();
                         }).catch(function (error) {
                             // An error happened.
                         });
@@ -1673,55 +1679,62 @@
                         closeButton.onclick = function () {
                             vue.displayLogin = "none";
                         }
+                        this.userAttemptedLogin = true;
                     }
-                    this.displaySavePrompt = "block";
-                    document.getElementById('graph-name').value = "";
-                    setTimeout("document.getElementById('graph-name').focus();", 100);
 
-                    var vue = this;
-                    document.getElementById('graph-name').addEventListener("keyup", function (event) {
-                        if (event.key == "Enter") {
-                            var graphName = document.getElementById('graph-name').value;
-                            vue.displaySavePrompt = "none";
-                            this.removeEventListener("keyup", arguments.callee, false);
+                    if (document.cookie != "") {
+                        this.displayLogin = "none";
+                        this.displaySavePrompt = "block";
+                        document.getElementById('graph-name').value = "";
+                        setTimeout("document.getElementById('graph-name').focus();", 100);
 
-                            const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
+                        var vue = this;
+                        document.getElementById('graph-name').addEventListener("keyup", function (event) {
+                            if (event.key == "Enter") {
+                                var graphName = document.getElementById('graph-name').value;
+                                vue.displaySavePrompt = "none";
+                                this.removeEventListener("keyup", arguments.callee, false);
 
-                            changeGraphNameAction(graphName);
-                            COLLAPSED_SNAPSHOT.push(SNAPSHOT[CURRENT_SNAPSHOT].pop());
+                                const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
 
-                            if (COLLAPSED_SNAPSHOT.length > 0) {
+                                changeGraphNameAction(graphName);
+                                COLLAPSED_SNAPSHOT.push(SNAPSHOT[CURRENT_SNAPSHOT].pop());
 
-                                var url = window.location.pathname;
-                                url = url.split('/');
-                                var token = url[url.length - 1];
-                                $.ajax({
-                                    type: 'POST',
-                                    url: '/api/saveToDB/' + token,
-                                    contentType: "application/json",
-                                    data: JSON.stringify(COLLAPSED_SNAPSHOT),
-                                    headers: {
-                                        RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                                    },
-                                    success: function () {
-                                        SNAPSHOT[CURRENT_SNAPSHOT] = [];
-                                        vue.showSaveMessage = true;
-                                        setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
-                                    },
-                                    error: function (xhr, textStatus, errorThrown) {
-                                        alert(errorThrown);
-                                    }
-                                });
-                            } else {
-                                alert('Saved.');
+                                if (COLLAPSED_SNAPSHOT.length > 0) {
+
+                                    var url = window.location.pathname;
+                                    url = url.split('/');
+                                    var token = url[url.length - 1];
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: '/api/saveToDB/' + token,
+                                        contentType: "application/json",
+                                        data: JSON.stringify(COLLAPSED_SNAPSHOT),
+                                        headers: {
+                                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                        },
+                                        success: function () {
+                                            SNAPSHOT[CURRENT_SNAPSHOT] = [];
+                                            vue.showSaveMessage = true;
+                                            setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
+                                        },
+                                        error: function (xhr, textStatus, errorThrown) {
+                                            alert(errorThrown);
+                                        }
+                                    });
+                                } else {
+                                    alert('Saved.');
+                                }
+
                             }
+                        });
+                    }
 
-                        }
-                    });
                 },
                 initializeUI: function () {
-                    // Initialize the FirebaseUI Widget using Firebase.
-                    var ui = new firebaseui.auth.AuthUI(firebase.auth());
+                    this.firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
+                },
+                renderUI: function () {
                     var uiConfig = {
                         callbacks: {
                             signInSuccessWithAuthResult: function (authResult, redirectUrl) {
@@ -1777,10 +1790,9 @@
                     };
 
                     // The start method will wait until the DOM is loaded.
-                    ui.start('#firebaseui-auth-container', uiConfig);
+                    this.firebaseUI.start('#firebaseui-auth-container', uiConfig);
                 }
             }
-
         });
 
         const pickr = Pickr.create({

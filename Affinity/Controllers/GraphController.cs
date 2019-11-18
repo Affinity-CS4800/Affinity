@@ -29,6 +29,13 @@ namespace Affinity.Controllers
         public async Task GraphSaver([FromBody] JArray json, string graphID)
         {
             var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+
+            if(!await graphExistForUser(userToken.Uid, graphID))
+            {
+                //Make and store the new graph into the database
+                await CheckIfLoggedInAndMakeGraph(graphID);
+            }
+
             var user = await _affinityDbContext.Users.Where(u => u.UID == userToken.Uid && u.GraphID == graphID).FirstOrDefaultAsync();
             user.Modified = DateTime.Now;
             _affinityDbContext.Users.Update(user);
@@ -147,7 +154,7 @@ namespace Affinity.Controllers
         }
 
         [Route("/graph")]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             bool unique = true;
             Random rand = new Random();
@@ -180,21 +187,6 @@ namespace Affinity.Controllers
                     }
                 }
             } while (!unique);
-
-            //If user is logged in
-            if (await Utils.CheckFirebaseToken(_httpContextAccessor))
-            {
-                //Get the token!
-                var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
-                int graphsMadeByUser = await _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).CountAsync();
-
-                //User has less than the max amount of graphs saved
-                if (graphsMadeByUser < GraphConstants.MAX_GRAPHS)
-                {
-                    await _affinityDbContext.AddAsync(new User { UID = userToken.Uid, GraphID = tempID, Modified = DateTime.Now });
-                    await _affinityDbContext.SaveChangesAsync();
-                }
-            }
 
             return RedirectToAction("GetSpecificGraph", "Graph", new { token = tempID });
         }
@@ -259,10 +251,10 @@ namespace Affinity.Controllers
             var graphOwner = await _affinityDbContext.Users.Where(user => user.UID == userToken.Uid && user.GraphID == token).FirstOrDefaultAsync();
 
             //graph wasn't owned by current user redirect them to their graphs
-            if(graphOwner == null)
-            {
-                return Json(new { redirect = true, redirect_url = "/graphs" });
-            }
+            //if(graphOwner == null)
+            //{
+            //    return Json(new { redirect = true, redirect_url = "/graphs" });
+            //}
 
             //d9147ab4
             //879443a4
@@ -302,6 +294,31 @@ namespace Affinity.Controllers
             }
 
             return 0;
+        }
+
+        private async Task<bool> graphExistForUser(string uid, string graphID)
+        {
+            var userGraph = await _affinityDbContext.Users.Where(user => user.UID == uid && user.GraphID == graphID).FirstOrDefaultAsync();
+
+            return userGraph != null;
+        }
+
+        private async Task CheckIfLoggedInAndMakeGraph(string graphID)
+        {
+            //If user is logged in
+            if (await Utils.CheckFirebaseToken(_httpContextAccessor))
+            {
+                //Get the token!
+                var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+                int graphsMadeByUser = await _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).CountAsync();
+
+                //User has less than the max amount of graphs saved
+                if (graphsMadeByUser < GraphConstants.MAX_GRAPHS)
+                {
+                    await _affinityDbContext.AddAsync(new User { UID = userToken.Uid, GraphID = graphID, Modified = DateTime.Now });
+                    await _affinityDbContext.SaveChangesAsync();
+                }
+            }
         }
 
 

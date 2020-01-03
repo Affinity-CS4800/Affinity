@@ -2,6 +2,7 @@
     ViewData["Title"] = "New Graph";
 }
 @section styles {
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/4.2.0/firebaseui.css" />
     <style>
         .graph {
             position: relative;
@@ -47,7 +48,7 @@
 
                 .button-group button:hover {
                     cursor: pointer;
-                    color: #0026ff;
+                    color: #1E90FF;
                     transform: translateY(-1px);
                 }
 
@@ -125,7 +126,7 @@
             }
 
         button.selectedButton {
-            color: #0026ff;
+            color: #1E90FF;
             font-weight: bold;
         }
 
@@ -137,7 +138,7 @@
             user-select: none;
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
             position: relative;
-            border: 1px solid #0026ff;
+            border: 1px solid #1E90FF;
             border-radius: 3px;
             color: #555;
         }
@@ -208,11 +209,11 @@
         }
 
             .state-switch label:hover {
-                color: #0026ff;
+                color: #1E90FF;
             }
 
             .state-switch label:before {
-                background: #0026ff;
+                background: #1E90FF;
                 transition: all 250ms cubic-bezier(0, 0.95, 0.38, 0.98);
             }
 
@@ -222,7 +223,7 @@
 
         .edit-group {
             position: absolute;
-            top: -.5rem;
+            top: -2rem;
             left: -12rem;
         }
 
@@ -242,17 +243,17 @@
 
         .undo-icon:hover svg {
             transform: rotateZ(-15deg) translateY(-1px);
-            fill: #0026ff;
+            fill: #1E90FF;
         }
 
         .redo-icon:hover svg {
             transform: rotateZ(15deg) translateY(-1px);
-            fill: #0026ff;
+            fill: #1E90FF;
         }
 
         .save-icon:hover svg {
             transform: scale3d(1.05, 1.05, 1);
-            fill: #0026ff;
+            fill: #1E90FF;
         }
 
         .export-group {
@@ -263,7 +264,7 @@
             .export-group button {
                 display: inline-block;
                 width: 50%;
-                background: #0026ff;
+                background: #1E90FF;
                 border: 1px solid #efefef;
                 border-radius: 5px;
                 color: #dddddd;
@@ -359,18 +360,19 @@
         }
 
         .modal-content {
-            margin: 10vh auto;
+            margin: 5vh auto 0 auto;
             width: 60%;
-            padding: 30vh 0;
+            padding: 20vh 10vw;
             background: #efefef;
             border-radius: 5px;
         }
 
-        .modal-content label, .modal-content h2 {
-            display: block;
-            margin: 0 auto;
-            width: 35ch;
-        }
+            .modal-content label, .modal-content h2 {
+                display: block;
+                margin: 0 auto;
+                width: 35ch;
+            }
+
 
         /* The Close Button */
         .close-modal {
@@ -380,17 +382,41 @@
             font-weight: bold;
         }
 
-        .close-modal:hover,
-        .close-modal:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
+            .close-modal:hover,
+            .close-modal:focus {
+                color: #000;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            .graph-name {
+                font-size: 1rem;
+                display: block;
+                width: 60%;
+                margin-left: 1.5rem;
+                font-weight: bold;
+                margin-bottom: 1rem;
+            }
+
+                .graph-name:valid {
+                    color: #666;
+                }
+
+                .graph-name:invalid {
+                    color: rgba(1,1,1,.10);
+                    font-weight: normal;
+                }
+
+            .graph-name:not(:focus) {
+                border: 0;
+                background: transparent;
+            }
     </style>
 }
 
 <div v-cloak class="graph">
     <div class="interface">
+        <input required class="graph-name" type="text" v-on:change="saveGraphName()" minlength="1" v-model="graphName" placeholder="Graph name" id="graph-name" />
         <div class="button-group">
             <div class="draw-group">
                 <span class="draw-title"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.078 7.061l2.861 2.862-10.799 10.798-3.584.723.724-3.585 10.798-10.798zm0-2.829l-12.64 12.64-1.438 7.128 7.127-1.438 12.642-12.64-5.691-5.69zm7.105 4.277l2.817-2.82-5.691-5.689-2.816 2.817 5.69 5.692z" /></svg></span>
@@ -482,7 +508,7 @@
 <div v-cloak id="save-graph-name-prompt" class="modal" v-bind:style="{ 'display': displaySavePrompt }">
     <div class="modal-content">
         <h2>Enter a name for your graph.</h2>
-        <label>Graph Name: <input type="text" id="graph-name" /></label>
+        <label></label>
     </div>
 </div>
 
@@ -830,6 +856,7 @@
         function changeGraphNameAction(graphName_) {
             SNAPSHOT[CURRENT_SNAPSHOT].push({
                 action: ACTION_GRAPH_SET_NAME,
+                id: -20, // ID is used to make sure duplicate names are removed
                 graphName: graphName_
             });
         }
@@ -988,7 +1015,7 @@
                         SNAPSHOT[CURRENT_SNAPSHOT].push(lastAction);
                         break;
                     case ACTION_ADD_VERTEX:
-                        VIS_NODES.add({ id: lastAction.id, label: "", color: lastAction.color, x: lastAction.x, y: lastAction.y });
+                        VIS_NODES.add({ id: lastAction.id, label: "", color: lastAction.color, font: {}, x: lastAction.x, y: lastAction.y });
                         addNodeAction(lastAction.id, lastAction.color, lastAction.x, lastAction.y);
                         break;
                     case ACTION_ADD_EDGE:
@@ -1099,7 +1126,10 @@
                 currentNodes: [],
                 currentEdges: [],
                 displaySavePrompt: "none",
-                displayLogin: "none"
+                displayLogin: "none",
+                firebaseUI: null,
+                userAttemptedLogin: false,
+                graphName: "New Graph"
             },
             mounted: function () {
                 var vue = this;
@@ -1139,7 +1169,10 @@
                         }
                     },
                     edges: {
-                        smooth: false
+                        smooth: false,
+                        color: {
+                            inherit: false
+                        }
                     },
                     manipulation: {
                         enabled: true,
@@ -1160,31 +1193,31 @@
                         addEdge: function (data, callback) {
 
                             var numberOfConnectingEdges = 1;
+                            var multipleLoops = false;
 
                             var fromEdges = NETWORK.getConnectedEdges(data.from);
                             fromEdges.forEach(id => {
                                 var edge = VIS_EDGES.get(id);
+
                                 if (id != data.id && edge.to == data.to) {
                                     numberOfConnectingEdges++;
                                 }
                                 else if (edge.to == data.from && edge.from == data.to) {
                                     numberOfConnectingEdges++;
                                 }
+
+                                if (id != data.id && data.to == data.from && edge.to == edge.from) {
+                                    multipleLoops = true;
+                                }
                             });
 
-                            if (numberOfConnectingEdges <= 5) {
+                            if (numberOfConnectingEdges <= 5 && !multipleLoops) {
 
                                 data.id = nextEdgeID;
                                 nextEdgeID++;
                                 data.color = pickr2.getColor().toHEXA().toString();
-                                if (data.from == data.to && vue.state == "draw") {
-                                    if (confirm("Do you want to connect the node to itself?")) {
-                                        callback(data);
-                                    }
-                                }
-                                else {
-                                    callback(data);
-                                }
+
+                                callback(data);
 
                                 var directed = false;
                                 if (document.querySelector('input[name="edge-direction"]:checked').value == "directed") {
@@ -1206,7 +1239,7 @@
                                 document.getElementById('edge-value').focus();
 
                             }
-                            else {
+                            else if (numberOfConnectingEdges > 5){
                                 vue.showErrorMessage = true;
                                 setTimeout(function (vue) { vue.showErrorMessage = false; }, 2500, vue);
                             }
@@ -1286,6 +1319,7 @@
             },
             created: function () {
                 var vue = this;
+                changeGraphNameAction("New Graph");
                 // When user logs in, store it in this Vue app's data.
                 // Add cookie storing user token.
                 firebase.auth().onAuthStateChanged(user => {
@@ -1294,20 +1328,45 @@
                         user.getIdToken().then(function (idToken) {
                             document.cookie = "aff_t=" + idToken + "; path=/;";
                         });
+                        let url = window.location.pathname;
+                        url = url.split('/');
+                        let token = url[url.length - 1];
+                        $.ajax({
+                            type: "GET",
+                            url: "/api/getGraphName/" + token,
+                            cache: false,
+                            async: false,
+                            success: function (data) {
+                                vue.graphName = data;
+                                SNAPSHOT[CURRENT_SNAPSHOT] = [];
+                            }
+                        });
+
+                        vue.displayLogin = "none";
+                        if (vue.userAttemptedLogin) {
+                            setTimeout(function (vue) { vue.save(); }, 1000, vue);
+                        }
                     }
                     // Reset user
                     else {
                         vue.user = user;
-                        // document.cookie = "aff_t=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                         document.cookie = "aff_t=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                        vue.renderUI();
                     }
+
                 });
             },
             methods: {
                 undo: function (event) {
+                    NETWORK.unselectAll();
+                    this.currentNodes = [];
+                    this.currentEdges = [];
                     undoLastAction(this.state);
                 },
                 redo: function (event) {
+                    NETWORK.unselectAll();
+                    this.currentNodes = [];
+                    this.currentEdges = [];
                     redoLastAction(this.state);
                 },
                 deleteSelectedVertices: function (event) {
@@ -1360,6 +1419,9 @@
 
                     this.currentEdges = [];
                 },
+                saveGraphName: function () {
+                    changeGraphNameAction(this.graphName);
+                },
                 changeMode: function (newMode) {
 
                     NETWORK.unselectAll();
@@ -1410,12 +1472,14 @@
                                 document.getElementById('node-name').value = updateNode.label;
 
                                 setTimeout("document.getElementById('node-name').focus();", 100);
+                                setTimeout("document.getElementById('node-name').setSelectionRange(8, 8);", 100);
 
-                                //if (updateNode.font.color === '#FFFFFF') {
-                                //    document.getElementById('node-font-color').value = "#FFFFFF";
-                                //} else {
-                                //    document.getElementById('node-font-color').value = "#000000";
-                                //}
+                                if (updateNode.font.color == "#000000") {
+                                    document.getElementById('black-node-font').checked = true;
+                                }
+                                else {
+                                    document.getElementById('white-node-font').checked = true;
+                                }
 
                                 pickr.setColor(updateNode.color);
 
@@ -1434,18 +1498,27 @@
                                 }
 
                                 setTimeout("document.getElementById('edge-value').focus();", 100);
+                                setTimeout("document.getElementById('edge-value').setSelectionRange(12, 12);", 100);
 
                                 //Set the color to what the current node is!
                                 pickr2.setColor(updateEdge.color);
 
                                 //Init the Alignment
-                                //if (updateEdge.font.align === 'top') {
-                                //    document.getElementById('edge-font-align').value = "top";
-                                //} else if (updateEdge.font.align === 'middle') {
-                                //    document.getElementById('edge-font-align').value = "middle";
-                                //} else {
-                                //    document.getElementById('edge-font-align').value = "bottom";
-                                //}
+                                if (updateEdge.font.align === 'top') {
+                                    document.getElementById('align-top').checked = true;
+                                } else if (updateEdge.font.align === 'middle') {
+                                    document.getElementById('align-middle').checked = true;
+                                } else {
+                                    document.getElementById('align-bottom').checked = true;
+                                }
+
+                                if (updateEdge.arrows.to == true) {
+                                    document.getElementById('directed').checked = true;
+
+                                }
+                                else {
+                                    document.getElementById('undirected').checked = true;
+                                }
                             }
                         });
                     }
@@ -1454,8 +1527,16 @@
                         NETWORK.unselectAll();
                         this.currentNodes = NETWORK.getSelectedNodes();
                         this.currentEdges = NETWORK.getSelectedEdges();
-                        this.showNodeCustomization = true; // temporary
-                        this.showEdgeCustomization = true; // temporary
+                        this.showNodeCustomization = true;
+                        this.showEdgeCustomization = true;
+
+                        document.getElementById('node-name').value = "";
+                        pickr.setColor(null);
+                        document.getElementById('white-node-font').checked = true;
+                        document.getElementById('edge-value').value = "";
+                        pickr2.setColor(null);
+                        document.getElementById('align-top').checked = true;
+                        document.getElementById('undirected').checked = true;
 
                         var vue = this;
                         NETWORK.on('click', function () {
@@ -1463,6 +1544,14 @@
                                 NETWORK.unselectAll();
                                 vue.currentNodes = [];
                                 vue.currentEdges = [];
+
+                                document.getElementById('node-name').value = "";
+                                pickr.setColor(null);
+                                document.getElementById('white-node-font').checked = true;
+                                document.getElementById('edge-value').value = "";
+                                pickr2.setColor(null);
+                                document.getElementById('align-top').checked = true;
+                                document.getElementById('undirected').checked = true;
                             }
                             else if (NETWORK.getSelectedNodes().length != 0) {
                                 selectedNode = NETWORK.getSelectedNodes()[0];
@@ -1472,6 +1561,10 @@
                                 }
                                 else {
                                     vue.currentNodes.push(String(NETWORK.getSelectedNodes()));
+                                    document.getElementById('node-name').value = "";
+                                    setTimeout("document.getElementById('node-name').focus();", 100);
+                                    pickr.setColor(null);
+                                    document.getElementById('white-node-font').checked = true;
                                 }
                                 NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                             }
@@ -1483,6 +1576,11 @@
                                 }
                                 else {
                                     vue.currentEdges.push(String(NETWORK.getSelectedEdges()));
+                                    document.getElementById('edge-value').value = "";
+                                    setTimeout("document.getElementById('edge-value').focus();", 100);
+                                    pickr2.setColor(null);
+                                    document.getElementById('align-top').checked = true;
+                                    document.getElementById('undirected').checked = true;
                                 }
                                 NETWORK.setSelection({ nodes: vue.currentNodes, edges: vue.currentEdges }, { unselectAll: true, highlightEdges: false });
                             }
@@ -1530,7 +1628,7 @@
                     editNodeIDS.forEach(id => {
                         var editNode = VIS_NODES.get(id);
 
-                        if (editNode.font.color !== newFontColor) {
+                        if (editNode.font.color !== newFontColor && editNode.label != "") {
                             recolorNodeFontAction(editNode.id, editNode.font.color, newFontColor);
                             if (isBatchAction) moveLastActionToBatch();
                             editNode.font.color = newFontColor;
@@ -1556,7 +1654,7 @@
                     editEdgeIDS.forEach(id => {
                         var editEdge = VIS_EDGES.get(id);
 
-                        if (editEdge.font.align != newAlignment) {
+                        if (editEdge.font.align != newAlignment && editEdge.label != " ") {
                             changeEdgeFontAlignmentAction(editEdge.id, editEdge.from, editEdge.to, editEdge.font.align, newAlignment);
                             if (isBatchAction) moveLastActionToBatch();
                             editEdge.font.align = newAlignment;
@@ -1656,7 +1754,7 @@
                             vue.user = false;
                             // Successfully signed out. This cookie will be set at a early time to expire and delete
                             // ensuring the user is correctly signed out
-                           // deleteAllCookies();
+                            // deleteAllCookies();
                         }).catch(function (error) {
                             // An error happened.
                         });
@@ -1673,55 +1771,51 @@
                         closeButton.onclick = function () {
                             vue.displayLogin = "none";
                         }
+                        setTimeout(() => {
+                            document.getElementsByClassName("firebaseui-id-email")[0].focus();
+                        }, 100);
+                        this.userAttemptedLogin = true;
                     }
-                    this.displaySavePrompt = "block";
-                    document.getElementById('graph-name').value = "";
-                    setTimeout("document.getElementById('graph-name').focus();", 100);
 
-                    var vue = this;
-                    document.getElementById('graph-name').addEventListener("keyup", function (event) {
-                        if (event.key == "Enter") {
-                            var graphName = document.getElementById('graph-name').value;
-                            vue.displaySavePrompt = "none";
-                            this.removeEventListener("keyup", arguments.callee, false);
+                    if (document.cookie != "") {
+                        this.displayLogin = "none";
+                        var vue = this;
 
-                            const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
+                        const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
 
-                            changeGraphNameAction(graphName);
-                            COLLAPSED_SNAPSHOT.push(SNAPSHOT[CURRENT_SNAPSHOT].pop());
+                        if (COLLAPSED_SNAPSHOT.length > 0) {
 
-                            if (COLLAPSED_SNAPSHOT.length > 0) {
-
-                                var url = window.location.pathname;
-                                url = url.split('/');
-                                var token = url[url.length - 1];
-                                $.ajax({
-                                    type: 'POST',
-                                    url: '/api/saveToDB/' + token,
-                                    contentType: "application/json",
-                                    data: JSON.stringify(COLLAPSED_SNAPSHOT),
-                                    headers: {
-                                        RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
-                                    },
-                                    success: function () {
-                                        SNAPSHOT[CURRENT_SNAPSHOT] = [];
-                                        vue.showSaveMessage = true;
-                                        setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
-                                    },
-                                    error: function (xhr, textStatus, errorThrown) {
-                                        alert(errorThrown);
-                                    }
-                                });
-                            } else {
-                                alert('Saved.');
-                            }
-
+                            var url = window.location.pathname;
+                            url = url.split('/');
+                            var token = url[url.length - 1];
+                            $.ajax({
+                                type: 'POST',
+                                url: '/api/saveToDB/' + token,
+                                contentType: "application/json",
+                                data: JSON.stringify(COLLAPSED_SNAPSHOT),
+                                headers: {
+                                    RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                },
+                                success: function () {
+                                    SNAPSHOT[CURRENT_SNAPSHOT] = [];
+                                    vue.showSaveMessage = true;
+                                    setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
+                                },
+                                error: function (xhr, textStatus, errorThrown) {
+                                    alert(errorThrown);
+                                }
+                            });
+                        } else {
+                            vue.showSaveMessage = true;
+                            setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
                         }
-                    });
+                    }
+
                 },
                 initializeUI: function () {
-                    // Initialize the FirebaseUI Widget using Firebase.
-                    var ui = new firebaseui.auth.AuthUI(firebase.auth());
+                    this.firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
+                },
+                renderUI: function () {
                     var uiConfig = {
                         callbacks: {
                             signInSuccessWithAuthResult: function (authResult, redirectUrl) {
@@ -1777,10 +1871,9 @@
                     };
 
                     // The start method will wait until the DOM is loaded.
-                    ui.start('#firebaseui-auth-container', uiConfig);
+                    this.firebaseUI.start('#firebaseui-auth-container', uiConfig);
                 }
             }
-
         });
 
         const pickr = Pickr.create({
@@ -1915,6 +2008,15 @@
             }
 
         });
+
+        pickr.on('change', (color, instance) => {
+            pickr.applyColor(true);
+        });
+
+        pickr2.on('change', (color, instance) => {
+            pickr2.applyColor(true);
+        });
+
 
         document.getElementById('node-name').addEventListener("keyup", function (event) {
             if (event.key == "Enter") {

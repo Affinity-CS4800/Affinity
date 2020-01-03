@@ -139,8 +139,7 @@ header {
     .cta-bg {
         position: absolute;
         top: 5rem;
-        overflow:hidden;
-        left: 45vw;
+        left: 52vw;
         background: url("../img/bg.JPG");
         background-size: cover;
         width: 600px;

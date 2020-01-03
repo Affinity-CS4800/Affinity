@@ -30,7 +30,8 @@ namespace Affinity.Controllers
         {
             var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
 
-            if(!await graphExistForUser(userToken.Uid, graphID))
+            //If the graph doesnt exist for the user verify they are logged in and save to DB
+            if(!await GraphExistForUser(userToken.Uid, graphID))
             {
                 //Make and store the new graph into the database
                 await CheckIfLoggedInAndMakeGraph(graphID);
@@ -296,7 +297,7 @@ namespace Affinity.Controllers
             return 0;
         }
 
-        private async Task<bool> graphExistForUser(string uid, string graphID)
+        private async Task<bool> GraphExistForUser(string uid, string graphID)
         {
             var userGraph = await _affinityDbContext.Users.Where(user => user.UID == uid && user.GraphID == graphID).FirstOrDefaultAsync();
 
@@ -319,162 +320,6 @@ namespace Affinity.Controllers
                     await _affinityDbContext.SaveChangesAsync();
                 }
             }
-        }
-
-
-        [Route("/api/testaddtodb")]
-        public void TestAddToDB()
-        {
-            //Graph graph = new Graph();
-            /*
-            Vertex vertex1 = new Vertex
-            {
-                Name = "A",
-                ID = 0,
-                XPos = 200,
-                YPos = 300,
-                Color = Color.Aqua.ToArgb(),
-                GraphID = "d9147ab4"
-            };
-
-            Vertex vertex2 = new Vertex
-            {
-                Name = "B",
-                ID = 1,
-                XPos = 400,
-                YPos = 300,
-                Color = Color.Aqua.ToArgb(),
-                GraphID = "d9147ab4"
-            };
-
-            Vertex vertex3 = new Vertex
-            {
-                Name = "C",
-                ID = 2,
-                XPos = 300,
-                YPos = 200,
-                Color = Color.Aqua.ToArgb(),
-                GraphID = "d9147ab4"
-            };
-
-            Vertex vertex4 = new Vertex
-            {
-                Name = "D",
-                ID = 3,
-                XPos = 500,
-                YPos = 400,
-                Color = Color.Aqua.ToArgb(),
-                GraphID = "d9147ab4"
-            };
-
-            //graph.AddVertex(vertex1);
-            //graph.AddVertex(vertex2);
-            //graph.AddVertex(vertex3);
-            //graph.AddVertex(vertex4);
-            
-            var Edges = new List<Edge>
-            {
-                new Edge
-                {
-                    Weight = 8,
-                    First = 0,
-                    Second = 3,
-                   // Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                },
-                new Edge
-                {
-                    Weight = 3,
-                    First = 0,
-                    Second = 2,
-                   // Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                },
-                new Edge
-                {
-                    Weight = 18,
-                    First = 1,
-                    Second = 2,
-                    //Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                },
-                new Edge
-                {
-                    Weight = 3,
-                    First = 2,
-                    Second = 0,
-                    Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                },
-                new Edge
-                {
-                    Weight = 18,
-                    First = 2,
-                    Second = 1,
-                    Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                },
-                new Edge
-                {
-                    Weight = 3,
-                    First = 2,
-                    Second = 3,
-                    Direction = Direction.DirectedAtSecond,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                },
-                new Edge
-                {
-                    Weight = 1,
-                    First = 3,
-                    Second = 1,
-                    Direction = Direction.DirectedAtSecond,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                },
-                new Edge
-                {
-                    Weight = 8,
-                    First = 3,
-                    Second = 0,
-                    Direction = Direction.Undirected,
-                    Color = Color.Black.ToArgb(),
-                    GraphID = "d9147ab4"
-                }
-            };
-
-
-            _affinityDbContext.Vertices.Add(vertex1);
-            _affinityDbContext.Vertices.Add(vertex2);
-            _affinityDbContext.Vertices.Add(vertex3);
-            _affinityDbContext.Vertices.Add(vertex4);
-
-            foreach (Edge edge in Edges)
-            {
-                //graph.AddEdge(edge.First, edge.Second, "", edge.Color, edge.Weight, edge.Direction);
-                _affinityDbContext.Edges.Add(edge);
-            }
-
-            _affinityDbContext.SaveChanges();
-            */
-            //string output = "";
-
-            //output += JsonConvert.SerializeObject(graph.GetNeighbors(vertex1), Formatting.Indented);
-
-            //output += JsonConvert.SerializeObject(graph.Dijkstra(vertex1), Formatting.Indented);
-
-            //output += $"\nGraph distance from {vertex1.ID} to {vertex2.ID} is: {graph.CalculateGraphDistance(vertex1, vertex2)}";
-            //output += $"\nGraph distance from {vertex1.ID} to {vertex3.ID} is: {graph.CalculateGraphDistance(vertex1, vertex3)}";
-            //output += $"\nGraph distance from {vertex1.ID} to {vertex4.ID} is: {graph.CalculateGraphDistance(vertex1, vertex4)}";
-
-            //output += $"\nGraph Diameter is: {graph.CalculateGraphDiameter(graph)}";
-
-            //return output;
         }
     }
 }

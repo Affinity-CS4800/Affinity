@@ -411,6 +411,32 @@
                 border: 0;
                 background: transparent;
             }
+
+        .graphLink {
+            display: inline-block;
+            max-width: 20%;
+            min-width: 15%;
+            margin-right: 1rem;
+            margin-left: 1rem;
+            margin-bottom: 2rem;
+            height: 150px;
+            background: orangered;
+            text-decoration: none;
+            text-align: center;
+            padding: 2rem 0 0 0;
+            font-weight: bold;
+            color: #efefef;
+            background: linear-gradient(180deg, #00d2ff 0%, #3a47d5 80%);
+            filter: grayscale(50%);
+            transition-duration: .25s;
+            transition-property: filter, transform;
+            transition-timing-function: ease-in-out;
+        }
+
+            .graphLink:hover {
+                filter: grayscale(0%);
+                transform: translateY(-2px);
+            }
     </style>
 }
 
@@ -518,6 +544,14 @@
         <h2>To save your graph, login or create an account.</h2>
         <div id="firebaseui-auth-container"></div>
         <div id="loader">Loading...</div>
+    </div>
+</div>
+
+<div v-cloak id="overwrite-modal" class="modal" v-bind:style="{ 'display': displayOverwrite }">
+    <div class="modal-content">
+        <span class="close-modal">x</span>
+        <h2>You have reached maximum saves allotted. Please select one to overwrite.</h2>
+        <a v-for="name in graphNames" class="graphLink" v-on:click="sendGraphToBackendForRemoval(name)">{{name}}</a>
     </div>
 </div>
 
@@ -1127,9 +1161,12 @@
                 currentEdges: [],
                 displaySavePrompt: "none",
                 displayLogin: "none",
+                displayOverwrite: "none",
                 firebaseUI: null,
                 userAttemptedLogin: false,
-                graphName: "New Graph"
+                graphName: "New Graph",
+                canSave: true,
+                graphNames: []
             },
             mounted: function () {
                 var vue = this;
@@ -1754,12 +1791,13 @@
                             vue.user = false;
                             // Successfully signed out. This cookie will be set at a early time to expire and delete
                             // ensuring the user is correctly signed out
+                            document.cookie = "aff_t=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                             // deleteAllCookies();
                         }).catch(function (error) {
                             // An error happened.
                         });
 
-                        //window.location.href = "/"; // kick thew user to the main page on logout
+                        window.location.href = "/"; // kick thew user to the main page on logout
                     }
                 },
                 save: function () {
@@ -1779,36 +1817,95 @@
 
                     if (document.cookie != "") {
                         this.displayLogin = "none";
+                        this.displayOverwrite = "none";
                         var vue = this;
 
                         const COLLAPSED_SNAPSHOT = getCollapsedSnapshot();
 
                         if (COLLAPSED_SNAPSHOT.length > 0) {
-
                             var url = window.location.pathname;
                             url = url.split('/');
                             var token = url[url.length - 1];
+
+                            //Get the amount of saves remaining for the user
                             $.ajax({
-                                type: 'POST',
-                                url: '/api/saveToDB/' + token,
-                                contentType: "application/json",
-                                data: JSON.stringify(COLLAPSED_SNAPSHOT),
-                                headers: {
-                                    RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                type: 'GET',
+                                url: "/api/canUserSave/" + token,
+                                async: false,
+                                success: function (canSave) {
+                                    console.log("User can save this graph!");
+                                    vue.canSave = canSave;
                                 },
-                                success: function () {
-                                    SNAPSHOT[CURRENT_SNAPSHOT] = [];
-                                    vue.showSaveMessage = true;
-                                    setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
-                                },
-                                error: function (xhr, textStatus, errorThrown) {
-                                    alert(errorThrown);
+                                error: function () {
+                                    vue.canSave = false;
                                 }
                             });
+
+                            //If the user has save slots available to be used!
+                            if (vue.canSave) {
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/api/saveToDB/' + token,
+                                    contentType: "application/json",
+                                    data: JSON.stringify(COLLAPSED_SNAPSHOT),
+                                    headers: {
+                                        RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                    },
+                                    success: function () {
+                                        SNAPSHOT[CURRENT_SNAPSHOT] = [];
+                                        vue.showSaveMessage = true;
+                                        setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
+                                    },
+                                    error: function (xhr, textStatus, errorThrown) {
+                                        alert(errorThrown);
+                                    }
+                                });
+                            } else { //User needs to select a graph to delete
+                                vue.showOverwritePopupMenu();
+                            }
                         } else {
-                            vue.showSaveMessage = true;
-                            setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
+                            //vue.showSaveMessage = true;
+                            //setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
                         }
+                    }
+
+                },
+                showOverwritePopupMenu: function () {
+                    var vue = this;
+                    var closeButton = document.getElementsByClassName("close-modal")[1]; //First is Login/Register, Second is the overwriting
+                    closeButton.onclick = function () {
+                        vue.displayOverwrite = "none";
+                    }
+
+                    $.ajax({
+                        type: 'GET',
+                        url: "/api/getGraphNames",
+                        async: false,
+                        success: function (data) {
+                            vue.graphNames = data;
+                        }
+                    });
+
+                    vue.displayOverwrite = "block";
+                },
+                sendGraphToBackendForRemoval: function (id) {
+                    var vue = this;
+
+                    if (confirm("Are you sure you want to delete " + id)) {
+                        $.ajax({
+                            type: 'POST',
+                            url: "/api/removeGraph/" + id,
+                            async: false,
+                            success: function () {
+                                alert("Graph has been deleted.");
+                                vue.save();
+                            },
+                            error: function () {
+                                alert("error has occurred when trying to delete this graph.");
+                            }
+                        });
+
+                        vue.displayOverwrite = "none";
                     }
 
                 },

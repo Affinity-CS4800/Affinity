@@ -232,6 +232,8 @@ namespace Affinity.Controllers
                 graphs.Add(new GraphIDName { Name = user.Name, GraphID = user.GraphID });
             }
 
+            ViewData["MaxGraphs"] = GraphConstants.MAX_GRAPHS;
+
             return View("Graphs", graphs);
         }
 
@@ -306,6 +308,63 @@ namespace Affinity.Controllers
             string graphName = await _affinityDbContext.Users.AsNoTracking().Where(user => user.GraphID == token && user.UID == userToken.Uid).Select(name => name.Name).FirstOrDefaultAsync();
 
             return graphName;
+        }
+
+        [Route("/api/canUserSave/{token:length(8)}")]
+        public async Task<bool> CheckIfUserCanSave(string token)
+        {
+            // Get the current Firebase token and we know that they are logged in so there has to be a token for us to read
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+
+            var graphs = await _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).ToListAsync();
+
+            //Check to make sure its id is in the previously saved GraphIDs or not
+            if(graphs.Any(graph => graph.GraphID == token))
+            {
+                return true; //overwriting a previously saved graph so this is allowed
+            }
+
+            //Since a user doesn't have max saved we can now asses based on the amount of graphs detected for the user
+            return GraphConstants.MAX_GRAPHS - graphs.Count > 0;
+        }
+
+        [Route("/api/getGraphNames")]
+        public async Task<List<string>> GetGraphNames()
+        {
+            // Get the current Firebase token and we know that they are logged in so there has to be a token for us to read
+            var userToken = await Utils.GetUserFirebaseToken(_httpContextAccessor);
+
+            List<User> graphsTiedToUser = await _affinityDbContext.Users.AsNoTracking().Where(user => user.UID == userToken.Uid).ToListAsync();
+
+            List<string> graphNames = new List<string>();
+
+            foreach(User graph in graphsTiedToUser)
+            {
+                graphNames.Add(graph.Name ?? graph.GraphID);
+            }
+
+            return graphNames;
+        }
+
+        [Route("/api/removeGraph/{id}")]
+        public async Task RemoveGraph(string id)
+        {
+            //Need to check if the graph is named first. If it is then we must get its ID.
+            string graphID = await _affinityDbContext.Users.Where(graph => graph.Name == id).Select(graph => graph.GraphID).FirstOrDefaultAsync(); 
+
+            if(graphID == null)
+            {
+                graphID = id;
+            }
+
+            var vertices = await _affinityDbContext.Vertices.Where(vertex => vertex.GraphID == graphID).ToListAsync();
+            var edges = await _affinityDbContext.Edges.Where(vertex => vertex.GraphID == graphID).ToListAsync();
+
+            _affinityDbContext.Vertices.RemoveRange(vertices);
+            _affinityDbContext.Edges.RemoveRange(edges);
+            _affinityDbContext.Users.Remove(_affinityDbContext.Users.Where(graph => graph.GraphID == graphID).FirstOrDefault());
+
+            await _affinityDbContext.SaveChangesAsync();
         }
 
         private async Task<bool> GraphExistForUser(string uid, string graphID)

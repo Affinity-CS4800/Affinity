@@ -1325,13 +1325,15 @@
                 url = url.split('/');
                 let token = url[url.length - 1];
 
+                var vue = this;
+
                 $.ajax({
                     type: 'GET',
                     url: "/api/getStartingNodeID/" + token,
                     cache: false,
                     async: false,
                     success: function (data) {
-                        nextNodeID = data;
+                        vue.nextNodeID = data;
                     }
                 });
 
@@ -1341,9 +1343,12 @@
                     cache: false,
                     async: false,
                     success: function (data) {
-                        nextEdgeID = data;
+                        vue.nextEdgeID = data;
                     }
                 });
+
+                console.log(this.nextNodeID);
+                console.log(this.nextEdgeID);
 
                 NETWORK = new vis.Network(document.getElementById('mynetwork'), getGraphData(), options);
 
@@ -1860,12 +1865,21 @@
                                         alert(errorThrown);
                                     }
                                 });
+
+                                html2canvas(document.getElementsByTagName("canvas"), {
+                                    background: '#FFFFFF',
+                                    onrendered: function (canvas) {
+                                        var imgData = canvas.toDataURL('image/jpeg', 1.0);
+                                        localStorage.setItem(token, imgData);
+                                    }
+                                });
+
                             } else { //User needs to select a graph to delete
                                 vue.showOverwritePopupMenu();
                             }
                         } else {
-                            //vue.showSaveMessage = true;
-                            //setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
+                            vue.showSaveMessage = true;
+                            setTimeout(function (vue) { vue.showSaveMessage = false; }, 2500, vue);
                         }
                     }
 
@@ -1896,18 +1910,18 @@
                             type: 'POST',
                             url: "/api/removeGraph/" + id,
                             async: false,
-                            success: function () {
+                            success: function (graphID) {
                                 alert("Graph has been deleted.");
+                                localStorage.removeItem(graphID);
                                 vue.save();
                             },
-                            error: function () {
-                                alert("error has occurred when trying to delete this graph.");
+                            error: function (xhr, textStatus, errorThrown) {
+                                alert(errorThrown);
                             }
                         });
 
                         vue.displayOverwrite = "none";
                     }
-
                 },
                 initializeUI: function () {
                     this.firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());

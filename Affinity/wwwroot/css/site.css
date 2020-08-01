@@ -36,14 +36,19 @@ p, span, .navigation, a {
         text-decoration: none;
     }
 
-    .logo a:visited {
-        color: rgb(0,0,238);
-    }
+        .logo a:visited {
+            color: #3750eb;
+            /*color: rgb(0,0,238);*/
+        }
 
 header {
-    background: #efefef;
+    background: #efefef; 
+    /*background: linear-gradient(-225deg, #7DE2FC 0%, #B9B6E5 100%);*/
+    /*background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);*/
     margin-bottom: 1rem;
     padding: 1rem 0;
+    /*background: linear-gradient(-90deg, #00d2ff 0%, #3a47d5 80%);*/
+    /*background: linear-gradient(90deg, rgba(49,125,254,1) 0%, rgba(0,255,175,1) 100%);*/
 }
 
 .cta {

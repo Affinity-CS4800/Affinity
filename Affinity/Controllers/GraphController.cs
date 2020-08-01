@@ -347,7 +347,7 @@ namespace Affinity.Controllers
         }
 
         [Route("/api/removeGraph/{id}")]
-        public async Task RemoveGraph(string id)
+        public async Task<string> RemoveGraph(string id)
         {
             //Need to check if the graph is named first. If it is then we must get its ID.
             string graphID = await _affinityDbContext.Users.Where(graph => graph.Name == id).Select(graph => graph.GraphID).FirstOrDefaultAsync(); 
@@ -365,6 +365,8 @@ namespace Affinity.Controllers
             _affinityDbContext.Users.Remove(_affinityDbContext.Users.Where(graph => graph.GraphID == graphID).FirstOrDefault());
 
             await _affinityDbContext.SaveChangesAsync();
+
+            return graphID;
         }
 
         private async Task<bool> GraphExistForUser(string uid, string graphID)

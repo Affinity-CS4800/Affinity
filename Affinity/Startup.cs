@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Affinity.Models;
@@ -13,6 +12,7 @@ using Google.Apis.Auth.OAuth2;
 using System.Diagnostics;
 using System.IO;
 using System;
+using Microsoft.Extensions.Hosting;
 
 namespace Affinity
 {
@@ -40,7 +40,7 @@ namespace Affinity
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddRazorPages();
 
             string API_KEY = "";
             using (StreamReader reader = new StreamReader("API_KEY.txt"))
@@ -75,7 +75,7 @@ namespace Affinity
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -106,19 +106,21 @@ namespace Affinity
                 await next();
             });
 
+            app.UseRouting();
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Affinity}/{action=Index}/{id?}");
+                    pattern: "{controller=Affinity}/{action=Index}/{id?}");
 
-                routes.MapRoute(
+                endpoints.MapControllerRoute(
                     name: "graph",
-                    template: "{controller=Graph}/{action=GetSpecificGraph}/{token:length(8)}");
+                    pattern: "{controller=Graph}/{action=GetSpecificGraph}/{token:length(8)}");
             });
         }
     }

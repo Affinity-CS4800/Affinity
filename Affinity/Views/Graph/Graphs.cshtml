@@ -81,6 +81,8 @@
             padding: 10px 16px;
             font-size: 22px;
         }
+
+       
     </style>
 
 }
@@ -134,12 +136,15 @@
                     this.user = user;
                 });
 
-                var data = @Html.Raw(Json.Serialize(Model));
+                data = @Html.Raw(Json.Serialize(Model));
 
-                for (var i = 0; i < data.length; i++) {
-                    var imgData = localStorage.getItem(data[i].graphID);
+                for (i = 0; i < data.length; i++) {
+                    imgData = localStorage.getItem(data[i].graphID);
                     if (imgData != null) {
                         $('#' + data[i].graphID).attr("src", imgData);
+                    } else {
+                        $('#' + data[i].graphID).attr("src", "");
+                        $('#' + data[i].graphID).attr("alt", "No preview yet. Try saving the graph again to allow this new feature!");
                     }
                 }
             },

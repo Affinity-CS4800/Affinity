@@ -23,9 +23,11 @@ jobs:
           include-prerelease: true
 
       - name: Build with dotnet
+        working-directory: ./Affinity
         run: dotnet build --configuration Release
 
       - name: dotnet publish
+        working-directory: ./Affinity
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
@@ -53,5 +55,5 @@ jobs:
         with:
           app-name: 'graphaffinity'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CAA86AC55C574511984AA61F6D7D2A56 }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .

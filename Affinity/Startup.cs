@@ -9,6 +9,7 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using System;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace Affinity
 {
@@ -38,8 +39,11 @@ namespace Affinity
 
             services.AddRazorPages();
 
+            var connectionString = Environment.GetEnvironmentVariable("CUSTOMCONNSTR_AffinityDbcontext");
+            connectionString ??= Configuration.GetConnectionString("AffinityDbcontext");
+
             services.AddEntityFrameworkNpgsql()
-                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(Configuration.GetConnectionString("AffinityDbcontext"), providerOptions => providerOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
+                .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(connectionString, providerOptions => providerOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);

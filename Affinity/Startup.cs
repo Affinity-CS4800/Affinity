@@ -6,11 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Affinity.Models;
 using Microsoft.EntityFrameworkCore;
 using FirebaseAdmin;
-using RestSharp;
-using Newtonsoft.Json.Linq;
 using Google.Apis.Auth.OAuth2;
-using System.Diagnostics;
-using System.IO;
 using System;
 using Microsoft.Extensions.Hosting;
 
@@ -42,32 +38,8 @@ namespace Affinity
 
             services.AddRazorPages();
 
-            string API_KEY = "";
-            using (StreamReader reader = new StreamReader("API_KEY.txt"))
-            {
-                API_KEY = reader.ReadLine();
-            }
-
-            RestClient client = new RestClient("https://api.heroku.com/");
-            RestRequest req = new RestRequest("apps/affinity-cpp/config-vars");
-            req.AddHeader("Accept", "application/vnd.heroku+json; version=3");
-            req.AddHeader("Authorization", "Bearer " + API_KEY);
-            string response = client.Execute(req).Content.ToLower();
-
-            JObject config = JObject.Parse(response);
-            JProperty dbUrlProperty = config.Property("database_url");
-
-            Debug.WriteLine(dbUrlProperty.Value.ToString());
-
-            var builder = new PostgreSqlConnectionStringBuilder(dbUrlProperty.Value.ToString())
-            {
-                Pooling = true,
-                TrustServerCertificate = true,
-                SslMode = SslMode.Require
-            };
-
             services.AddEntityFrameworkNpgsql()
-                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(builder.ConnectionString, providerOptions => providerOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
+                    .AddDbContext<AffinityDbcontext>(options => options.UseNpgsql(Configuration.GetConnectionString("AffinityDbcontext"), providerOptions => providerOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
 
             //Set's the urls to be lowercase easier for the user!
             services.AddRouting(other => other.LowercaseUrls = true);
